@@ -4,6 +4,7 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.AssemblyInfoInputs.cache
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.AssemblyInfo.cs
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.csproj.CoreCompileInputs.cache
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.sourcelink.json
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\appsettings.Development.json
@@ -21,9 +22,13 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Sqlite.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Microsoft.OpenApi.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\SQLitePCLRaw.batteries_v2.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\SQLitePCLRaw.core.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\SQLitePCLRaw.provider.e_sqlite3.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\runtimes\browser-wasm\nativeassets\net9.0\e_sqlite3.a
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\runtimes\linux-arm\native\libe_sqlite3.so
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\runtimes\linux-arm64\native\libe_sqlite3.so
@@ -59,8 +64,3 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.pdb
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.genruntimeconfig.cache
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\ref\TempusCare.Api.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Microsoft.OpenApi.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\src\TempusCare.Api\obj\Debug\net9.0\TempusCare.Api.MvcApplicationPartsAssemblyInfo.cs

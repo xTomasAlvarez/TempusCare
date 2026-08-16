@@ -14,11 +14,20 @@ builder.Services.AddDbContext<TempusCareDbContext>(options =>
 // Registro de Servicios e Inyección de Dependencias
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfesionalService, ProfesionalService>();
+builder.Services.AddScoped<IPacienteService, PacienteService>();
+builder.Services.AddScoped<IAsistenteService, AsistenteService>();
+builder.Services.AddScoped<IInstitucionService, InstitucionService>();
 builder.Services.AddScoped<IConsultorioService, ConsultorioService>();
+builder.Services.AddScoped<IEstudioService, EstudioService>();
 builder.Services.AddScoped<IEspecialidadService, EspecialidadService>();
+builder.Services.AddScoped<IObraSocialService, ObraSocialService>();
 builder.Services.AddScoped<IAgendaService, AgendaService>();
-builder.Services.AddScoped<ITurnoCitaService, TurnoCitaService>();
-builder.Services.AddScoped<IPerfilPacienteService, PerfilPacienteService>();
+builder.Services.AddScoped<ITurnoService, TurnoService>();
+builder.Services.AddScoped<ICitaService, CitaService>();
+builder.Services.AddScoped<IRecetaService, RecetaService>();
+builder.Services.AddScoped<IHistoriaClinicaService, HistoriaClinicaService>();
+builder.Services.AddScoped<ICuestionarioService, CuestionarioService>();
+builder.Services.AddScoped<IObservacionService, ObservacionService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -54,6 +63,15 @@ using (var scope = app.Services.CreateScope())
     // Asegura la creación física de la base de datos y sus tablas (tempuscare.db)
     db.Database.EnsureCreated();
 
+    if (!db.Instituciones.Any())
+    {
+        db.Instituciones.AddRange(
+            new TempusCare.Api.Domain.Entities.Institucion { Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com" },
+            new TempusCare.Api.Domain.Entities.Institucion { Nombre = "Clínica Mayo", Cuit = "30555666778", Email = "info@clinicamayo.com" }
+        );
+        db.SaveChanges();
+    }
+
     if (!db.Especialidades.Any())
     {
         db.Especialidades.AddRange(
@@ -63,6 +81,16 @@ using (var scope = app.Services.CreateScope())
             new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Traumatología", Descripcion = "Sistema osteoarticular" }
         );
     }
+
+    if (!db.Estudios.Any())
+    {
+        db.Estudios.AddRange(
+            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Ecografía Abdominal", Descripcion = "Ultrasonido de abdomen", Duracion = 30, Preparacion = "Ayuno de 6 horas" },
+            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Resonancia Magnética", Descripcion = "Estudio por resonancia", Duracion = 45, Preparacion = "Sin objetos metálicos" },
+            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Electrocardiograma", Descripcion = "Registro de actividad cardíaca", Duracion = 20, Preparacion = "Ninguna" }
+        );
+    }
+
     if (!db.ObrasSociales.Any())
     {
         db.ObrasSociales.AddRange(
@@ -72,6 +100,7 @@ using (var scope = app.Services.CreateScope())
             new TempusCare.Api.Domain.Entities.ObraSocial { Nombre = "PAMI", Catalogo = "Jubilados y pensionados" }
         );
     }
+
     db.SaveChanges();
 }
 

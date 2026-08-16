@@ -23,6 +23,7 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tes
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Sqlite.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.OpenApi.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.TestPlatform.CoreUtilities.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.TestPlatform.PlatformAbstractions.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
@@ -34,6 +35,9 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tes
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\SQLitePCLRaw.batteries_v2.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\SQLitePCLRaw.core.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\SQLitePCLRaw.provider.e_sqlite3.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\xunit.abstractions.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\xunit.assert.dll
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\xunit.core.dll
@@ -138,7 +142,3 @@ C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tes
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\obj\Debug\net9.0\TempusCare.Tests.pdb
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\obj\Debug\net9.0\TempusCare.Tests.genruntimeconfig.cache
 C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\obj\Debug\net9.0\ref\TempusCare.Tests.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Microsoft.OpenApi.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Users\tomas\OneDrive\Escritorio\UTN\4TO AÑO\Adm. de Sistemas\TFI\backend\tests\TempusCare.Tests\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll

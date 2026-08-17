@@ -31,6 +31,7 @@ public class TempusCareDbContext : DbContext
     public DbSet<ProfesionalEspecialidad> ProfesionalEspecialidades => Set<ProfesionalEspecialidad>();
     public DbSet<ProfesionalObraSocial> ProfesionalObrasSociales => Set<ProfesionalObraSocial>();
     public DbSet<PacienteObraSocial> PacienteObrasSociales => Set<PacienteObraSocial>();
+    public DbSet<AsistenteAgenda> AsistenteAgendas => Set<AsistenteAgenda>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,12 @@ public class TempusCareDbContext : DbContext
             .HasOne(a => a.Direccion)
             .WithMany()
             .HasForeignKey(a => a.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Institucion)
+            .WithMany(i => i.Asistentes)
+            .HasForeignKey(a => a.InstitucionId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Paciente primary key: Cuil
@@ -91,6 +98,12 @@ public class TempusCareDbContext : DbContext
         // Institucion primary key: Id
         modelBuilder.Entity<Institucion>()
             .HasKey(i => i.Id);
+
+        modelBuilder.Entity<Institucion>()
+            .HasOne(i => i.Usuario)
+            .WithOne(u => u.Institucion)
+            .HasForeignKey<Institucion>(i => i.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Institucion>()
             .HasMany(i => i.Consultorios)
@@ -237,5 +250,21 @@ public class TempusCareDbContext : DbContext
             .HasOne(pao => pao.ObraSocial)
             .WithMany(o => o.Pacientes)
             .HasForeignKey(pao => pao.ObraSocialId);
+
+        // Junction: Asistente <-> Agenda
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasKey(aa => new { aa.AsistenteCuil, aa.AgendaId });
+
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasOne(aa => aa.Asistente)
+            .WithMany(a => a.AgendasAsignadas)
+            .HasForeignKey(aa => aa.AsistenteCuil)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasOne(aa => aa.Agenda)
+            .WithMany(a => a.AsistentesAsignados)
+            .HasForeignKey(aa => aa.AgendaId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

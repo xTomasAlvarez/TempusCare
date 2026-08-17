@@ -389,4 +389,103 @@ public class BusinessRulesTests
         Assert.Single(hcActualizada.Observaciones);
         Assert.Equal("Chequeo de rutina", hcActualizada.Observaciones.First().Motivo);
     }
+
+    [Fact]
+    public async Task Institucion_UsuarioLink_ShouldCreateUsuarioWithRolInstitucion()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Institucion_UsuarioLink_ShouldCreateUsuarioWithRolInstitucion));
+        var institucionService = new InstitucionService(db, NullLogger<InstitucionService>.Instance);
+        var authService = new AuthService(db, NullLogger<AuthService>.Instance);
+
+        // Act
+        var inst = await institucionService.AltaInstitucionAsync(new AltaInstitucionDto("Hospital Central", "30777111223", "admin@hospitalcentral.com"));
+
+        // Assert
+        Assert.NotNull(inst);
+        Assert.True(inst.UsuarioId > 0);
+
+        var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Id == inst.UsuarioId);
+        Assert.NotNull(usuario);
+        Assert.Equal("30777111223", usuario.NombreUsuario);
+        Assert.Equal(RolUsuario.Institucion, usuario.Rol);
+
+        // Validar inicio de sesión
+        var authRes = await authService.IniciarSesionAsync(new IniciarSesionDto("30777111223", "Institucion123!"));
+        Assert.Equal(RolUsuario.Institucion, authRes.Rol);
+        Assert.Equal("30777111223", authRes.Cuil);
+    }
+
+    [Fact]
+    public async Task Institucion_ABM_AsistentesYConsultorios_ShouldManageBelongingEntities()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Institucion_ABM_AsistentesYConsultorios_ShouldManageBelongingEntities));
+        var institucionService = new InstitucionService(db, NullLogger<InstitucionService>.Instance);
+        var consultorioService = new ConsultorioService(db, NullLogger<ConsultorioService>.Instance);
+        var asistenteService = new AsistenteService(db, NullLogger<AsistenteService>.Instance);
+
+        var inst = await institucionService.AltaInstitucionAsync(new AltaInstitucionDto("Clínica Modelo", "30888222110", "info@clinicamodelo.com"));
+
+        // Act: Crear consultorio y asistente pertenecientes a la institución
+        await consultorioService.AltaConsultorioAsync(new AltaConsultorioDto(
+            "30888222111", "Consultorio 101", "c101@clinicamodelo.com", "3814001122", "Alta", inst.Id,
+            "San Martín", "100", null, "San Miguel de Tucumán", "Tucumán", "4000", null));
+
+        await asistenteService.AltaAsistenteAsync(new AltaAsistenteDto(
+            "27333333334", "Valeria", "Ramos", new DateTime(1992, 4, 10), "3815998877", "Femenino",
+            "Laprida", "200", null, "San Miguel de Tucumán", "Tucumán", "4000", inst.Id));
+
+        var consultorios = await institucionService.ObtenerConsultoriosInstitucionAsync(inst.Id);
+        var asistentes = await institucionService.ObtenerAsistentesInstitucionAsync(inst.Id);
+
+        // Assert
+        Assert.Single(consultorios);
+        Assert.Equal("Consultorio 101", consultorios.First().Nombre);
+        Assert.Single(asistentes);
+        Assert.Equal("Valeria", asistentes.First().Nombre);
+        Assert.Equal("Clínica Modelo", asistentes.First().InstitucionNombre);
+    }
+
+    [Fact]
+    public async Task AsistenteAgenda_ManyToMay_Permissions_ShouldAssignRevokeAndCheck()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(AsistenteAgenda_ManyToMay_Permissions_ShouldAssignRevokeAndCheck));
+        var asistenteService = new AsistenteService(db, NullLogger<AsistenteService>.Instance);
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20111222333", Nombre = "Esteban", Apellido = "Quito", Matricula = "MP555" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30555444333", Nombre = "Consultorio A" });
+        await db.SaveChangesAsync();
+
+        var asis = await asistenteService.AltaAsistenteAsync(new AltaAsistenteDto(
+            "27444555666", "Laura", "Mendez", new DateTime(1991, 7, 15), "3815123456", "Femenino",
+            null, null, null, null, null, null));
+
+        var ag1 = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20111222333", "30555444333", 1, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(12, 0, 0)));
+        var ag2 = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20111222333", "30555444333", 2, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(12, 0, 0)));
+
+        // Initial check: no permissions
+        Assert.False(await asistenteService.ValidarPermisoAsistenteAgendaAsync(asis.Cuil, ag1.Id));
+
+        // Act: Assign agendas 1 and 2 to Assistant (N:M)
+        await asistenteService.AsignarAgendaAsync(asis.Cuil, ag1.Id);
+        await asistenteService.AsignarAgendaAsync(asis.Cuil, ag2.Id);
+
+        // Assert
+        Assert.True(await asistenteService.ValidarPermisoAsistenteAgendaAsync(asis.Cuil, ag1.Id));
+        Assert.True(await asistenteService.ValidarPermisoAsistenteAgendaAsync(asis.Cuil, ag2.Id));
+
+        var agendasAsignadas = await asistenteService.ObtenerAgendasAsignadasAsync(asis.Cuil);
+        Assert.Equal(2, agendasAsignadas.Count);
+
+        // Revoke 1 agenda
+        await asistenteService.RemoverAgendaAsync(asis.Cuil, ag1.Id);
+        Assert.False(await asistenteService.ValidarPermisoAsistenteAgendaAsync(asis.Cuil, ag1.Id));
+
+        agendasAsignadas = await asistenteService.ObtenerAgendasAsignadasAsync(asis.Cuil);
+        Assert.Single(agendasAsignadas);
+        Assert.Equal(ag2.Id, agendasAsignadas.First().Id);
+    }
 }

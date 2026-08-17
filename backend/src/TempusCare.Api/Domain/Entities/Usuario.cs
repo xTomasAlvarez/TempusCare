@@ -14,4 +14,5 @@ public class Usuario
     public Paciente? Paciente { get; set; }
     public Profesional? Profesional { get; set; }
     public Asistente? Asistente { get; set; }
+    public Institucion? Institucion { get; set; }
 }

@@ -5,5 +5,6 @@ public enum RolUsuario
     Paciente = 1,
     Profesional = 2,
     Asistente = 3,
-    Administrador = 4
+    Administrador = 4,
+    Institucion = 5
 }

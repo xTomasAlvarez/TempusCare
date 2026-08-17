@@ -15,8 +15,10 @@ public record ModificarInstitucionDto(
 
 public record InstitucionResponseDto(
     int Id,
+    int UsuarioId,
     string Nombre,
     string Cuit,
     string Email,
-    List<string> ConsultoriosNombres
+    List<string> ConsultoriosNombres,
+    List<string> AsistentesNombres
 );

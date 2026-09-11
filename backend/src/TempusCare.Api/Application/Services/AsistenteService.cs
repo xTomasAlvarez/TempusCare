@@ -54,6 +54,12 @@ public class AsistenteService : IAsistenteService
             await _db.SaveChangesAsync();
         }
 
+        if (dto.InstitucionId.HasValue && !await _db.Instituciones.AnyAsync(i => i.Id == dto.InstitucionId.Value))
+        {
+            _logger.LogWarning("Institución ID {Id} no encontrada al crear asistente", dto.InstitucionId.Value);
+            throw new InstitucionNotFoundException(dto.InstitucionId.Value);
+        }
+
         var asistente = new Asistente
         {
             Cuil = dto.Cuil,
@@ -63,7 +69,8 @@ public class AsistenteService : IAsistenteService
             FechaNacimiento = dto.FecNac,
             Telefono = dto.Telefono,
             Genero = dto.Genero,
-            DireccionId = dir?.Id
+            DireccionId = dir?.Id,
+            InstitucionId = dto.InstitucionId
         };
 
         _db.Asistentes.Add(asistente);
@@ -87,11 +94,18 @@ public class AsistenteService : IAsistenteService
             throw new AsistenteNotFoundException(dto.Cuil);
         }
 
+        if (dto.InstitucionId.HasValue && !await _db.Instituciones.AnyAsync(i => i.Id == dto.InstitucionId.Value))
+        {
+            _logger.LogWarning("Institución ID {Id} no encontrada al modificar asistente", dto.InstitucionId.Value);
+            throw new InstitucionNotFoundException(dto.InstitucionId.Value);
+        }
+
         asistente.Nombre = dto.Nombre;
         asistente.Apellido = dto.Apellido;
         asistente.FechaNacimiento = dto.FecNac;
         asistente.Telefono = dto.Telefono;
         asistente.Genero = dto.Genero;
+        asistente.InstitucionId = dto.InstitucionId ?? asistente.InstitucionId;
 
         if (asistente.Direccion != null)
         {
@@ -146,6 +160,7 @@ public class AsistenteService : IAsistenteService
 
         var asistente = await _db.Asistentes
             .Include(a => a.Direccion)
+            .Include(a => a.Institucion)
             .FirstOrDefaultAsync(a => a.Cuil == cuil);
 
         if (asistente == null)
@@ -163,9 +178,85 @@ public class AsistenteService : IAsistenteService
 
         var lista = await _db.Asistentes
             .Include(a => a.Direccion)
+            .Include(a => a.Institucion)
             .ToListAsync();
 
         return lista.Select(a => MapToDto(a)).ToList();
+    }
+
+    public async Task AsignarAgendaAsync(string asistenteCuil, int agendaId)
+    {
+        _logger.LogInformation("Asignando permiso de agenda ID {AgendaId} al asistente CUIL {Cuil}", agendaId, asistenteCuil);
+
+        if (!await _db.Asistentes.AnyAsync(a => a.Cuil == asistenteCuil))
+            throw new AsistenteNotFoundException(asistenteCuil);
+
+        if (!await _db.Agendas.AnyAsync(a => a.Id == agendaId))
+            throw new AgendaNotFoundException(agendaId);
+
+        bool existe = await _db.AsistenteAgendas.AnyAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
+        if (!existe)
+        {
+            _db.AsistenteAgendas.Add(new AsistenteAgenda
+            {
+                AsistenteCuil = asistenteCuil,
+                AgendaId = agendaId
+            });
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Permiso de agenda ID {AgendaId} asignado a asistente CUIL {Cuil}", agendaId, asistenteCuil);
+        }
+    }
+
+    public async Task RemoverAgendaAsync(string asistenteCuil, int agendaId)
+    {
+        _logger.LogInformation("Removiendo permiso de agenda ID {AgendaId} al asistente CUIL {Cuil}", agendaId, asistenteCuil);
+
+        if (!await _db.Asistentes.AnyAsync(a => a.Cuil == asistenteCuil))
+            throw new AsistenteNotFoundException(asistenteCuil);
+
+        var relacion = await _db.AsistenteAgendas.FirstOrDefaultAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
+        if (relacion != null)
+        {
+            _db.AsistenteAgendas.Remove(relacion);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Permiso de agenda ID {AgendaId} removido del asistente CUIL {Cuil}", agendaId, asistenteCuil);
+        }
+    }
+
+    public async Task<List<AgendaResponseDto>> ObtenerAgendasAsignadasAsync(string asistenteCuil)
+    {
+        _logger.LogInformation("Obteniendo agendas asignadas al asistente CUIL {Cuil}", asistenteCuil);
+
+        if (!await _db.Asistentes.AnyAsync(a => a.Cuil == asistenteCuil))
+            throw new AsistenteNotFoundException(asistenteCuil);
+
+        var agendas = await _db.AsistenteAgendas
+            .Where(aa => aa.AsistenteCuil == asistenteCuil)
+            .Include(aa => aa.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(aa => aa.Agenda).ThenInclude(a => a!.Consultorio)
+            .Include(aa => aa.Agenda).ThenInclude(a => a!.Turnos)
+            .Select(aa => aa.Agenda)
+            .ToListAsync();
+
+        return agendas.Where(a => a != null).Select(a => new AgendaResponseDto(
+            a!.Id,
+            a.ProfesionalCuil,
+            $"{a.Profesional?.Nombre} {a.Profesional?.Apellido}",
+            a.Profesional?.Matricula ?? "",
+            a.ConsultorioCuit,
+            a.Consultorio?.Nombre ?? "",
+            a.Dia,
+            a.Mes,
+            a.Anio,
+            a.HoraEntrada,
+            a.HoraSalida,
+            a.Turnos.Count
+        )).ToList();
+    }
+
+    public async Task<bool> ValidarPermisoAsistenteAgendaAsync(string asistenteCuil, int agendaId)
+    {
+        return await _db.AsistenteAgendas.AnyAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
     }
 
     private static AsistenteResponseDto MapToDto(Asistente a)
@@ -181,7 +272,9 @@ public class AsistenteService : IAsistenteService
             a.FechaNacimiento,
             a.Telefono,
             a.Genero,
-            dirStr
+            dirStr,
+            a.InstitucionId,
+            a.Institucion?.Nombre
         );
     }
 }

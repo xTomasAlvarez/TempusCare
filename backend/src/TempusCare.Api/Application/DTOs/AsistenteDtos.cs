@@ -12,7 +12,8 @@ public record AltaAsistenteDto(
     string? Depto,
     string? Localidad,
     string? Provincia,
-    string? CodPostal
+    string? CodPostal,
+    int? InstitucionId = null
 );
 
 public record ModificarAsistenteDto(
@@ -27,7 +28,8 @@ public record ModificarAsistenteDto(
     string? Depto,
     string? Localidad,
     string? Provincia,
-    string? CodPostal
+    string? CodPostal,
+    int? InstitucionId = null
 );
 
 public record AsistenteResponseDto(
@@ -37,5 +39,7 @@ public record AsistenteResponseDto(
     DateTime FechaNacimiento,
     string Telefono,
     string Genero,
-    string? DireccionCompleta
+    string? DireccionCompleta,
+    int? InstitucionId = null,
+    string? InstitucionNombre = null
 );

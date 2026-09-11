@@ -17,4 +17,5 @@ public class Agenda
     public TimeSpan HoraSalida { get; set; }
 
     public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
+    public ICollection<AsistenteAgenda> AsistentesAsignados { get; set; } = new List<AsistenteAgenda>();
 }

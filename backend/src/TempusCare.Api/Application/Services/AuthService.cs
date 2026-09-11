@@ -90,6 +90,7 @@ public class AuthService : IAuthService
             RolUsuario.Asistente => usuario.Asistente?.Cuil,
             RolUsuario.AdminInstitucion => usuario.AdministradorInstitucion?.Cuil,
             RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Cuil,
+            RolUsuario.Institucion => usuario.Institucion?.Cuit,
             _ => null
         };
 

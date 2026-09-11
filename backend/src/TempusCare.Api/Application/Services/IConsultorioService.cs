@@ -9,4 +9,5 @@ public interface IConsultorioService
     Task BajaConsultorioAsync(string cuit);
     Task<List<ConsultorioResponseDto>> ObtenerTodosAsync();
     Task<ConsultorioResponseDto> ObtenerPorCuitAsync(string cuit);
+    Task<List<ConsultorioResponseDto>> ObtenerPorInstitucionAsync(int institucionId);
 }

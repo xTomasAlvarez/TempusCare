@@ -160,6 +160,20 @@ public class ConsultorioService : IConsultorioService
         return MapToDto(cons);
     }
 
+    public async Task<List<ConsultorioResponseDto>> ObtenerPorInstitucionAsync(int institucionId)
+    {
+        _logger.LogInformation("Obteniendo consultorios para la institución ID {Id}", institucionId);
+
+        var lista = await _db.Consultorios
+            .Include(c => c.Direccion)
+            .Include(c => c.Institucion)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional)
+            .Where(c => c.InstitucionId == institucionId)
+            .ToListAsync();
+
+        return lista.Select(c => MapToDto(c)).ToList();
+    }
+
     private static ConsultorioResponseDto MapToDto(Consultorio c)
     {
         string dirStr = c.Direccion != null

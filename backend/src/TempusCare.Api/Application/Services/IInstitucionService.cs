@@ -9,4 +9,6 @@ public interface IInstitucionService
     Task BajaInstitucionAsync(int id);
     Task<List<InstitucionResponseDto>> ObtenerTodasAsync();
     Task<InstitucionResponseDto> ObtenerPorIdAsync(int id);
+    Task<List<AsistenteResponseDto>> ObtenerAsistentesInstitucionAsync(int id);
+    Task<List<ConsultorioResponseDto>> ObtenerConsultoriosInstitucionAsync(int id);
 }

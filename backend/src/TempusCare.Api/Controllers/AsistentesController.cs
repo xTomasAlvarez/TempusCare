@@ -52,4 +52,32 @@ public class AsistentesController : ControllerBase
         var res = await _asistenteService.ObtenerPorCuilAsync(cuil);
         return Ok(res);
     }
+
+    [HttpPost("{cuil}/agendas/{agendaId}")]
+    public async Task<IActionResult> AsignarAgenda(string cuil, int agendaId)
+    {
+        await _asistenteService.AsignarAgendaAsync(cuil, agendaId);
+        return NoContent();
+    }
+
+    [HttpDelete("{cuil}/agendas/{agendaId}")]
+    public async Task<IActionResult> RemoverAgenda(string cuil, int agendaId)
+    {
+        await _asistenteService.RemoverAgendaAsync(cuil, agendaId);
+        return NoContent();
+    }
+
+    [HttpGet("{cuil}/agendas")]
+    public async Task<IActionResult> ObtenerAgendasAsignadas(string cuil)
+    {
+        var res = await _asistenteService.ObtenerAgendasAsignadasAsync(cuil);
+        return Ok(res);
+    }
+
+    [HttpGet("{cuil}/agendas/{agendaId}/permiso")]
+    public async Task<IActionResult> ValidarPermisoAgenda(string cuil, int agendaId)
+    {
+        var tienePermiso = await _asistenteService.ValidarPermisoAsistenteAgendaAsync(cuil, agendaId);
+        return Ok(new { cuil, agendaId, tienePermiso });
+    }
 }

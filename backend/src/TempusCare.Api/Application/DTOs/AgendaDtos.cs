@@ -29,5 +29,11 @@ public record AgendaResponseDto(
     int Anio,
     TimeSpan HoraEntrada,
     TimeSpan HoraSalida,
-    int CantidadTurnos
+    int CantidadTurnos,
+    List<string>? AsistentesAutorizados = null
+);
+
+public record AsignarAsistenteAgendaDto(
+    string AsistenteCuil,
+    int AgendaId
 );

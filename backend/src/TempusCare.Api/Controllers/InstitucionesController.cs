@@ -52,4 +52,18 @@ public class InstitucionesController : ControllerBase
         var res = await _institucionService.ObtenerPorIdAsync(id);
         return Ok(res);
     }
+
+    [HttpGet("{id}/asistentes")]
+    public async Task<IActionResult> ObtenerAsistentes(int id)
+    {
+        var res = await _institucionService.ObtenerAsistentesInstitucionAsync(id);
+        return Ok(res);
+    }
+
+    [HttpGet("{id}/consultorios")]
+    public async Task<IActionResult> ObtenerConsultorios(int id)
+    {
+        var res = await _institucionService.ObtenerConsultoriosInstitucionAsync(id);
+        return Ok(res);
+    }
 }

@@ -65,7 +65,7 @@ public class ExceptionMiddleware
                 var p when p.Contains("agenda") => "agenda",
                 var p when p.Contains("turno") => "turno",
                 var p when p.Contains("cita") => "cita",
-                var p when p.Contains("receta") => "receta",
+                var p when p.Contains("administrador") => "administrador",
                 var p when p.Contains("historiaclinica") || p.Contains("historia-clinica") => "historiaclinica",
                 var p when p.Contains("cuestionario") => "cuestionario",
                 var p when p.Contains("observacion") => "observacion",

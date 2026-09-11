@@ -41,12 +41,12 @@ public class ProfesionalesController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Consultar(
+        [FromQuery] string? nombre,
         [FromQuery] int? especialidadId,
         [FromQuery] int? obraSocialId,
-        [FromQuery] string? consultorioCuit,
-        [FromQuery] string? matricula)
+        [FromQuery] string? consultorioCuit)
     {
-        var res = await _profesionalService.ConsultarProfesionalesAsync(especialidadId, obraSocialId, consultorioCuit, matricula);
+        var res = await _profesionalService.ConsultarProfesionalesAsync(nombre, especialidadId, obraSocialId, consultorioCuit);
         return Ok(res);
     }
 
@@ -54,6 +54,27 @@ public class ProfesionalesController : ControllerBase
     public async Task<IActionResult> ObtenerPorCuil(string cuil)
     {
         var res = await _profesionalService.ObtenerPorCuilAsync(cuil);
+        return Ok(res);
+    }
+
+    [HttpPost("{cuil}/estudios")]
+    public async Task<IActionResult> AsignarEstudio(string cuil, [FromBody] AsignarEstudioProfesionalDto dto)
+    {
+        var res = await _profesionalService.AsignarEstudioAsync(cuil, dto);
+        return Ok(res);
+    }
+
+    [HttpDelete("{cuil}/estudios/{estudioId}")]
+    public async Task<IActionResult> DesasignarEstudio(string cuil, int estudioId)
+    {
+        await _profesionalService.DesasignarEstudioAsync(cuil, estudioId);
+        return NoContent();
+    }
+
+    [HttpGet("{cuil}/estudios")]
+    public async Task<IActionResult> ObtenerEstudios(string cuil)
+    {
+        var res = await _profesionalService.ObtenerEstudiosPorProfesionalAsync(cuil);
         return Ok(res);
     }
 }

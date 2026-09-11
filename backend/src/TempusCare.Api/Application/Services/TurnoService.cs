@@ -17,16 +17,15 @@ public class TurnoService : ITurnoService
         _logger = logger;
     }
 
-    public async Task<List<TurnoResponseDto>> ObtenerTurnosDisponiblesAsync(string profesionalCuilOMatricula, DateTime? fecha)
+    public async Task<List<TurnoResponseDto>> ObtenerTurnosDisponiblesAsync(string profesionalCuil, DateTime? fecha)
     {
-        _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha}", profesionalCuilOMatricula, fecha);
+        _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha}", profesionalCuil, fecha);
 
         var query = _db.Turnos
             .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
             .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
             .Where(t => t.Estado == EstadoTurno.Disponible &&
-                        (t.Agenda!.ProfesionalCuil == profesionalCuilOMatricula ||
-                         (t.Agenda!.Profesional != null && t.Agenda.Profesional.Matricula == profesionalCuilOMatricula)))
+                        t.Agenda!.ProfesionalCuil == profesionalCuil)
             .AsQueryable();
 
         if (fecha.HasValue)

@@ -227,10 +227,10 @@ public class ProfesionalService : IProfesionalService
         _logger.LogInformation("Profesional CUIL {Cuil} marcado como Inactivo", cuil);
     }
 
-    public async Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(int? especialidadId, int? obraSocialId, string? consultorioCuit, string? matricula)
+    public async Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(string? nombre, int? especialidadId, int? obraSocialId, string? consultorioCuit)
     {
-        _logger.LogInformation("Consultando profesionales con filtros: Esp={Esp}, OS={OS}, Cons={Cons}, Matr={Matr}",
-            especialidadId, obraSocialId, consultorioCuit, matricula);
+        _logger.LogInformation("Consultando profesionales con filtros: Nombre={Nombre}, Esp={Esp}, OS={OS}, Cons={Cons}",
+            nombre, especialidadId, obraSocialId, consultorioCuit);
 
         var query = _db.Profesionales
             .Include(p => p.Direccion)
@@ -241,6 +241,12 @@ public class ProfesionalService : IProfesionalService
             .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas).ThenInclude(cob => cob.ObraSocial)
             .Where(p => p.Estado == EstadoProfesional.Activo)
             .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(nombre))
+        {
+            var busqueda = nombre.Trim().ToLower();
+            query = query.Where(p => p.Nombre.ToLower().Contains(busqueda) || p.Apellido.ToLower().Contains(busqueda));
+        }
 
         if (especialidadId.HasValue)
         {
@@ -255,11 +261,6 @@ public class ProfesionalService : IProfesionalService
         if (!string.IsNullOrEmpty(consultorioCuit))
         {
             query = query.Where(p => p.Consultorios.Any(c => c.ConsultorioCuit == consultorioCuit));
-        }
-
-        if (!string.IsNullOrEmpty(matricula))
-        {
-            query = query.Where(p => p.Matricula == matricula);
         }
 
         var lista = await query.ToListAsync();
@@ -295,6 +296,104 @@ public class ProfesionalService : IProfesionalService
 
         double punt = await CalcularPuntuacionDinamicaAsync(prof.Cuil);
         return MapToResponseDto(prof, punt);
+    }
+
+    public async Task<ProfesionalEstudioResponseDto> AsignarEstudioAsync(string profesionalCuil, AsignarEstudioProfesionalDto dto)
+    {
+        _logger.LogInformation("Asignando estudio {EstudioId} a profesional {Cuil}", dto.EstudioId, profesionalCuil);
+
+        var prof = await _db.Profesionales
+            .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas)
+            .FirstOrDefaultAsync(p => p.Cuil == profesionalCuil);
+
+        if (prof == null)
+            throw new ProfesionalNotFoundException(profesionalCuil);
+
+        var estudio = await _db.Estudios.FirstOrDefaultAsync(e => e.Id == dto.EstudioId);
+        if (estudio == null)
+            throw new EstudioNotFoundException(dto.EstudioId);
+
+        var profEst = prof.Estudios.FirstOrDefault(pe => pe.EstudioId == dto.EstudioId);
+        if (profEst == null)
+        {
+            profEst = new ProfesionalEstudio
+            {
+                ProfesionalCuil = prof.Cuil,
+                EstudioId = dto.EstudioId,
+                DuracionTurno = dto.DuracionTurno > 0 ? dto.DuracionTurno : 30,
+                PrecioParticular = dto.PrecioParticular,
+                Activo = true
+            };
+            prof.Estudios.Add(profEst);
+        }
+        else
+        {
+            profEst.DuracionTurno = dto.DuracionTurno > 0 ? dto.DuracionTurno : profEst.DuracionTurno;
+            profEst.PrecioParticular = dto.PrecioParticular;
+            profEst.Activo = true;
+            profEst.Coberturas.Clear();
+        }
+
+        if (dto.ObrasSocialesAceptadasIds != null)
+        {
+            foreach (var osId in dto.ObrasSocialesAceptadasIds)
+            {
+                profEst.Coberturas.Add(new Cobertura
+                {
+                    ObraSocialId = osId
+                });
+            }
+        }
+
+        await _db.SaveChangesAsync();
+
+        var recargado = await _db.ProfesionalEstudios
+            .Include(pe => pe.Estudio)
+            .Include(pe => pe.Coberturas).ThenInclude(cob => cob.ObraSocial)
+            .FirstAsync(pe => pe.Id == profEst.Id);
+
+        return new ProfesionalEstudioResponseDto(
+            recargado.Id,
+            recargado.EstudioId,
+            recargado.Estudio?.Nombre ?? "",
+            recargado.DuracionTurno,
+            recargado.PrecioParticular,
+            recargado.Activo,
+            recargado.Coberturas.Select(c => c.ObraSocial?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList()
+        );
+    }
+
+    public async Task DesasignarEstudioAsync(string profesionalCuil, int estudioId)
+    {
+        _logger.LogInformation("Desasignando estudio {EstudioId} de profesional {Cuil}", estudioId, profesionalCuil);
+
+        var profEst = await _db.ProfesionalEstudios
+            .FirstOrDefaultAsync(pe => pe.ProfesionalCuil == profesionalCuil && pe.EstudioId == estudioId);
+
+        if (profEst != null)
+        {
+            _db.ProfesionalEstudios.Remove(profEst);
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    public async Task<List<ProfesionalEstudioResponseDto>> ObtenerEstudiosPorProfesionalAsync(string profesionalCuil)
+    {
+        var lista = await _db.ProfesionalEstudios
+            .Include(pe => pe.Estudio)
+            .Include(pe => pe.Coberturas).ThenInclude(c => c.ObraSocial)
+            .Where(pe => pe.ProfesionalCuil == profesionalCuil)
+            .ToListAsync();
+
+        return lista.Select(pe => new ProfesionalEstudioResponseDto(
+            pe.Id,
+            pe.EstudioId,
+            pe.Estudio?.Nombre ?? "",
+            pe.DuracionTurno,
+            pe.PrecioParticular,
+            pe.Activo,
+            pe.Coberturas.Select(c => c.ObraSocial?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList()
+        )).ToList();
     }
 
     private async Task<double> CalcularPuntuacionDinamicaAsync(string profesionalCuil)

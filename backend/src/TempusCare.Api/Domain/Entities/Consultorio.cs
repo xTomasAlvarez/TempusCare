@@ -16,4 +16,6 @@ public class Consultorio
 
     public ICollection<ProfesionalConsultorio> Profesionales { get; set; } = new List<ProfesionalConsultorio>();
     public ICollection<Agenda> Agendas { get; set; } = new List<Agenda>();
+    public ICollection<AdministradorConsultorio> Administradores { get; set; } = new List<AdministradorConsultorio>();
+    public ICollection<Asistente> Asistentes { get; set; } = new List<Asistente>();
 }

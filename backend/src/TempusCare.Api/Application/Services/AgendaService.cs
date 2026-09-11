@@ -167,15 +167,15 @@ public class AgendaService : IAgendaService
         _logger.LogInformation("Agenda ID {IdAgenda} eliminada", idAgenda);
     }
 
-    public async Task<List<AgendaResponseDto>> ObtenerAgendasPorProfesionalAsync(string cuilOMatricula)
+    public async Task<List<AgendaResponseDto>> ObtenerAgendasPorProfesionalAsync(string profesionalCuil)
     {
-        _logger.LogInformation("Buscando agendas para profesional por CUIL o Matrícula: {Identificador}", cuilOMatricula);
+        _logger.LogInformation("Buscando agendas para profesional por CUIL: {Cuil}", profesionalCuil);
 
         var agendas = await _db.Agendas
             .Include(a => a.Profesional)
             .Include(a => a.Consultorio)
             .Include(a => a.Turnos)
-            .Where(a => a.ProfesionalCuil == cuilOMatricula || (a.Profesional != null && a.Profesional.Matricula == cuilOMatricula))
+            .Where(a => a.ProfesionalCuil == profesionalCuil)
             .ToListAsync();
 
         return agendas.Select(a => new AgendaResponseDto(

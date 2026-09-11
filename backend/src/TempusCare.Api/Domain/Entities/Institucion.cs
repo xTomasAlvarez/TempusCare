@@ -8,4 +8,5 @@ public class Institucion
     public string Email { get; set; } = string.Empty;
 
     public ICollection<Consultorio> Consultorios { get; set; } = new List<Consultorio>();
+    public ICollection<AdministradorInstitucion> Administradores { get; set; } = new List<AdministradorInstitucion>();
 }

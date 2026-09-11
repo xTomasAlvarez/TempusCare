@@ -18,5 +18,4 @@ public class Cita
 
     public Observacion? Observacion { get; set; }
     public Cuestionario? Cuestionario { get; set; }
-    public ICollection<Receta> Recetas { get; set; } = new List<Receta>();
 }

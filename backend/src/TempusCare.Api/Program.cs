@@ -24,7 +24,7 @@ builder.Services.AddScoped<IObraSocialService, ObraSocialService>();
 builder.Services.AddScoped<IAgendaService, AgendaService>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<ICitaService, CitaService>();
-builder.Services.AddScoped<IRecetaService, RecetaService>();
+builder.Services.AddScoped<IAdministradorService, AdministradorService>();
 builder.Services.AddScoped<IHistoriaClinicaService, HistoriaClinicaService>();
 builder.Services.AddScoped<ICuestionarioService, CuestionarioService>();
 builder.Services.AddScoped<IObservacionService, ObservacionService>();

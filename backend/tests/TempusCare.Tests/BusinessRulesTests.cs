@@ -192,25 +192,37 @@ public class BusinessRulesTests
     }
 
     [Fact]
-    public async Task AgendaSearchByMatricula_ShouldReturnAgendasSuccessfully()
+    public async Task BusquedaProfesionalesPorNombreYEspecialidad_ShouldFilterCorrectly()
     {
         // Arrange
-        var db = GetInMemoryDbContext(nameof(AgendaSearchByMatricula_ShouldReturnAgendasSuccessfully));
-        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var db = GetInMemoryDbContext(nameof(BusquedaProfesionalesPorNombreYEspecialidad_ShouldFilterCorrectly));
+        var profService = new ProfesionalService(db, NullLogger<ProfesionalService>.Instance);
 
-        db.Profesionales.Add(new Profesional { Cuil = "20999999999", Nombre = "Patricia", Apellido = "Soria", Matricula = "MAT-7788" });
-        db.Consultorios.Add(new Consultorio { Cuit = "30333333333", Nombre = "Clínica Centro" });
+        var espCardio = new Especialidad { Id = 1, Nombre = "Cardiología" };
+        var espDerma = new Especialidad { Id = 2, Nombre = "Dermatología" };
+        db.Especialidades.AddRange(espCardio, espDerma);
+
+        var prof1 = new Profesional { Cuil = "20999999991", Nombre = "Patricia", Apellido = "Soria", Matricula = "MAT-7788", Estado = EstadoProfesional.Activo };
+        prof1.Especialidades.Add(new ProfesionalEspecialidad { ProfesionalCuil = prof1.Cuil, EspecialidadId = 1 });
+
+        var prof2 = new Profesional { Cuil = "20999999992", Nombre = "Patricio", Apellido = "Rey", Matricula = "MAT-9900", Estado = EstadoProfesional.Activo };
+        prof2.Especialidades.Add(new ProfesionalEspecialidad { ProfesionalCuil = prof2.Cuil, EspecialidadId = 2 });
+
+        var prof3 = new Profesional { Cuil = "20999999993", Nombre = "Mariana", Apellido = "Soria", Matricula = "MAT-5544", Estado = EstadoProfesional.Activo };
+        prof3.Especialidades.Add(new ProfesionalEspecialidad { ProfesionalCuil = prof3.Cuil, EspecialidadId = 1 });
+
+        db.Profesionales.AddRange(prof1, prof2, prof3);
         await db.SaveChangesAsync();
 
-        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20999999999", "30333333333", 5, 9, 2026, new TimeSpan(8, 0, 0), new TimeSpan(10, 0, 0), 30));
+        // Act 1: Búsqueda por nombre "patri" (debe traer a Patricia y Patricio)
+        var resNombre = await profService.ConsultarProfesionalesAsync("patri", null, null, null);
+        Assert.Equal(2, resNombre.Count);
 
-        // Act: Búsqueda por Matrícula
-        var agendas = await agendaService.ObtenerAgendasPorProfesionalAsync("MAT-7788");
-
-        // Assert
-        Assert.Single(agendas);
-        Assert.Equal("20999999999", agendas.First().ProfesionalCuil);
-        Assert.Equal("MAT-7788", agendas.First().ProfesionalMatricula);
+        // Act 2: Búsqueda por apellido "soria" y filtrada por especialidad Cardiología (Id 1) (debe traer a Patricia y Mariana)
+        var resFiltro = await profService.ConsultarProfesionalesAsync("soria", 1, null, null);
+        Assert.Equal(2, resFiltro.Count);
+        Assert.Contains(resFiltro, p => p.Cuil == "20999999991");
+        Assert.Contains(resFiltro, p => p.Cuil == "20999999993");
     }
 
     [Fact]
@@ -388,5 +400,76 @@ public class BusinessRulesTests
         Assert.Equal("Camila Juarez", hcActualizada.PacienteNombreCompleto);
         Assert.Single(hcActualizada.Observaciones);
         Assert.Equal("Chequeo de rutina", hcActualizada.Observaciones.First().Motivo);
+    }
+
+    [Fact]
+    public async Task Administradores_Jerarquia_ShouldCreateAndAssignCorrectly()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Administradores_Jerarquia_ShouldCreateAndAssignCorrectly));
+        var adminService = new AdministradorService(db, NullLogger<AdministradorService>.Instance);
+        var institucionService = new InstitucionService(db, NullLogger<InstitucionService>.Instance);
+        var consultorioService = new ConsultorioService(db, NullLogger<ConsultorioService>.Instance);
+
+        var inst = await institucionService.AltaInstitucionAsync(new AltaInstitucionDto("Clínica Integral", "30999111223", "integral@clinica.com"));
+        var cons = await consultorioService.AltaConsultorioAsync(new AltaConsultorioDto(
+            "30444555667", "Sede Central", "sede@clinica.com", "3814445566", "Alta", inst.Id, "Av. Mate de Luna", "2000", null, "San Miguel de Tucumán", "Tucumán", "4000", null
+        ));
+
+        // Act 1: Alta Admin Institución (SuperAdmin acción)
+        var adminInst = await adminService.AltaAdminInstitucionAsync(new AltaAdminInstitucionDto(
+            "20123987654", "Roberto", "Gómez", "3815001122", new DateTime(1975, 4, 10), inst.Id, "r_gomez", "pass123", "r_gomez@clinica.com"
+        ));
+
+        // Act 2: Alta Admin Consultorio (Admin Institución acción)
+        var adminCons = await adminService.AltaAdminConsultorioAsync(new AltaAdminConsultorioDto(
+            "27333444555", "Lucía", "Paz", "3816112233", new DateTime(1988, 8, 25), cons.Cuit, "l_paz", "pass456", "l_paz@clinica.com"
+        ));
+
+        // Assert
+        Assert.NotNull(adminInst);
+        Assert.Equal("Clínica Integral", adminInst.InstitucionNombre);
+        var uInst = await db.Usuarios.FindAsync(adminInst.UsuarioId);
+        Assert.Equal(RolUsuario.AdminInstitucion, uInst?.Rol);
+
+        Assert.NotNull(adminCons);
+        Assert.Equal("Sede Central", adminCons.ConsultorioNombre);
+        var uCons = await db.Usuarios.FindAsync(adminCons.UsuarioId);
+        Assert.Equal(RolUsuario.AdminConsultorio, uCons?.Rol);
+    }
+
+    [Fact]
+    public async Task Asistente_AsignarEstudiosYCoberturas_ShouldConfigureSuccessfully()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Asistente_AsignarEstudiosYCoberturas_ShouldConfigureSuccessfully));
+        var profService = new ProfesionalService(db, NullLogger<ProfesionalService>.Instance);
+        var estudioService = new EstudioService(db, NullLogger<EstudioService>.Instance);
+
+        var osde = new ObraSocial { Id = 1, Nombre = "OSDE" };
+        var swiss = new ObraSocial { Id = 2, Nombre = "Swiss Medical" };
+        db.ObrasSociales.AddRange(osde, swiss);
+        await db.SaveChangesAsync();
+
+        var est = await estudioService.AltaEstudioAsync(new AltaEstudioDto("Ecocardiograma", "Ultrasonido del corazón", 30, "En reposo"));
+
+        var profDto = new AltaProfesionalDto(
+            "20333333333", "Esteban", "Quito", new DateTime(1982, 1, 1), "3814441111", "MP555", "M", null, null, null, null, null, null, null, null, null, null
+        );
+        await profService.AltaProfesionalAsync(profDto);
+
+        // Act: La Asistente configura los estudios del profesional y sus coberturas
+        var estudioAsignado = await profService.AsignarEstudioAsync("20333333333", new AsignarEstudioProfesionalDto(
+            est.Id, 35, 18000m, new List<int> { 1, 2 }
+        ));
+
+        // Assert
+        Assert.NotNull(estudioAsignado);
+        Assert.Equal("Ecocardiograma", estudioAsignado.EstudioNombre);
+        Assert.Equal(35, estudioAsignado.DuracionTurno);
+        Assert.Equal(18000m, estudioAsignado.PrecioParticular);
+        Assert.Equal(2, estudioAsignado.ObrasSocialesAceptadas.Count);
+        Assert.Contains("OSDE", estudioAsignado.ObrasSocialesAceptadas);
+        Assert.Contains("Swiss Medical", estudioAsignado.ObrasSocialesAceptadas);
     }
 }

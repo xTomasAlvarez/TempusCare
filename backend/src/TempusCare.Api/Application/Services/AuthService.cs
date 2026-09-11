@@ -73,6 +73,8 @@ public class AuthService : IAuthService
             .Include(u => u.Paciente)
             .Include(u => u.Profesional)
             .Include(u => u.Asistente)
+            .Include(u => u.AdministradorInstitucion)
+            .Include(u => u.AdministradorConsultorio)
             .FirstOrDefaultAsync(u => u.NombreUsuario == dto.Usuario && u.Contrasena == dto.Contra);
 
         if (usuario == null)
@@ -86,6 +88,8 @@ public class AuthService : IAuthService
             RolUsuario.Paciente => usuario.Paciente?.Cuil,
             RolUsuario.Profesional => usuario.Profesional?.Cuil,
             RolUsuario.Asistente => usuario.Asistente?.Cuil,
+            RolUsuario.AdminInstitucion => usuario.AdministradorInstitucion?.Cuil,
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Cuil,
             _ => null
         };
 

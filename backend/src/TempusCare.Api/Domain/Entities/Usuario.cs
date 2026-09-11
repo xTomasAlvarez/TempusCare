@@ -14,4 +14,6 @@ public class Usuario
     public Paciente? Paciente { get; set; }
     public Profesional? Profesional { get; set; }
     public Asistente? Asistente { get; set; }
+    public AdministradorInstitucion? AdministradorInstitucion { get; set; }
+    public AdministradorConsultorio? AdministradorConsultorio { get; set; }
 }

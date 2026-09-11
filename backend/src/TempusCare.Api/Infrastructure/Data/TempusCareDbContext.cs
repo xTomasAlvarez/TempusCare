@@ -25,7 +25,8 @@ public class TempusCareDbContext : DbContext
     public DbSet<Observacion> Observaciones => Set<Observacion>();
     public DbSet<Cuestionario> Cuestionarios => Set<Cuestionario>();
     public DbSet<HistoriaClinica> HistoriasClinicas => Set<HistoriaClinica>();
-    public DbSet<Receta> Recetas => Set<Receta>();
+    public DbSet<AdministradorInstitucion> AdministradoresInstitucion => Set<AdministradorInstitucion>();
+    public DbSet<AdministradorConsultorio> AdministradoresConsultorio => Set<AdministradorConsultorio>();
 
     public DbSet<ProfesionalConsultorio> ProfesionalConsultorios => Set<ProfesionalConsultorio>();
     public DbSet<ProfesionalEspecialidad> ProfesionalEspecialidades => Set<ProfesionalEspecialidad>();
@@ -35,6 +36,38 @@ public class TempusCareDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // AdministradorInstitucion
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasKey(ai => ai.Cuil);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasOne(ai => ai.Usuario)
+            .WithOne(u => u.AdministradorInstitucion)
+            .HasForeignKey<AdministradorInstitucion>(ai => ai.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasOne(ai => ai.Institucion)
+            .WithMany(i => i.Administradores)
+            .HasForeignKey(ai => ai.InstitucionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // AdministradorConsultorio
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasKey(ac => ac.Cuil);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasOne(ac => ac.Usuario)
+            .WithOne(u => u.AdministradorConsultorio)
+            .HasForeignKey<AdministradorConsultorio>(ac => ac.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasOne(ac => ac.Consultorio)
+            .WithMany(c => c.Administradores)
+            .HasForeignKey(ac => ac.ConsultorioCuit)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Asistente primary key: Cuil
         modelBuilder.Entity<Asistente>()
@@ -50,6 +83,12 @@ public class TempusCareDbContext : DbContext
             .HasOne(a => a.Direccion)
             .WithMany()
             .HasForeignKey(a => a.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Consultorio)
+            .WithMany(c => c.Asistentes)
+            .HasForeignKey(a => a.ConsultorioCuit)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Paciente primary key: Cuil

@@ -39,10 +39,10 @@ public class AgendasController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("profesional/{cuilOMatricula}")]
-    public async Task<IActionResult> ObtenerPorProfesional(string cuilOMatricula)
+    [HttpGet("profesional/{cuil}")]
+    public async Task<IActionResult> ObtenerPorProfesional(string cuil)
     {
-        var res = await _agendaService.ObtenerAgendasPorProfesionalAsync(cuilOMatricula);
+        var res = await _agendaService.ObtenerAgendasPorProfesionalAsync(cuil);
         return Ok(res);
     }
 }

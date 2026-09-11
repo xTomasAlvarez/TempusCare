@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TempusCare.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d0d9bc9226b7b5dedcb59dd85870857992836ea")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cc622f310cb02c62639820ba6d7f5a83de8710d2")]
 [assembly: System.Reflection.AssemblyProductAttribute("TempusCare.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TempusCare.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

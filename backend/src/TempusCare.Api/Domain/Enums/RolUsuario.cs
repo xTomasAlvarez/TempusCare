@@ -7,5 +7,6 @@ public enum RolUsuario
     Asistente = 3,
     AdminConsultorio = 4,
     AdminInstitucion = 5,
-    SuperAdmin = 6
+    SuperAdmin = 6,
+    Institucion = 7
 }

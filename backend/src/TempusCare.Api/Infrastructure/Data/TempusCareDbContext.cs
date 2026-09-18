@@ -92,6 +92,12 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey(a => a.ConsultorioCuit)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Institucion)
+            .WithMany(i => i.Asistentes)
+            .HasForeignKey(a => a.InstitucionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Paciente primary key: Cuil
         modelBuilder.Entity<Paciente>()
             .HasKey(p => p.Cuil);

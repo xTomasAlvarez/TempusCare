@@ -18,5 +18,8 @@ public class Asistente
     public int? InstitucionId { get; set; }
     public Institucion? Institucion { get; set; }
 
+    public string? ConsultorioCuit { get; set; }
+    public Consultorio? Consultorio { get; set; }
+
     public ICollection<AsistenteAgenda> AgendasAsignadas { get; set; } = new List<AsistenteAgenda>();
 }

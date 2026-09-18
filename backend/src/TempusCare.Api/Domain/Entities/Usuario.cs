@@ -16,4 +16,5 @@ public class Usuario
     public Asistente? Asistente { get; set; }
     public AdministradorInstitucion? AdministradorInstitucion { get; set; }
     public AdministradorConsultorio? AdministradorConsultorio { get; set; }
+    public Institucion? Institucion { get; set; }
 }

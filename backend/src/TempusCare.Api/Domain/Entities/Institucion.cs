@@ -12,4 +12,5 @@ public class Institucion
 
     public ICollection<Consultorio> Consultorios { get; set; } = new List<Consultorio>();
     public ICollection<AdministradorInstitucion> Administradores { get; set; } = new List<AdministradorInstitucion>();
+    public ICollection<Asistente> Asistentes { get; set; } = new List<Asistente>();
 }

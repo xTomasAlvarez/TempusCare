@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TempusCare.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cc622f310cb02c62639820ba6d7f5a83de8710d2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+948c4af0ec8bfe0c0ba8e29dc22dc8a4eec5220d")]
 [assembly: System.Reflection.AssemblyProductAttribute("TempusCare.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TempusCare.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

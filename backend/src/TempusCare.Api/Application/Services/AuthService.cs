@@ -75,6 +75,7 @@ public class AuthService : IAuthService
             .Include(u => u.Asistente)
             .Include(u => u.AdministradorInstitucion)
             .Include(u => u.AdministradorConsultorio)
+            .Include(u => u.Institucion)
             .FirstOrDefaultAsync(u => u.NombreUsuario == dto.Usuario && u.Contrasena == dto.Contra);
 
         if (usuario == null)

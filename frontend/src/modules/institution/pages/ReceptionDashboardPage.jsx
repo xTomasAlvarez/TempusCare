@@ -1,68 +1,134 @@
-import React from 'react';
-import { useAuth } from '../../../core/context/AuthContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../shared/components/ui/Card';
-import { Calendar, PhoneCall, CheckCircle, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { useReceptionDashboard } from '../hooks/useReceptionDashboard';
+import { KanbanBoard } from '../components/KanbanBoard';
+import { ReceptionFilters } from '../components/ReceptionFilters';
+import { CreateAgendaModal } from '../components/CreateAgendaModal';
+import { Toast } from '../../../shared/components/ui/Toast';
+import { AlertCircle } from 'lucide-react';
 
 export const ReceptionDashboardPage = () => {
-  const { user } = useAuth();
+  const {
+    doctors,
+    consultorios,
+    selectedDoctorCuil,
+    setSelectedDoctorCuil,
+    selectedDate,
+    setSelectedDate,
+    columnDisponibles,
+    columnEspera,
+    columnAtendiendose,
+    columnFinalizados,
+    isLoading,
+    isActionLoading,
+    error,
+    startAttention,
+    finishAttention,
+    cancelCita,
+    refreshDashboard,
+  } = useReceptionDashboard();
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const handleAgendaCreated = () => {
+    setToastMessage({
+      type: 'success',
+      title: '¡Agenda Generada con Éxito!',
+      message: 'Se generaron los turnos dinámicos en el sistema.',
+    });
+    refreshDashboard();
+  };
+
+  const handleCancelAppointment = async (citaId) => {
+    const ok = window.confirm('¿Confirmas la cancelación de la cita? El turno se liberará automáticamente (RN-01).');
+    if (!ok) return;
+
+    const success = await cancelCita(citaId);
+    if (success) {
+      setToastMessage({
+        type: 'info',
+        title: 'Cita Cancelada',
+        message: 'La cita fue cancelada y el turno volvió a estar Disponible.',
+      });
+    }
+  };
+
+  const handleFinishAttention = async (citaId) => {
+    const success = await finishAttention(citaId);
+    if (success) {
+      setToastMessage({
+        type: 'success',
+        title: 'Atención Finalizada',
+        message: 'La consulta médica fue registrada como Atendida en el sistema.',
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Toast Notificación Accesible */}
+      {toastMessage && (
+        <Toast
+          type={toastMessage.type}
+          title={toastMessage.title}
+          message={toastMessage.message}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
+
+      {/* Encabezado Principal Limpio */}
       <div>
-        <h1 className="text-3xl font-bold font-heading text-slate-900">
-          Mesa de Recepción — {user?.usuario}
+        <h1 className="text-2xl sm:text-3xl font-bold font-heading tracking-tight text-slate-900">
+          Mesa de Recepción Diaria
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Administración de agendas de profesionales, confirmación y registro de turnos presenciales o telefónicos.
+        <p className="text-sm text-slate-500 mt-1 font-sans">
+          Gestión operativa de sala de espera, llamado a consultorio y administración de agendas en tiempo real.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2">
-              <Calendar className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <CardTitle>Demanda del Día</CardTitle>
-            <CardDescription>Ocupación de turnos y salas de espera</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="py-6 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
-              Selecciona una agenda o médico para ver la grilla de turnos.
-            </div>
-          </CardContent>
-        </Card>
+      {/* Toolbar Unificado de Controles */}
+      <ReceptionFilters
+        doctors={doctors}
+        selectedDoctorCuil={selectedDoctorCuil}
+        onDoctorChange={setSelectedDoctorCuil}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        onOpenCreateAgenda={() => setIsCreateModalOpen(true)}
+        onRefresh={refreshDashboard}
+        isLoading={isLoading}
+      />
 
-        <Card>
-          <CardHeader>
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-2">
-              <PhoneCall className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <CardTitle>Turnos Externos</CardTitle>
-            <CardDescription>Carga rápida por ventanilla o llamada</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-slate-500">
-              Registra citas directas para pacientes que asisten presencialmente o coordinan por vía telefónica.
-            </p>
-          </CardContent>
-        </Card>
+      {/* Error si ocurre */}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
-              <CheckCircle className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <CardTitle>Asignación de Estudios</CardTitle>
-            <CardDescription>Parametrización de coberturas y prácticas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-slate-500">
-              Configura los estudios habilitados por especialista y las obras sociales aceptadas.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Tablero Kanban con Espacio Vertical Ampliado */}
+      <section aria-label="Tablero Kanban de turnos diarios" className="pt-2">
+        <KanbanBoard
+          columnDisponibles={columnDisponibles}
+          columnEspera={columnEspera}
+          columnAtendiendose={columnAtendiendose}
+          columnFinalizados={columnFinalizados}
+          isLoading={isLoading}
+          isActionLoading={isActionLoading}
+          onStartAttention={startAttention}
+          onFinishAttention={handleFinishAttention}
+          onCancel={handleCancelAppointment}
+        />
+      </section>
+
+      {/* Modal de Creación de Agenda */}
+      <CreateAgendaModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        doctors={doctors}
+        consultorios={consultorios}
+        onAgendaCreated={handleAgendaCreated}
+      />
     </div>
   );
 };

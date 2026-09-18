@@ -77,12 +77,30 @@ using (var scope = app.Services.CreateScope())
     // Asegura la creación física de la base de datos y sus tablas (tempuscare.db)
     db.Database.EnsureCreated();
 
-    if (!db.Instituciones.Any())
+    if (!db.Usuarios.Any())
     {
-        db.Instituciones.AddRange(
-            new TempusCare.Api.Domain.Entities.Institucion { Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com" },
-            new TempusCare.Api.Domain.Entities.Institucion { Nombre = "Clínica Mayo", Cuit = "30555666778", Email = "info@clinicamayo.com" }
-        );
+        var uInst1 = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "30111222334", Contrasena = "Institucion123!", Mail = "contacto@sanatoriotucuman.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Institucion };
+        var uInst2 = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "30555666778", Contrasena = "Institucion123!", Mail = "info@clinicamayo.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Institucion };
+        
+        var uPac = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "27000000001", Contrasena = "Paciente123!", Mail = "paciente@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Paciente };
+        var uMed = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "20123456789", Contrasena = "Medico123!", Mail = "medico@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Profesional };
+        var uAsis = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "27111111111", Contrasena = "Asistente123!", Mail = "asistente@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Asistente };
+
+        db.Usuarios.AddRange(uInst1, uInst2, uPac, uMed, uAsis);
+        db.SaveChanges();
+
+        var inst1 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst1.Id, Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com" };
+        var inst2 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst2.Id, Nombre = "Clínica Mayo", Cuit = "30555666778", Email = "info@clinicamayo.com" };
+        db.Instituciones.AddRange(inst1, inst2);
+        db.SaveChanges();
+
+        var pac = new TempusCare.Api.Domain.Entities.Paciente { Cuil = "27000000001", UsuarioId = uPac.Id, Nombre = "Ana", Apellido = "García", FechaNacimiento = new DateTime(1995, 5, 20), Telefono = "3815001122", Genero = "F" };
+        var med = new TempusCare.Api.Domain.Entities.Profesional { Cuil = "20123456789", UsuarioId = uMed.Id, Nombre = "Carlos", Apellido = "Pérez", Matricula = "MP1234", Telefono = "3816003344", Genero = "M", FechaNacimiento = new DateTime(1980, 8, 15) };
+        var asis = new TempusCare.Api.Domain.Entities.Asistente { Cuil = "27111111111", UsuarioId = uAsis.Id, Nombre = "Lucía", Apellido = "Fernández", Telefono = "3817005566", Genero = "F", FechaNacimiento = new DateTime(1992, 3, 10), InstitucionId = inst1.Id };
+        
+        db.Pacientes.Add(pac);
+        db.Profesionales.Add(med);
+        db.Asistentes.Add(asis);
         db.SaveChanges();
     }
 

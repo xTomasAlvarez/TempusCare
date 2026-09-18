@@ -7,4 +7,5 @@ public class Especialidad
     public string Descripcion { get; set; } = string.Empty;
 
     public ICollection<ProfesionalEspecialidad> Profesionales { get; set; } = new List<ProfesionalEspecialidad>();
+    public ICollection<Estudio> Estudios { get; set; } = new List<Estudio>();
 }

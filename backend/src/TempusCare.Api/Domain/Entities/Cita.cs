@@ -18,4 +18,10 @@ public class Cita
 
     public Observacion? Observacion { get; set; }
     public Cuestionario? Cuestionario { get; set; }
+
+    public int? EstudioId { get; set; }
+    public Estudio? Estudio { get; set; }
+    public string? DocumentoPedidoMedico { get; set; }
+
+    public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
 }

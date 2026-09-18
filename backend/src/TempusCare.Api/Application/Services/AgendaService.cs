@@ -40,7 +40,7 @@ public class AgendaService : IAgendaService
             throw new ConsultorioNotFoundException(dto.CuitConsultorio);
         }
 
-        // RN-01: Un profesional no puede tener dos turnos/agendas superpuestas en la misma franja horaria.
+        // RN-01 / RN-05: Un profesional no puede tener dos turnos/agendas superpuestas en la misma franja horaria (incluso en distintos consultorios).
         bool solapado = await _db.Agendas.AnyAsync(a =>
             a.ProfesionalCuil == dto.ProfesionalCuil &&
             a.Dia == dto.Dia && a.Mes == dto.Mes && a.Anio == dto.Anio &&
@@ -50,8 +50,8 @@ public class AgendaService : IAgendaService
 
         if (solapado)
         {
-            _logger.LogWarning("RN-01 violada: solapamiento de agenda para profesional {Cuil}", dto.ProfesionalCuil);
-            throw new ConflictException("RN-01: El profesional ya posee una agenda configurada que se solapa en esa franja horaria.");
+            _logger.LogWarning("RN-05 violada: solapamiento de agenda para profesional {Cuil} en día {Dia}/{Mes}/{Anio}", dto.ProfesionalCuil, dto.Dia, dto.Mes, dto.Anio);
+            throw new ConflictException("RN-05: El profesional ya posee una agenda configurada que se solapa en esa franja horaria (no puede tener agendas que se crucen entre consultorios distintos en día y hora).");
         }
 
         var agenda = new Agenda

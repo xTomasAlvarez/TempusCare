@@ -35,11 +35,25 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
+// Configuración de CORS para permitir consumo desde el frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Configuración de Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Habilitar CORS
+app.UseCors("AllowAll");
 
 // Habilitar Swagger UI en todos los entornos para pruebas
 app.UseSwagger();
@@ -74,21 +88,34 @@ using (var scope = app.Services.CreateScope())
 
     if (!db.Especialidades.Any())
     {
-        db.Especialidades.AddRange(
-            new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Pediatría", Descripcion = "Atención médica a niños" },
-            new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Cardiología", Descripcion = "Enfermedades del corazón" },
-            new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Dermatología", Descripcion = "Cuidado de la piel" },
-            new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Traumatología", Descripcion = "Sistema osteoarticular" }
-        );
-    }
+        var espPediatria = new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Pediatría", Descripcion = "Atención médica a niños" };
+        var espCardio = new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Cardiología", Descripcion = "Enfermedades del corazón" };
+        var espDerma = new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Dermatología", Descripcion = "Cuidado de la piel" };
+        var espTrauma = new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Traumatología", Descripcion = "Sistema osteoarticular" };
+        var espImagenes = new TempusCare.Api.Domain.Entities.Especialidad { Nombre = "Diagnóstico por Imágenes", Descripcion = "Ecografías, resonancias y estudios por imágenes" };
 
-    if (!db.Estudios.Any())
+        db.Especialidades.AddRange(espPediatria, espCardio, espDerma, espTrauma, espImagenes);
+        db.SaveChanges();
+
+        if (!db.Estudios.Any())
+        {
+            db.Estudios.AddRange(
+                new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Ecografía Abdominal", Descripcion = "Ultrasonido de abdomen", Duracion = 30, Preparacion = "Ayuno de 6 horas", EspecialidadId = espImagenes.Id },
+                new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Resonancia Magnética", Descripcion = "Estudio por resonancia", Duracion = 60, Preparacion = "Sin objetos metálicos", EspecialidadId = espImagenes.Id },
+                new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Doppler Mamario", Descripcion = "Ultrasonido doppler mamario", Duracion = 30, Preparacion = "Sin desodorante", EspecialidadId = espImagenes.Id },
+                new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Electrocardiograma", Descripcion = "Registro de actividad cardíaca", Duracion = 30, Preparacion = "Ninguna", EspecialidadId = espCardio.Id }
+            );
+            db.SaveChanges();
+        }
+    }
+    else if (!db.Estudios.Any())
     {
         db.Estudios.AddRange(
             new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Ecografía Abdominal", Descripcion = "Ultrasonido de abdomen", Duracion = 30, Preparacion = "Ayuno de 6 horas" },
-            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Resonancia Magnética", Descripcion = "Estudio por resonancia", Duracion = 45, Preparacion = "Sin objetos metálicos" },
-            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Electrocardiograma", Descripcion = "Registro de actividad cardíaca", Duracion = 20, Preparacion = "Ninguna" }
+            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Resonancia Magnética", Descripcion = "Estudio por resonancia", Duracion = 60, Preparacion = "Sin objetos metálicos" },
+            new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Electrocardiograma", Descripcion = "Registro de actividad cardíaca", Duracion = 30, Preparacion = "Ninguna" }
         );
+        db.SaveChanges();
     }
 
     if (!db.ObrasSociales.Any())

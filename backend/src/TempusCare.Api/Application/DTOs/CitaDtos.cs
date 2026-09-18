@@ -8,7 +8,8 @@ public record AltaCitaDto(
     int TurnoId,
     TipoCita Tipo,
     int? ObraSocialId,
-    int? EstudioId
+    int? EstudioId,
+    string? DocumentoPedidoMedico = null
 );
 
 public record ModificarCitaEstadoDto(int CitaId, EstadoCita Estado);
@@ -28,5 +29,9 @@ public record CitaResponseDto(
     CoberturaCita Cobertura,
     string? MotivoObservacion,
     string? DetalleObservacion,
-    double? PuntualidadEncuesta
+    double? PuntualidadEncuesta,
+    int? EstudioId = null,
+    string? EstudioNombre = null,
+    string? DocumentoPedidoMedico = null,
+    int CantidadTurnosCubiertos = 1
 );

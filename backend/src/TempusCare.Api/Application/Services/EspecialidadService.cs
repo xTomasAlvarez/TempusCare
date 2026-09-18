@@ -92,4 +92,31 @@ public class EspecialidadService : IEspecialidadService
 
         return new EspecialidadDto(esp.Id, esp.Nombre, esp.Descripcion);
     }
+
+    public async Task<List<EstudioResponseDto>> ObtenerEstudiosPorEspecialidadAsync(int especialidadId)
+    {
+        _logger.LogInformation("Obteniendo estudios para especialidad ID {Id}", especialidadId);
+
+        var esp = await _db.Especialidades.FindAsync(especialidadId);
+        if (esp == null)
+        {
+            _logger.LogWarning("Especialidad ID {Id} no encontrada", especialidadId);
+            throw new EspecialidadNotFoundException(especialidadId);
+        }
+
+        var estudios = await _db.Estudios
+            .Include(e => e.Especialidad)
+            .Where(e => e.EspecialidadId == especialidadId)
+            .ToListAsync();
+
+        return estudios.Select(e => new EstudioResponseDto(
+            e.Id,
+            e.Nombre,
+            e.Descripcion,
+            e.Duracion,
+            e.Preparacion,
+            e.EspecialidadId,
+            esp.Nombre
+        )).ToList();
+    }
 }

@@ -40,9 +40,9 @@ public class EstudiosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> ObtenerTodos()
+    public async Task<IActionResult> ObtenerTodos([FromQuery] int? especialidadId)
     {
-        var res = await _estudioService.ObtenerTodosAsync();
+        var res = await _estudioService.ObtenerTodosAsync(especialidadId);
         return Ok(res);
     }
 

@@ -86,6 +86,50 @@ public class CitaService : ICitaService
 
         turno.Estado = EstadoTurno.Reservado;
 
+        // Aclaración RF-SADM-03.A: Cobertura de múltiples turnos si el estudio dura más que un slot individual
+        var turnosAdicionales = new List<Turno>();
+        Estudio? estudioObj = null;
+
+        if (dto.EstudioId.HasValue)
+        {
+            estudioObj = await _db.Estudios.FirstOrDefaultAsync(e => e.Id == dto.EstudioId.Value);
+            if (estudioObj == null)
+            {
+                _logger.LogWarning("Estudio ID {EstudioId} no encontrado", dto.EstudioId.Value);
+                throw new EstudioNotFoundException(dto.EstudioId.Value);
+            }
+
+            int duracionEstudio = estudioObj.Duracion > 0 ? estudioObj.Duracion : 30;
+            int duracionSlot = (int)(turno.HoraFin - turno.HoraInicio).TotalMinutes;
+            if (duracionSlot <= 0) duracionSlot = 30;
+
+            int turnosRequeridos = (int)Math.Ceiling((double)duracionEstudio / duracionSlot);
+
+            if (turnosRequeridos > 1)
+            {
+                TimeSpan siguienteInicio = turno.HoraFin;
+                for (int i = 1; i < turnosRequeridos; i++)
+                {
+                    var sigTurno = await _db.Turnos
+                        .FirstOrDefaultAsync(t => t.AgendaId == turno.AgendaId && t.Fecha == turno.Fecha && t.HoraInicio == siguienteInicio);
+
+                    if (sigTurno == null || sigTurno.Estado != EstadoTurno.Disponible)
+                    {
+                        _logger.LogWarning("Turnos continuos insuficientes para estudio ID {EstudioId}. Se requieren {Req} turnos.", dto.EstudioId.Value, turnosRequeridos);
+                        throw new ConflictException($"El estudio '{estudioObj.Nombre}' requiere {turnosRequeridos} turnos consecutivos ({duracionEstudio} min) y no hay disponibilidad continua a partir del horario seleccionado.");
+                    }
+
+                    turnosAdicionales.Add(sigTurno);
+                    siguienteInicio = sigTurno.HoraFin;
+                }
+
+                foreach (var sig in turnosAdicionales)
+                {
+                    sig.Estado = EstadoTurno.Reservado;
+                }
+            }
+        }
+
         var cita = new Cita
         {
             TurnoId = turno.Id,
@@ -93,12 +137,27 @@ public class CitaService : ICitaService
             Fecha = turno.Fecha,
             Estado = EstadoCita.Confirmada,
             Tipo = dto.Tipo,
-            Cobertura = coberturaFinal
+            Cobertura = coberturaFinal,
+            EstudioId = dto.EstudioId,
+            DocumentoPedidoMedico = dto.DocumentoPedidoMedico
         };
 
         _db.Citas.Add(cita);
         await _db.SaveChangesAsync();
-        _logger.LogInformation("Cita médica creada exitosamente con ID {CitaId}", cita.Id);
+
+        // Vincular los turnos cubiertos con la Cita
+        turno.CitaId = cita.Id;
+        foreach (var sig in turnosAdicionales)
+        {
+            sig.CitaId = cita.Id;
+        }
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Cita médica creada exitosamente con ID {CitaId} cubriendo {Cant} turnos", cita.Id, turnosAdicionales.Count + 1);
+
+        cita.Estudio = estudioObj;
+        cita.Turnos = new List<Turno> { turno };
+        foreach (var ta in turnosAdicionales) cita.Turnos.Add(ta);
 
         return MapCitaDto(cita, turno, paciente, prof);
     }
@@ -110,6 +169,8 @@ public class CitaService : ICitaService
         var cita = await _db.Citas
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Include(c => c.Turnos)
+            .Include(c => c.Estudio)
             .Include(c => c.Paciente)
             .Include(c => c.Observacion)
             .Include(c => c.Cuestionario)
@@ -123,15 +184,26 @@ public class CitaService : ICitaService
 
         cita.Estado = estado;
 
-        // Regla de Negocio: Si el paciente cancela la cita, el turno pasa a estar Disponible (RN-06).
-        if (estado == EstadoCita.Cancelada && cita.Turno != null)
+        // Regla de Negocio RN-01: Si se cancela la cita, todos los turnos asociados pasan a estar Disponibles.
+        var turnosDeCita = await _db.Turnos
+            .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
+            .ToListAsync();
+
+        if (estado == EstadoCita.Cancelada)
         {
-            _logger.LogInformation("Cita cancelada: restableciendo turno ID {TurnoId} a Disponible", cita.Turno.Id);
-            cita.Turno.Estado = EstadoTurno.Disponible;
+            _logger.LogInformation("Cita cancelada: restableciendo {Cant} turnos a Disponible", turnosDeCita.Count);
+            foreach (var t in turnosDeCita)
+            {
+                t.Estado = EstadoTurno.Disponible;
+                t.CitaId = null;
+            }
         }
-        else if (estado == EstadoCita.Atendida && cita.Turno != null)
+        else if (estado == EstadoCita.Atendida)
         {
-            cita.Turno.Estado = EstadoTurno.Atendido;
+            foreach (var t in turnosDeCita)
+            {
+                t.Estado = EstadoTurno.Atendido;
+            }
         }
 
         await _db.SaveChangesAsync();
@@ -154,6 +226,8 @@ public class CitaService : ICitaService
             .Include(c => c.Paciente)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Include(c => c.Turnos)
+            .Include(c => c.Estudio)
             .Include(c => c.Observacion)
             .Include(c => c.Cuestionario)
             .Where(c => c.PacienteCuil == pacienteCuil)
@@ -170,6 +244,8 @@ public class CitaService : ICitaService
             .Include(c => c.Paciente)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Include(c => c.Turnos)
+            .Include(c => c.Estudio)
             .Include(c => c.Observacion)
             .Include(c => c.Cuestionario)
             .Where(c => c.Turno!.Agenda!.ProfesionalCuil == profesionalCuil)
@@ -193,6 +269,8 @@ public class CitaService : ICitaService
             .Include(c => c.Paciente)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Include(c => c.Turnos)
+            .Include(c => c.Estudio)
             .Include(c => c.Observacion)
             .Include(c => c.Cuestionario)
             .FirstOrDefaultAsync(c => c.Id == citaId);
@@ -212,6 +290,8 @@ public class CitaService : ICitaService
             ? Math.Round((c.Cuestionario.Puntualidad + c.Cuestionario.Atencion + c.Cuestionario.Profesionalismo) / 3.0, 2)
             : null;
 
+        int cantidadTurnos = c.Turnos?.Count > 0 ? c.Turnos.Count : 1;
+
         return new CitaResponseDto(
             c.Id,
             t.Id,
@@ -227,7 +307,11 @@ public class CitaService : ICitaService
             c.Cobertura,
             c.Observacion?.Motivo,
             c.Observacion?.Detalle,
-            punt
+            punt,
+            c.EstudioId,
+            c.Estudio?.Nombre,
+            c.DocumentoPedidoMedico,
+            cantidadTurnos
         );
     }
 }

@@ -4,7 +4,8 @@ public record AltaEstudioDto(
     string Nombre,
     string Descripcion,
     int Duracion,
-    string Preparacion
+    string Preparacion,
+    int? EspecialidadId = null
 );
 
 public record ModificarEstudioDto(
@@ -12,7 +13,8 @@ public record ModificarEstudioDto(
     string Nombre,
     string Descripcion,
     int Duracion,
-    string Preparacion
+    string Preparacion,
+    int? EspecialidadId = null
 );
 
 public record EstudioResponseDto(
@@ -20,5 +22,7 @@ public record EstudioResponseDto(
     string Nombre,
     string Descripcion,
     int Duracion,
-    string Preparacion
+    string Preparacion,
+    int? EspecialidadId = null,
+    string? EspecialidadNombre = null
 );

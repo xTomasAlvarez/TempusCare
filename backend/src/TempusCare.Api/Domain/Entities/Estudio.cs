@@ -8,5 +8,8 @@ public class Estudio
     public int Duracion { get; set; } = 30; // en minutos
     public string Preparacion { get; set; } = string.Empty;
 
+    public int? EspecialidadId { get; set; }
+    public Especialidad? Especialidad { get; set; }
+
     public ICollection<ProfesionalEstudio> ProfesionalEstudios { get; set; } = new List<ProfesionalEstudio>();
 }

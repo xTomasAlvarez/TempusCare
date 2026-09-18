@@ -195,12 +195,33 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey<Cuestionario>(cu => cu.CitaId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Turno <-> Cita (1:0..1)
+        // Turno <-> Cita (Turno principal de la cita)
         modelBuilder.Entity<Cita>()
             .HasOne(c => c.Turno)
-            .WithOne(t => t.Cita)
-            .HasForeignKey<Cita>(c => c.TurnoId)
+            .WithMany()
+            .HasForeignKey(c => c.TurnoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Cita 1:N Turnos (turnos cubiertos por la cita en estudios multi-turno)
+        modelBuilder.Entity<Turno>()
+            .HasOne(t => t.Cita)
+            .WithMany(c => c.Turnos)
+            .HasForeignKey(t => t.CitaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cita 1:0..1 Estudio
+        modelBuilder.Entity<Cita>()
+            .HasOne(c => c.Estudio)
+            .WithMany()
+            .HasForeignKey(c => c.EstudioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Especialidad 1:N Estudios
+        modelBuilder.Entity<Estudio>()
+            .HasOne(e => e.Especialidad)
+            .WithMany(esp => esp.Estudios)
+            .HasForeignKey(e => e.EspecialidadId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Estudio <-> ProfesionalEstudio (1:N)
         modelBuilder.Entity<ProfesionalEstudio>()

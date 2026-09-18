@@ -52,4 +52,11 @@ public class EspecialidadesController : ControllerBase
         var res = await _especialidadService.ObtenerPorIdAsync(id);
         return Ok(res);
     }
+
+    [HttpGet("{id}/estudios")]
+    public async Task<IActionResult> ObtenerEstudios(int id)
+    {
+        var res = await _especialidadService.ObtenerEstudiosPorEspecialidadAsync(id);
+        return Ok(res);
+    }
 }

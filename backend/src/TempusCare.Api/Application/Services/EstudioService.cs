@@ -32,11 +32,18 @@ public class EstudioService : IEstudioService
             Nombre = dto.Nombre,
             Descripcion = dto.Descripcion,
             Duracion = dto.Duracion > 0 ? dto.Duracion : 30,
-            Preparacion = dto.Preparacion
+            Preparacion = dto.Preparacion,
+            EspecialidadId = dto.EspecialidadId
         };
 
         _db.Estudios.Add(est);
         await _db.SaveChangesAsync();
+
+        if (est.EspecialidadId.HasValue)
+        {
+            await _db.Entry(est).Reference(e => e.Especialidad).LoadAsync();
+        }
+
         _logger.LogInformation("Estudio creado con ID {Id}", est.Id);
 
         return MapToDto(est);
@@ -46,7 +53,7 @@ public class EstudioService : IEstudioService
     {
         _logger.LogInformation("Modificando estudio ID {Id}", dto.Id);
 
-        var est = await _db.Estudios.FindAsync(dto.Id);
+        var est = await _db.Estudios.Include(e => e.Especialidad).FirstOrDefaultAsync(e => e.Id == dto.Id);
         if (est == null)
         {
             _logger.LogWarning("Estudio ID {Id} no encontrado para modificación", dto.Id);
@@ -57,8 +64,18 @@ public class EstudioService : IEstudioService
         est.Descripcion = dto.Descripcion;
         est.Duracion = dto.Duracion > 0 ? dto.Duracion : 30;
         est.Preparacion = dto.Preparacion;
+        if (dto.EspecialidadId.HasValue)
+        {
+            est.EspecialidadId = dto.EspecialidadId;
+        }
 
         await _db.SaveChangesAsync();
+
+        if (est.EspecialidadId.HasValue && est.Especialidad == null)
+        {
+            await _db.Entry(est).Reference(e => e.Especialidad).LoadAsync();
+        }
+
         _logger.LogInformation("Estudio ID {Id} modificado con éxito", est.Id);
 
         return MapToDto(est);
@@ -80,19 +97,31 @@ public class EstudioService : IEstudioService
         _logger.LogInformation("Estudio ID {Id} eliminado del catálogo", id);
     }
 
-    public async Task<List<EstudioResponseDto>> ObtenerTodosAsync()
+    public async Task<List<EstudioResponseDto>> ObtenerTodosAsync(int? especialidadId = null)
     {
-        _logger.LogInformation("Listando todos los estudios");
+        _logger.LogInformation("Listando estudios. Filtro especialidad: {EspecialidadId}", especialidadId);
 
-        var lista = await _db.Estudios.ToListAsync();
+        var query = _db.Estudios.Include(e => e.Especialidad).AsQueryable();
+        if (especialidadId.HasValue)
+        {
+            query = query.Where(e => e.EspecialidadId == especialidadId.Value);
+        }
+
+        var lista = await query.ToListAsync();
         return lista.Select(e => MapToDto(e)).ToList();
+    }
+
+    public async Task<List<EstudioResponseDto>> ObtenerPorEspecialidadAsync(int especialidadId)
+    {
+        _logger.LogInformation("Obteniendo estudios de especialidad {EspecialidadId}", especialidadId);
+        return await ObtenerTodosAsync(especialidadId);
     }
 
     public async Task<EstudioResponseDto> ObtenerPorIdAsync(int id)
     {
         _logger.LogInformation("Obteniendo estudio ID {Id}", id);
 
-        var est = await _db.Estudios.FindAsync(id);
+        var est = await _db.Estudios.Include(e => e.Especialidad).FirstOrDefaultAsync(e => e.Id == id);
         if (est == null)
         {
             _logger.LogWarning("Estudio ID {Id} no encontrado", id);
@@ -109,7 +138,9 @@ public class EstudioService : IEstudioService
             e.Nombre,
             e.Descripcion,
             e.Duracion,
-            e.Preparacion
+            e.Preparacion,
+            e.EspecialidadId,
+            e.Especialidad?.Nombre
         );
     }
 }

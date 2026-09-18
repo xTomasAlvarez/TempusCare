@@ -9,4 +9,5 @@ public interface IEspecialidadService
     Task EliminarEspecialidadAsync(int id);
     Task<List<EspecialidadDto>> ObtenerTodasAsync();
     Task<EspecialidadDto> ObtenerPorIdAsync(int id);
+    Task<List<EstudioResponseDto>> ObtenerEstudiosPorEspecialidadAsync(int especialidadId);
 }

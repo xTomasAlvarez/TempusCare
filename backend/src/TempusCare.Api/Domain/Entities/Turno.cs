@@ -13,5 +13,6 @@ public class Turno
     public TimeSpan HoraFin { get; set; }
     public EstadoTurno Estado { get; set; } = EstadoTurno.Disponible;
 
+    public int? CitaId { get; set; }
     public Cita? Cita { get; set; }
 }

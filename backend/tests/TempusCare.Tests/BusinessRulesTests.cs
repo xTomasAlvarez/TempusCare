@@ -472,4 +472,164 @@ public class BusinessRulesTests
         Assert.Contains("OSDE", estudioAsignado.ObrasSocialesAceptadas);
         Assert.Contains("Swiss Medical", estudioAsignado.ObrasSocialesAceptadas);
     }
+
+    [Fact]
+    public async Task RN05_MedicoNoPuedeTenerDosAgendasEnConsultoriosDistintosQueSeCrucenEnDiaYHora_ThrowsConflictException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RN05_MedicoNoPuedeTenerDosAgendasEnConsultoriosDistintosQueSeCrucenEnDiaYHora_ThrowsConflictException));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20999888777", Nombre = "Martín", Apellido = "Gómez", Matricula = "MP9988" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30111111111", Nombre = "Consultorio Sede Norte" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30222222222", Nombre = "Consultorio Sede Sur" });
+        await db.SaveChangesAsync();
+
+        // Agenda en Sede Norte de 08:00 a 12:00
+        var dtoSedeNorte = new AltaAgendaDto("20999888777", "30111111111", 10, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(12, 0, 0));
+        await agendaService.AltaAgendaAsync(dtoSedeNorte);
+
+        // Act & Assert: Intento de crear agenda para el mismo médico en Sede Sur de 10:00 a 14:00 (se cruza en día y hora)
+        var dtoSedeSur = new AltaAgendaDto("20999888777", "30222222222", 10, 10, 2026, new TimeSpan(10, 0, 0), new TimeSpan(14, 0, 0));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => agendaService.AltaAgendaAsync(dtoSedeSur));
+        Assert.Contains("RN-05", ex.Message);
+    }
+
+    [Fact]
+    public async Task CitaEstudio_QueDuraMasDe30Min_DebeCubrirMultiplesTurnosConsecutivos()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(CitaEstudio_QueDuraMasDe30Min_DebeCubrirMultiplesTurnosConsecutivos));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20777888999", Nombre = "Elena", Apellido = "Rios", Matricula = "MP7788" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30333444555", Nombre = "Centro de Diagnóstico" });
+        db.Pacientes.Add(new Paciente { Cuil = "27444555666", Nombre = "Susana", Apellido = "Pérez" });
+
+        // Estudio que dura 60 min (requiere 2 turnos de 30 min)
+        var estudio = new Estudio { Nombre = "Ecografía Morfológica", Duracion = 60, Preparacion = "Vejiga llena" };
+        db.Estudios.Add(estudio);
+        await db.SaveChangesAsync();
+
+        // Agenda de 08:00 a 10:00 con turnos de 30 min (08:00, 08:30, 09:00, 09:30)
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20777888999", "30333444555", 5, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(10, 0, 0), 30));
+        var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
+
+        // Act: Paciente Susana reserva cita para el estudio a las 08:00 (primer turno)
+        var citaDto = new AltaCitaDto(
+            "27444555666",
+            "20777888999",
+            turnos[0].Id,
+            TipoCita.Estudio,
+            null,
+            estudio.Id,
+            "pedido_medico_orden123.pdf"
+        );
+
+        var citaResponse = await citaService.AltaCitaAsync(citaDto);
+
+        // Assert
+        Assert.NotNull(citaResponse);
+        Assert.Equal(2, citaResponse.CantidadTurnosCubiertos);
+        Assert.Equal("pedido_medico_orden123.pdf", citaResponse.DocumentoPedidoMedico);
+        Assert.Equal(estudio.Id, citaResponse.EstudioId);
+
+        // Verificar que AMBOS turnos (08:00 y 08:30) quedaron como Reservados
+        var t1 = await db.Turnos.FindAsync(turnos[0].Id);
+        var t2 = await db.Turnos.FindAsync(turnos[1].Id);
+        var t3 = await db.Turnos.FindAsync(turnos[2].Id);
+
+        Assert.Equal(EstadoTurno.Reservado, t1?.Estado);
+        Assert.Equal(EstadoTurno.Reservado, t2?.Estado);
+        Assert.Equal(EstadoTurno.Disponible, t3?.Estado);
+        Assert.Equal(citaResponse.Id, t1?.CitaId);
+        Assert.Equal(citaResponse.Id, t2?.CitaId);
+    }
+
+    [Fact]
+    public async Task CitaEstudio_CuandoNoHayTurnosConsecutivosDisponibles_LanzaConflictException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(CitaEstudio_CuandoNoHayTurnosConsecutivosDisponibles_LanzaConflictException));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20121212121", Nombre = "Lucas", Apellido = "Mora", Matricula = "MP1212" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30555555555", Nombre = "Clínica San Lucas" });
+        db.Pacientes.Add(new Paciente { Cuil = "27111111112", Nombre = "Clara", Apellido = "Vidal" });
+        db.Pacientes.Add(new Paciente { Cuil = "27999999991", Nombre = "Pedro", Apellido = "Ramos" });
+
+        var estudio = new Estudio { Nombre = "Resonancia Magnética", Duracion = 60 };
+        db.Estudios.Add(estudio);
+        await db.SaveChangesAsync();
+
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20121212121", "30555555555", 6, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
+        var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
+
+        // Reservamos individualmente el turno de las 08:30 (turnos[1])
+        await citaService.AltaCitaAsync(new AltaCitaDto("27999999991", "20121212121", turnos[1].Id, TipoCita.Consulta, null, null));
+
+        // Act & Assert: Clara intenta reservar estudio de 60 min a las 08:00 (turnos[0]) pero a las 08:30 está ocupado
+        var citaEstudioDto = new AltaCitaDto("27111111112", "20121212121", turnos[0].Id, TipoCita.Estudio, null, estudio.Id);
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => citaService.AltaCitaAsync(citaEstudioDto));
+        Assert.Contains("requiere 2 turnos consecutivos", ex.Message);
+    }
+
+    [Fact]
+    public async Task CitaEstudio_AlCancelar_LiberaTodosLosTurnosCubiertos()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(CitaEstudio_AlCancelar_LiberaTodosLosTurnosCubiertos));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20666666666", Nombre = "Valeria", Apellido = "Sanz", Matricula = "MP6666" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30777777777", Nombre = "Instituto Médico" });
+        db.Pacientes.Add(new Paciente { Cuil = "27888888888", Nombre = "Joaquín", Apellido = "Paz" });
+
+        var estudio = new Estudio { Nombre = "Tomografía Computada", Duracion = 60 };
+        db.Estudios.Add(estudio);
+        await db.SaveChangesAsync();
+
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20666666666", "30777777777", 7, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
+        var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
+
+        var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20666666666", turnos[0].Id, TipoCita.Estudio, null, estudio.Id));
+
+        // Act: Se cancela la cita
+        await citaService.BajaCitaAsync(cita.Id);
+
+        // Assert: Ambos turnos quedan nuevamente en EstadoTurno.Disponible
+        var t1 = await db.Turnos.FindAsync(turnos[0].Id);
+        var t2 = await db.Turnos.FindAsync(turnos[1].Id);
+
+        Assert.Equal(EstadoTurno.Disponible, t1?.Estado);
+        Assert.Equal(EstadoTurno.Disponible, t2?.Estado);
+        Assert.Null(t1?.CitaId);
+        Assert.Null(t2?.CitaId);
+    }
+
+    [Fact]
+    public async Task Especialidad_AsociarEstudiosYConsultarPorEspecialidad_Success()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Especialidad_AsociarEstudiosYConsultarPorEspecialidad_Success));
+        var espService = new EspecialidadService(db, NullLogger<EspecialidadService>.Instance);
+        var estudioService = new EstudioService(db, NullLogger<EstudioService>.Instance);
+
+        var esp = await espService.AltaEspecialidadAsync(new AltaEspecialidadDto("Imágenes Médicas", "Diagnóstico por imágenes"));
+
+        await estudioService.AltaEstudioAsync(new AltaEstudioDto("Ecografía Mamaria", "Estudio ecográfico", 30, "Sin desodorante", esp.Id));
+        await estudioService.AltaEstudioAsync(new AltaEstudioDto("Doppler Transvaginal", "Estudio doppler", 30, "Preparación básica", esp.Id));
+
+        // Act
+        var estudiosDeEspecialidad = await espService.ObtenerEstudiosPorEspecialidadAsync(esp.Id);
+
+        // Assert
+        Assert.Equal(2, estudiosDeEspecialidad.Count);
+        Assert.Contains(estudiosDeEspecialidad, e => e.Nombre == "Ecografía Mamaria");
+        Assert.Contains(estudiosDeEspecialidad, e => e.Nombre == "Doppler Transvaginal");
+        Assert.All(estudiosDeEspecialidad, e => Assert.Equal("Imágenes Médicas", e.EspecialidadNombre));
+    }
 }

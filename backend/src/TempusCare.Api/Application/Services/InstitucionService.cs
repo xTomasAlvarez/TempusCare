@@ -44,7 +44,8 @@ public class InstitucionService : IInstitucionService
             UsuarioId = usuario.Id,
             Nombre = dto.Nombre,
             Cuit = dto.Cuit,
-            Email = dto.Email
+            Email = dto.Email,
+            Plan = !string.IsNullOrWhiteSpace(dto.Plan) ? dto.Plan : "Profesional"
         };
 
         _db.Instituciones.Add(inst);
@@ -72,6 +73,10 @@ public class InstitucionService : IInstitucionService
         inst.Nombre = dto.Nombre;
         inst.Cuit = dto.Cuit;
         inst.Email = dto.Email;
+        if (!string.IsNullOrWhiteSpace(dto.Plan))
+        {
+            inst.Plan = dto.Plan;
+        }
 
         await _db.SaveChangesAsync();
         _logger.LogInformation("Institución ID {Id} modificada correctamente", inst.Id);
@@ -159,7 +164,7 @@ public class InstitucionService : IInstitucionService
         var consultorios = await _db.Consultorios
             .Include(c => c.Institucion)
             .Include(c => c.Direccion)
-            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional).ThenInclude(pr => pr!.Especialidades).ThenInclude(pe => pe.Especialidad)
             .Where(c => c.InstitucionId == id)
             .ToListAsync();
 
@@ -171,7 +176,15 @@ public class InstitucionService : IInstitucionService
             c.NivelAccesibilidad,
             c.Institucion?.Nombre,
             c.Direccion != null ? $"{c.Direccion.Calle} {c.Direccion.Nro}, {c.Direccion.Localidad}, {c.Direccion.Provincia}" : "",
-            c.Profesionales.Select(p => $"{p.Profesional?.Nombre} {p.Profesional?.Apellido}").ToList()
+            c.Profesionales.Select(p => $"{p.Profesional?.Nombre} {p.Profesional?.Apellido}".Trim()).ToList(),
+            c.Profesionales.Select(p => new ProfesionalVinculadoDto(
+                p.Profesional?.Cuil ?? p.ProfesionalCuil,
+                p.Profesional?.Nombre ?? "",
+                p.Profesional?.Apellido ?? "",
+                p.Profesional?.Matricula ?? "",
+                p.Profesional?.Telefono ?? "",
+                p.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList() ?? new List<string>()
+            )).ToList()
         )).ToList();
     }
 
@@ -183,6 +196,7 @@ public class InstitucionService : IInstitucionService
             inst.Nombre,
             inst.Cuit,
             inst.Email,
+            inst.Plan ?? "Enterprise",
             inst.Consultorios.Select(c => c.Nombre).ToList(),
             inst.Asistentes.Select(a => $"{a.Nombre} {a.Apellido}").ToList()
         );

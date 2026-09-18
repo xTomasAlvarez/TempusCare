@@ -12,10 +12,6 @@ export const useReceptionDashboard = () => {
   const [availableTurnos, setAvailableTurnos] = useState([]);
   const [citas, setCitas] = useState([]);
 
-  // Estado local para turnos en curso (atendiéndose) y sala de espera
-  const [inConsultationIds, setInConsultationIds] = useState(new Set());
-  const [arrivedPatientIds, setArrivedPatientIds] = useState(new Set());
-
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -79,32 +75,41 @@ export const useReceptionDashboard = () => {
   }, [fetchDashboardData]);
 
   // Acciones Rápidas del Asistente
-  // 1. Marcar como "Llegó a Sala de Espera"
-  const markAsArrived = (citaId) => {
-    setArrivedPatientIds((prev) => new Set([...prev, citaId]));
+  // 1. Marcar como "Llegó a Sala de Espera" (persiste EstadoCita.EnSalaDeEspera = 6)
+  const markAsArrived = async (citaId) => {
+    setIsActionLoading(true);
+    try {
+      await receptionService.updateAppointmentStatus(citaId, 6);
+      await fetchDashboardData();
+      return true;
+    } catch (err) {
+      setError(err.message || 'No se pudo registrar la llegada a sala de espera.');
+      return false;
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
-  // 2. Pasar a Consulta (Atendiéndose)
-  const startAttention = (citaId) => {
-    setInConsultationIds((prev) => new Set([...prev, citaId]));
-    setArrivedPatientIds((prev) => {
-      const next = new Set(prev);
-      next.delete(citaId);
-      return next;
-    });
+  // 2. Pasar a Consulta (persiste EstadoCita.EnAtencion = 7)
+  const startAttention = async (citaId) => {
+    setIsActionLoading(true);
+    try {
+      await receptionService.updateAppointmentStatus(citaId, 7);
+      await fetchDashboardData();
+      return true;
+    } catch (err) {
+      setError(err.message || 'No se pudo llamar al paciente a consulta.');
+      return false;
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
-  // 3. Finalizar Atención Médica (pasa a Atendida en Backend)
+  // 3. Finalizar Atención Médica (persiste EstadoCita.Atendida = 3)
   const finishAttention = async (citaId) => {
     setIsActionLoading(true);
     try {
-      // 3 = EstadoCita.Atendida
       await receptionService.updateAppointmentStatus(citaId, 3);
-      setInConsultationIds((prev) => {
-        const next = new Set(prev);
-        next.delete(citaId);
-        return next;
-      });
       await fetchDashboardData();
       return true;
     } catch (err) {
@@ -120,16 +125,6 @@ export const useReceptionDashboard = () => {
     setIsActionLoading(true);
     try {
       await receptionService.cancelAppointment(citaId);
-      setInConsultationIds((prev) => {
-        const next = new Set(prev);
-        next.delete(citaId);
-        return next;
-      });
-      setArrivedPatientIds((prev) => {
-        const next = new Set(prev);
-        next.delete(citaId);
-        return next;
-      });
       await fetchDashboardData();
       return true;
     } catch (err) {
@@ -140,7 +135,7 @@ export const useReceptionDashboard = () => {
     }
   };
 
-  // Clasificación de las 4 Columnas del Kanban:
+  // Clasificación de las 4 Columnas del Kanban con persistencia backend:
   // 1. Disponibles: turnos libres sin cita asociada
   const columnDisponibles = availableTurnos.map((t) => ({
     id: `turno-${t.id}`,
@@ -152,20 +147,26 @@ export const useReceptionDashboard = () => {
     consultorioNombre: t.consultorioNombre,
   }));
 
-  // 2. En Sala de Espera: Citas confirmadas/solicitadas que NO están siendo atendidas y NO están finalizadas
+  // 2. En Sala de Espera / Citados: Citas agendadas o ya presentes en sala de espera
   const columnEspera = citas
     .filter(
       (c) =>
-        (c.estado === 1 || c.estado === 2 || c.estado === 'Solicitada' || c.estado === 'Confirmada') &&
-        !inConsultationIds.has(c.id)
+        c.estado === 1 ||
+        c.estado === 2 ||
+        c.estado === 6 ||
+        c.estado === 'Solicitada' ||
+        c.estado === 'Confirmada' ||
+        c.estado === 'EnSalaDeEspera'
     )
     .map((c) => ({
       ...c,
-      hasArrived: arrivedPatientIds.has(c.id),
+      hasArrived: c.estado === 6 || c.estado === 'EnSalaDeEspera',
     }));
 
-  // 3. Atendiéndose: Citas en curso
-  const columnAtendiendose = citas.filter((c) => inConsultationIds.has(c.id));
+  // 3. Atendiéndose: Citas en curso en el consultorio
+  const columnAtendiendose = citas.filter(
+    (c) => c.estado === 7 || c.estado === 'EnAtencion'
+  );
 
   // 4. Finalizados: Citas atendidas o completadas
   const columnFinalizados = citas.filter(

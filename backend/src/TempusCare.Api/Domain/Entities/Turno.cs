@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using TempusCare.Api.Domain.Enums;
 
 namespace TempusCare.Api.Domain.Entities;
@@ -15,4 +16,7 @@ public class Turno
 
     public int? CitaId { get; set; }
     public Cita? Cita { get; set; }
+
+    [ConcurrencyCheck]
+    public Guid RowVersion { get; set; } = Guid.NewGuid();
 }

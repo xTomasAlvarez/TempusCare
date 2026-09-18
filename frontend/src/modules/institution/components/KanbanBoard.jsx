@@ -9,6 +9,7 @@ export const KanbanBoard = ({
   columnFinalizados = [],
   isLoading = false,
   isActionLoading = false,
+  onMarkArrived,
   onStartAttention,
   onFinishAttention,
   onCancel,
@@ -38,6 +39,7 @@ export const KanbanBoard = ({
           isLoading={isLoading}
           isActionLoading={isActionLoading}
           emptyMessage="No hay pacientes en esta etapa"
+          onMarkArrived={onMarkArrived}
           onStartAttention={onStartAttention}
           onCancel={onCancel}
         />

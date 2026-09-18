@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { apiClient } from '../../../core/api/apiClient';
 
 /**
  * Servicio de administración institucional y parametrización B2B.
@@ -10,53 +10,23 @@ export const institutionAdminService = {
   // ==========================================
 
   async getConsultorios() {
-    const res = await fetch(`${API_BASE_URL}/consultorios`);
-    if (!res.ok) throw new Error('Error al cargar la lista de consultorios.');
-    return await res.json();
+    return await apiClient.get('consultorios');
   },
 
   async getConsultorioByCuit(cuit) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${cuit}`);
-    if (!res.ok) throw new Error('Error al obtener el consultorio.');
-    return await res.json();
+    return await apiClient.get(`consultorios/${cuit}`);
   },
 
   async createConsultorio(dto) {
-    const res = await fetch(`${API_BASE_URL}/consultorios`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dto),
-    });
-
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || 'No se pudo registrar el consultorio.');
-    }
-    return data;
+    return await apiClient.post('consultorios', dto);
   },
 
   async updateConsultorio(cuit, dto) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${cuit}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dto),
-    });
-
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || 'No se pudo actualizar el consultorio.');
-    }
-    return data;
+    return await apiClient.put(`consultorios/${cuit}`, dto);
   },
 
   async deleteConsultorio(cuit) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${cuit}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.detail || data?.message || 'No se pudo eliminar el consultorio.');
-    }
+    await apiClient.delete(`consultorios/${cuit}`);
     return true;
   },
 
@@ -65,36 +35,18 @@ export const institutionAdminService = {
   // ==========================================
 
   async getAsistentes(consultorioCuit = null) {
-    const url = consultorioCuit
-      ? `${API_BASE_URL}/asistentes?consultorioCuit=${encodeURIComponent(consultorioCuit)}`
-      : `${API_BASE_URL}/asistentes`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Error al cargar la lista de asistentes.');
-    return await res.json();
+    const endpoint = consultorioCuit
+      ? `asistentes?consultorioCuit=${encodeURIComponent(consultorioCuit)}`
+      : 'asistentes';
+    return await apiClient.get(endpoint);
   },
 
   async createAsistente(dto) {
-    const res = await fetch(`${API_BASE_URL}/asistentes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dto),
-    });
-
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || 'No se pudo registrar el asistente.');
-    }
-    return data;
+    return await apiClient.post('asistentes', dto);
   },
 
   async deleteAsistente(cuil) {
-    const res = await fetch(`${API_BASE_URL}/asistentes/${cuil}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.detail || data?.message || 'No se pudo eliminar el asistente.');
-    }
+    await apiClient.delete(`asistentes/${cuil}`);
     return true;
   },
 
@@ -103,30 +55,15 @@ export const institutionAdminService = {
   // ==========================================
 
   async getConsultorioProfesionales(cuit) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${encodeURIComponent(cuit)}/profesionales`);
-    if (!res.ok) throw new Error('Error al cargar los profesionales vinculados al consultorio.');
-    return await res.json();
+    return await apiClient.get(`consultorios/${encodeURIComponent(cuit)}/profesionales`);
   },
 
   async assignProfesionalToConsultorio(cuit, profesionalCuil) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${encodeURIComponent(cuit)}/profesionales/${encodeURIComponent(profesionalCuil)}`, {
-      method: 'POST',
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || 'No se pudo vincular el profesional al consultorio.');
-    }
-    return data;
+    return await apiClient.post(`consultorios/${encodeURIComponent(cuit)}/profesionales/${encodeURIComponent(profesionalCuil)}`);
   },
 
   async removeProfesionalFromConsultorio(cuit, profesionalCuil) {
-    const res = await fetch(`${API_BASE_URL}/consultorios/${encodeURIComponent(cuit)}/profesionales/${encodeURIComponent(profesionalCuil)}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.detail || data?.message || 'No se pudo desvincular el profesional del consultorio.');
-    }
+    await apiClient.delete(`consultorios/${encodeURIComponent(cuit)}/profesionales/${encodeURIComponent(profesionalCuil)}`);
     return true;
   },
 
@@ -135,66 +72,38 @@ export const institutionAdminService = {
   // ==========================================
 
   async getProfesionales() {
-    const res = await fetch(`${API_BASE_URL}/profesionales`);
-    if (!res.ok) throw new Error('Error al cargar la lista de profesionales.');
-    return await res.json();
+    return await apiClient.get('profesionales');
   },
 
   async getEstudios(especialidadId) {
     const params = new URLSearchParams();
     if (especialidadId) params.append('especialidadId', especialidadId);
-
-    const res = await fetch(`${API_BASE_URL}/estudios?${params.toString()}`);
-    if (!res.ok) throw new Error('Error al cargar catálogo de estudios.');
-    return await res.json();
+    const query = params.toString();
+    return await apiClient.get(`estudios${query ? `?${query}` : ''}`);
   },
 
   async getObrasSociales() {
-    const res = await fetch(`${API_BASE_URL}/obrassociales`);
-    if (!res.ok) throw new Error('Error al cargar catálogo de obras sociales.');
-    return await res.json();
+    return await apiClient.get('obrassociales');
   },
 
   async getEspecialidades() {
-    const res = await fetch(`${API_BASE_URL}/especialidades`);
-    if (!res.ok) throw new Error('Error al cargar especialidades.');
-    return await res.json();
+    return await apiClient.get('especialidades');
   },
 
   async getProfesionalEstudios(cuil) {
-    const res = await fetch(`${API_BASE_URL}/profesionales/${cuil}/estudios`);
-    if (!res.ok) throw new Error('Error al cargar estudios del profesional.');
-    return await res.json();
+    return await apiClient.get(`profesionales/${cuil}/estudios`);
   },
 
   async assignEstudioProfesional(cuil, dto) {
-    const res = await fetch(`${API_BASE_URL}/profesionales/${cuil}/estudios`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dto),
-    });
-
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || 'No se pudo parametrizar el estudio y su cobertura.');
-    }
-    return data;
+    return await apiClient.post(`profesionales/${cuil}/estudios`, dto);
   },
 
   async deleteEstudioProfesional(cuil, estudioId) {
-    const res = await fetch(`${API_BASE_URL}/profesionales/${cuil}/estudios/${estudioId}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      throw new Error(data?.detail || data?.message || 'No se pudo desasignar el estudio.');
-    }
+    await apiClient.delete(`profesionales/${cuil}/estudios/${estudioId}`);
     return true;
   },
 
   async getInstituciones() {
-    const res = await fetch(`${API_BASE_URL}/instituciones`);
-    if (!res.ok) throw new Error('Error al cargar instituciones.');
-    return await res.json();
+    return await apiClient.get('instituciones');
   },
 };

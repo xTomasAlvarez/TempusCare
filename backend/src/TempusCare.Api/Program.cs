@@ -80,6 +80,12 @@ using (var scope = app.Services.CreateScope())
     // Migraciones ligeras automáticas para columnas agregadas a SQLite existente
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Asistentes ADD COLUMN ConsultorioCuit TEXT;"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Asistentes ADD COLUMN AdminConsultorioCuil TEXT;"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Turnos ADD COLUMN RowVersion TEXT;"); } catch { }
+    try { db.Database.ExecuteSqlRaw("UPDATE Turnos SET RowVersion = '00000000-0000-0000-0000-000000000000' WHERE RowVersion IS NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ProfesionalEstudios_ProfesionalCuil_EstudioId ON ProfesionalEstudios (ProfesionalCuil, EstudioId);"); } catch { }
+    try { db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_Coberturas_ProfesionalEstudioId_ObraSocialId ON Coberturas (ProfesionalEstudioId, ObraSocialId);"); } catch { }
+    try { db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_Citas_TurnoId_Active ON Citas (TurnoId) WHERE Estado != 5;"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Instituciones ADD COLUMN Plan TEXT DEFAULT 'Enterprise';"); } catch { }
 
     if (!db.Usuarios.Any())
     {
@@ -94,8 +100,8 @@ using (var scope = app.Services.CreateScope())
         db.Usuarios.AddRange(uInst1, uInst2, uPac, uMed, uAsis, uSuper);
         db.SaveChanges();
 
-        var inst1 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst1.Id, Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com" };
-        var inst2 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst2.Id, Nombre = "Clínica Mayo", Cuit = "30555666778", Email = "info@clinicamayo.com" };
+        var inst1 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst1.Id, Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com", Plan = "Enterprise" };
+        var inst2 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst2.Id, Nombre = "Clínica Mayo", Cuit = "30555666778", Email = "info@clinicamayo.com", Plan = "Profesional" };
         db.Instituciones.AddRange(inst1, inst2);
         db.SaveChanges();
 

@@ -33,6 +33,7 @@ public class ExceptionMiddleware
                 Application.Exceptions.NoContentException => HttpStatusCode.BadRequest,
                 Application.Exceptions.ValidationException => HttpStatusCode.BadRequest,
                 Application.Exceptions.ConflictException => HttpStatusCode.Conflict,
+                Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => HttpStatusCode.Conflict,
                 _ => HttpStatusCode.InternalServerError
             };
 
@@ -42,6 +43,7 @@ public class ExceptionMiddleware
                 Application.Exceptions.EntityNotFoundException => "01",
                 Application.Exceptions.ValidationException => "02",
                 Application.Exceptions.ConflictException => "03",
+                Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => "03",
                 Application.Exceptions.ArgumentOutOfRangeException => "04",
                 Application.Exceptions.NoContentException => "05",
                 Application.Exceptions.NotAuthenticatedException => "07",
@@ -76,11 +78,15 @@ public class ExceptionMiddleware
             internalErrorCode = $"{source}-{internalErrorCode}";
 
             context.Response.StatusCode = (int)statusCode;
+            var detailMessage = e is Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException
+                ? "Conflicto de concurrencia optimista: el recurso o turno fue modificado simultáneamente por otra operación."
+                : e.Message;
+
             var errorResponse = new
             {
                 status = (int)statusCode,
                 title = statusCode.ToString(),
-                detail = e.Message,
+                detail = detailMessage,
                 code = internalErrorCode
             };
 

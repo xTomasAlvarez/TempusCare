@@ -31,7 +31,7 @@ export const ContextSwitcher = ({ className }) => {
           setActiveConsultorio(data[0]);
         }
       } catch (error) {
-        console.error('Error al cargar consultorios:', error);
+        // Silently handled fallback
       } finally {
         if (isMounted) setIsLoading(false);
       }

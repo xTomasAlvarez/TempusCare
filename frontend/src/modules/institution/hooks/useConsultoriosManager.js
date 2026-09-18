@@ -25,7 +25,6 @@ export const useConsultoriosManager = () => {
       setConsultorios(data);
       setInstituciones(insts);
     } catch (err) {
-      console.error('Error al cargar consultorios:', err);
       setError(err.message || 'Error al cargar sedes.');
     } finally {
       setIsLoading(false);
@@ -51,7 +50,6 @@ export const useConsultoriosManager = () => {
       await fetchConsultorios();
       return true;
     } catch (err) {
-      console.error('Error al crear consultorio:', err);
       addToast({
         title: 'Error al Registrar Sede',
         description: err.message || 'No se pudo crear el consultorio.',
@@ -74,7 +72,6 @@ export const useConsultoriosManager = () => {
       await fetchConsultorios();
       return true;
     } catch (err) {
-      console.error('Error al eliminar consultorio:', err);
       addToast({
         title: 'Error al Eliminar',
         description: err.message || 'No se pudo eliminar el consultorio.',

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Exceptions;
 using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Domain.Enums;
 using TempusCare.Api.Infrastructure.Data;
 
 namespace TempusCare.Api.Application.Services;
@@ -21,57 +22,112 @@ public class ObservacionService : IObservacionService
     {
         _logger.LogInformation("Completando observación médica para Cita ID {CitaId} / Historia Clínica ID {HcId}", dto.CitaId, dto.HistoriaClinicaId);
 
-        Observacion? observacion = null;
-
-        if (dto.CitaId.HasValue)
+        using var tx = _db.Database.IsRelational() ? await _db.Database.BeginTransactionAsync() : null;
+        try
         {
-            var cita = await _db.Citas
-                .Include(c => c.Observacion)
-                .Include(c => c.Paciente).ThenInclude(p => p!.HistoriaClinica)
-                .Include(c => c.Turno).ThenInclude(t => t!.Agenda)
-                .FirstOrDefaultAsync(c => c.Id == dto.CitaId.Value);
+            Observacion? observacion = null;
 
-            if (cita == null)
+            if (dto.CitaId.HasValue)
             {
-                _logger.LogWarning("Cita ID {CitaId} no encontrada", dto.CitaId.Value);
-                throw new CitaNotFoundException(dto.CitaId.Value);
-            }
+                var cita = await _db.Citas
+                    .Include(c => c.Observacion)
+                    .Include(c => c.Paciente).ThenInclude(p => p!.HistoriaClinica)
+                    .Include(c => c.Turno).ThenInclude(t => t!.Agenda)
+                    .FirstOrDefaultAsync(c => c.Id == dto.CitaId.Value);
 
-            if (cita.Observacion != null)
-            {
-                observacion = cita.Observacion;
-                observacion.Motivo = dto.Motivo;
-                observacion.Detalle = dto.Detalle;
+                if (cita == null)
+                {
+                    _logger.LogWarning("Cita ID {CitaId} no encontrada", dto.CitaId.Value);
+                    throw new CitaNotFoundException(dto.CitaId.Value);
+                }
+
+                int historiaClinicaId = dto.HistoriaClinicaId ?? 0;
+                if (cita.Paciente?.HistoriaClinica != null)
+                {
+                    historiaClinicaId = cita.Paciente.HistoriaClinica.Id;
+                }
+                else if (historiaClinicaId <= 0 && !string.IsNullOrEmpty(cita.PacienteCuil))
+                {
+                    // Buscar si existe HistoriaClinica por CUIL
+                    var hcExistente = await _db.HistoriasClinicas.FirstOrDefaultAsync(h => h.PacienteCuil == cita.PacienteCuil);
+                    if (hcExistente != null)
+                    {
+                        historiaClinicaId = hcExistente.Id;
+                    }
+                    else
+                    {
+                        // Auto-crear cabecera de Historia Clínica unificada para el paciente si aún no tenía
+                        var nuevaHc = new HistoriaClinica
+                        {
+                            PacienteCuil = cita.PacienteCuil
+                        };
+                        _db.HistoriasClinicas.Add(nuevaHc);
+                        await _db.SaveChangesAsync();
+                        historiaClinicaId = nuevaHc.Id;
+                    }
+                }
+
+                if (cita.Observacion != null)
+                {
+                    observacion = cita.Observacion;
+                    observacion.HistoriaClinicaId = historiaClinicaId;
+                    observacion.Motivo = dto.Motivo;
+                    observacion.Detalle = dto.Detalle;
+                }
+                else
+                {
+                    observacion = new Observacion
+                    {
+                        CitaId = cita.Id,
+                        HistoriaClinicaId = historiaClinicaId,
+                        ProfesionalCuil = cita.Turno?.Agenda?.ProfesionalCuil ?? dto.ProfesionalCuil,
+                        Motivo = dto.Motivo,
+                        Detalle = dto.Detalle
+                    };
+                    _db.Observaciones.Add(observacion);
+                }
+
+                // RF-MED-06 & RN-04: Al guardar la evolución clínica, actualizar la Cita a Atendida y los turnos asociados a Atendido
+                cita.Estado = EstadoCita.Atendida;
+
+                var turnosAsociados = await _db.Turnos
+                    .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
+                    .ToListAsync();
+
+                foreach (var t in turnosAsociados)
+                {
+                    t.Estado = EstadoTurno.Atendido;
+                    t.RowVersion = Guid.NewGuid();
+                }
             }
             else
             {
                 observacion = new Observacion
                 {
-                    CitaId = cita.Id,
-                    HistoriaClinicaId = cita.Paciente?.HistoriaClinica?.Id ?? dto.HistoriaClinicaId,
-                    ProfesionalCuil = cita.Turno?.Agenda?.ProfesionalCuil ?? dto.ProfesionalCuil,
+                    HistoriaClinicaId = dto.HistoriaClinicaId ?? 0,
+                    ProfesionalCuil = dto.ProfesionalCuil,
                     Motivo = dto.Motivo,
                     Detalle = dto.Detalle
                 };
                 _db.Observaciones.Add(observacion);
             }
-        }
-        else
-        {
-            observacion = new Observacion
+
+            await _db.SaveChangesAsync();
+
+            if (tx != null)
             {
-                HistoriaClinicaId = dto.HistoriaClinicaId,
-                ProfesionalCuil = dto.ProfesionalCuil,
-                Motivo = dto.Motivo,
-                Detalle = dto.Detalle
-            };
-            _db.Observaciones.Add(observacion);
+                await tx.CommitAsync();
+            }
+
+            _logger.LogInformation("Observación ID {Id} guardada con éxito y estados actualizados a Atendido", observacion.Id);
+
+            return await ObtenerPorIdAsync(observacion.Id);
         }
-
-        await _db.SaveChangesAsync();
-        _logger.LogInformation("Observación ID {Id} guardada con éxito", observacion.Id);
-
-        return await ObtenerPorIdAsync(observacion.Id);
+        catch
+        {
+            if (tx != null) await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<List<ObservacionResponseDto>> ObtenerObservacionesPorHistoriaClinicaAsync(int historiaClinicaId)

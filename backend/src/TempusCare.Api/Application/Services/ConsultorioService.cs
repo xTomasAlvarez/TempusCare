@@ -123,9 +123,22 @@ public class ConsultorioService : IConsultorioService
             throw new ConsultorioNotFoundException(cuit);
         }
 
+        // RF-IADM-01: Evitar cuentas huérfanas de Administradores de Consultorio
+        var admins = await _db.AdministradoresConsultorio
+            .Where(a => a.ConsultorioCuit == cuit)
+            .ToListAsync();
+        var adminUserIds = admins.Select(a => a.UsuarioId).ToList();
+
         _db.Consultorios.Remove(cons);
+
+        if (adminUserIds.Count > 0)
+        {
+            var usuarios = await _db.Usuarios.Where(u => adminUserIds.Contains(u.Id)).ToListAsync();
+            _db.Usuarios.RemoveRange(usuarios);
+        }
+
         await _db.SaveChangesAsync();
-        _logger.LogInformation("Consultorio CUIT {Cuit} eliminado", cuit);
+        _logger.LogInformation("Consultorio CUIT {Cuit} y sus administradores asociados eliminados correctamente", cuit);
     }
 
     public async Task<List<ConsultorioResponseDto>> ObtenerTodosAsync()
@@ -135,7 +148,7 @@ public class ConsultorioService : IConsultorioService
         var lista = await _db.Consultorios
             .Include(c => c.Direccion)
             .Include(c => c.Institucion)
-            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional).ThenInclude(pr => pr!.Especialidades).ThenInclude(pe => pe.Especialidad)
             .ToListAsync();
 
         return lista.Select(c => MapToDto(c)).ToList();
@@ -148,7 +161,7 @@ public class ConsultorioService : IConsultorioService
         var cons = await _db.Consultorios
             .Include(c => c.Direccion)
             .Include(c => c.Institucion)
-            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional).ThenInclude(pr => pr!.Especialidades).ThenInclude(pe => pe.Especialidad)
             .FirstOrDefaultAsync(c => c.Cuit == cuit);
 
         if (cons == null)
@@ -167,7 +180,7 @@ public class ConsultorioService : IConsultorioService
         var lista = await _db.Consultorios
             .Include(c => c.Direccion)
             .Include(c => c.Institucion)
-            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional).ThenInclude(pr => pr!.Especialidades).ThenInclude(pe => pe.Especialidad)
             .Where(c => c.InstitucionId == institucionId)
             .ToListAsync();
 
@@ -181,13 +194,12 @@ public class ConsultorioService : IConsultorioService
         var consultorioExiste = await _db.Consultorios.AnyAsync(c => c.Cuit == consultorioCuit);
         if (!consultorioExiste)
         {
+            _logger.LogWarning("Consultorio CUIT {Cuit} no encontrado", consultorioCuit);
             throw new ConsultorioNotFoundException(consultorioCuit);
         }
 
         var vinculaciones = await _db.ProfesionalConsultorios
-            .Include(pc => pc.Profesional)
-                .ThenInclude(p => p.Especialidades)
-                    .ThenInclude(e => e.Especialidad)
+            .Include(pc => pc.Profesional).ThenInclude(p => p!.Especialidades).ThenInclude(pe => pe.Especialidad)
             .Where(pc => pc.ConsultorioCuit == consultorioCuit)
             .ToListAsync();
 
@@ -197,7 +209,7 @@ public class ConsultorioService : IConsultorioService
             pc.Profesional?.Apellido ?? "",
             pc.Profesional?.Matricula ?? "",
             pc.Profesional?.Telefono ?? "",
-            pc.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList() ?? new List<string>()
+            pc.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList() ?? new List<string>()
         )).ToList();
     }
 
@@ -205,21 +217,27 @@ public class ConsultorioService : IConsultorioService
     {
         _logger.LogInformation("Asignando profesional {Cuil} a consultorio {Cuit}", profesionalCuil, consultorioCuit);
 
-        var consultorioExiste = await _db.Consultorios.AnyAsync(c => c.Cuit == consultorioCuit);
-        if (!consultorioExiste)
+        var cons = await _db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == consultorioCuit);
+        if (cons == null)
+        {
+            _logger.LogWarning("Consultorio CUIT {Cuit} no encontrado para asignar profesional", consultorioCuit);
             throw new ConsultorioNotFoundException(consultorioCuit);
+        }
 
-        var profesionalExiste = await _db.Profesionales.AnyAsync(p => p.Cuil == profesionalCuil);
-        if (!profesionalExiste)
+        var prof = await _db.Profesionales.FirstOrDefaultAsync(p => p.Cuil == profesionalCuil);
+        if (prof == null)
+        {
+            _logger.LogWarning("Profesional CUIL {Cuil} no encontrado para asignar al consultorio", profesionalCuil);
             throw new ProfesionalNotFoundException(profesionalCuil);
+        }
 
-        var yaExiste = await _db.ProfesionalConsultorios
+        var existe = await _db.ProfesionalConsultorios
             .AnyAsync(pc => pc.ConsultorioCuit == consultorioCuit && pc.ProfesionalCuil == profesionalCuil);
 
-        if (yaExiste)
+        if (existe)
         {
-            _logger.LogWarning("El profesional {Cuil} ya se encuentra vinculado al consultorio {Cuit}", profesionalCuil, consultorioCuit);
-            throw new ConflictException("El profesional ya se encuentra vinculado a este consultorio.");
+            _logger.LogWarning("El profesional {Cuil} ya está asignado al consultorio {Cuit}", profesionalCuil, consultorioCuit);
+            throw new ConflictException($"El profesional {profesionalCuil} ya se encuentra asignado a este consultorio.");
         }
 
         _db.ProfesionalConsultorios.Add(new ProfesionalConsultorio
@@ -256,6 +274,15 @@ public class ConsultorioService : IConsultorioService
             ? $"{c.Direccion.Calle} {c.Direccion.Nro}, {c.Direccion.Localidad}, {c.Direccion.Provincia}"
             : "";
 
+        var profesionalesVinculados = c.Profesionales.Select(p => new ProfesionalVinculadoDto(
+            p.Profesional?.Cuil ?? p.ProfesionalCuil,
+            p.Profesional?.Nombre ?? "",
+            p.Profesional?.Apellido ?? "",
+            p.Profesional?.Matricula ?? "",
+            p.Profesional?.Telefono ?? "",
+            p.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList() ?? new List<string>()
+        )).ToList();
+
         return new ConsultorioResponseDto(
             c.Cuit,
             c.Nombre,
@@ -264,7 +291,8 @@ public class ConsultorioService : IConsultorioService
             c.NivelAccesibilidad,
             c.Institucion?.Nombre,
             dirStr,
-            c.Profesionales.Select(p => $"{p.Profesional?.Nombre} {p.Profesional?.Apellido}").ToList()
+            c.Profesionales.Select(p => $"{p.Profesional?.Nombre} {p.Profesional?.Apellido}".Trim()).ToList(),
+            profesionalesVinculados
         );
     }
 }

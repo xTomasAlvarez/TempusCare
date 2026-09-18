@@ -166,12 +166,12 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey(c => c.DireccionId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Historia Clinica 1:1 Paciente
+        // Historia Clinica 1:1 Paciente (RNF-SEG-06: Confidencialidad y protección de datos médicos Ley 25.326)
         modelBuilder.Entity<HistoriaClinica>()
             .HasOne(hc => hc.Paciente)
             .WithOne(p => p.HistoriaClinica)
             .HasForeignKey<HistoriaClinica>(hc => hc.PacienteCuil)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Historia Clinica 1:N Observaciones
         modelBuilder.Entity<HistoriaClinica>()
@@ -208,12 +208,23 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey(c => c.TurnoId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Prevención de Overbooking (RF-PAC-06): Solo una cita activa por turno principal
+        modelBuilder.Entity<Cita>()
+            .HasIndex(c => c.TurnoId)
+            .IsUnique()
+            .HasFilter("\"Estado\" != 5");
+
         // Cita 1:N Turnos (turnos cubiertos por la cita en estudios multi-turno)
         modelBuilder.Entity<Turno>()
             .HasOne(t => t.Cita)
             .WithMany(c => c.Turnos)
             .HasForeignKey(t => t.CitaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Token de concurrencia optimista para Turno (Prevención Overbooking RF-PAC-06)
+        modelBuilder.Entity<Turno>()
+            .Property(t => t.RowVersion)
+            .IsConcurrencyToken();
 
         // Cita 1:0..1 Estudio
         modelBuilder.Entity<Cita>()
@@ -233,6 +244,11 @@ public class TempusCareDbContext : DbContext
         modelBuilder.Entity<ProfesionalEstudio>()
             .HasKey(pe => pe.Id);
 
+        // RN-02: Unicidad en la relación Profesional - Estudio
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .HasIndex(pe => new { pe.ProfesionalCuil, pe.EstudioId })
+            .IsUnique();
+
         modelBuilder.Entity<ProfesionalEstudio>()
             .HasOne(pe => pe.Profesional)
             .WithMany(p => p.Estudios)
@@ -248,6 +264,11 @@ public class TempusCareDbContext : DbContext
         // Cobertura (Relación Ternaria ProfesionalEstudio <-> ObraSocial)
         modelBuilder.Entity<Cobertura>()
             .HasKey(cob => cob.Id);
+
+        // RN-02: Unicidad en la relación ProfesionalEstudio - ObraSocial
+        modelBuilder.Entity<Cobertura>()
+            .HasIndex(cob => new { cob.ProfesionalEstudioId, cob.ObraSocialId })
+            .IsUnique();
 
         modelBuilder.Entity<Cobertura>()
             .HasOne(cob => cob.ProfesionalEstudio)

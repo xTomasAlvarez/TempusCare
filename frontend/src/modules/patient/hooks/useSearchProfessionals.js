@@ -32,7 +32,7 @@ export const useSearchProfessionals = () => {
           setHealthInsurances(insurances);
         }
       } catch (err) {
-        console.error('Error cargando catálogos:', err);
+        // Silently handled fallback
       }
     }
 

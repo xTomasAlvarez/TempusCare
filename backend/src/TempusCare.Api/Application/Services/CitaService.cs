@@ -23,193 +23,238 @@ public class CitaService : ICitaService
         _logger.LogInformation("Solicitando cita médica: Paciente={Pac}, Prof={Prof}, TurnoId={TurnoId}, Tipo={Tipo}",
             dto.PacienteCuil, dto.ProfesionalCuil, dto.TurnoId, dto.Tipo);
 
-        var paciente = await _db.Pacientes.FirstOrDefaultAsync(p => p.Cuil == dto.PacienteCuil);
-        if (paciente == null)
+        using var tx = _db.Database.IsRelational() ? await _db.Database.BeginTransactionAsync() : null;
+        try
         {
-            _logger.LogWarning("Paciente CUIL {Cuil} no encontrado", dto.PacienteCuil);
-            throw new PacienteNotFoundException(dto.PacienteCuil);
-        }
+            var paciente = await _db.Pacientes.FirstOrDefaultAsync(p => p.Cuil == dto.PacienteCuil);
+            if (paciente == null)
+            {
+                _logger.LogWarning("Paciente CUIL {Cuil} no encontrado", dto.PacienteCuil);
+                throw new PacienteNotFoundException(dto.PacienteCuil);
+            }
 
-        var prof = await _db.Profesionales
-            .Include(p => p.ObrasSociales)
-            .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas)
-            .FirstOrDefaultAsync(p => p.Cuil == dto.ProfesionalCuil);
+            var prof = await _db.Profesionales
+                .Include(p => p.ObrasSociales)
+                .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas)
+                .FirstOrDefaultAsync(p => p.Cuil == dto.ProfesionalCuil);
 
-        if (prof == null)
-        {
-            _logger.LogWarning("Profesional CUIL {Cuil} no encontrado", dto.ProfesionalCuil);
-            throw new ProfesionalNotFoundException(dto.ProfesionalCuil);
-        }
+            if (prof == null)
+            {
+                _logger.LogWarning("Profesional CUIL {Cuil} no encontrado", dto.ProfesionalCuil);
+                throw new ProfesionalNotFoundException(dto.ProfesionalCuil);
+            }
 
-        var turno = await _db.Turnos
-            .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
-            .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
-            .FirstOrDefaultAsync(t => t.Id == dto.TurnoId);
+            var turno = await _db.Turnos
+                .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
+                .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
+                .FirstOrDefaultAsync(t => t.Id == dto.TurnoId);
 
-        if (turno == null)
-        {
-            _logger.LogWarning("Turno ID {TurnoId} no encontrado", dto.TurnoId);
-            throw new TurnoNotFoundException(dto.TurnoId);
-        }
+            if (turno == null)
+            {
+                _logger.LogWarning("Turno ID {TurnoId} no encontrado", dto.TurnoId);
+                throw new TurnoNotFoundException(dto.TurnoId);
+            }
 
-        // RN-02: Solo se pueden reservar turnos en franjas disponibles.
-        if (turno.Estado != EstadoTurno.Disponible)
-        {
-            _logger.LogWarning("RN-02: Intento de reserva en turno no disponible ID {TurnoId}", turno.Id);
-            throw new ConflictException("RN-02: El horario seleccionado ya no está disponible.");
-        }
+            // RN-02: Solo se pueden reservar turnos en franjas disponibles.
+            if (turno.Estado != EstadoTurno.Disponible)
+            {
+                _logger.LogWarning("RN-02: Intento de reserva en turno no disponible ID {TurnoId}", turno.Id);
+                throw new ConflictException("RN-02: El horario seleccionado ya no está disponible.");
+            }
 
-        // RN-04: Cobertura de Obra Social o Particular
-        CoberturaCita coberturaFinal = CoberturaCita.Particular;
-        if (dto.ObraSocialId.HasValue)
-        {
-            bool aceptaObraSocial = false;
+            // RN-04: Cobertura de Obra Social o Particular
+            CoberturaCita coberturaFinal = CoberturaCita.Particular;
+            if (dto.ObraSocialId.HasValue)
+            {
+                bool aceptaObraSocial = false;
+
+                if (dto.EstudioId.HasValue)
+                {
+                    var est = prof.Estudios.FirstOrDefault(e => e.EstudioId == dto.EstudioId.Value);
+                    if (est != null && est.Coberturas.Any(c => c.ObraSocialId == dto.ObraSocialId.Value))
+                    {
+                        aceptaObraSocial = true;
+                    }
+                }
+                else
+                {
+                    aceptaObraSocial = prof.ObrasSociales.Any(o => o.ObraSocialId == dto.ObraSocialId.Value);
+                }
+
+                if (aceptaObraSocial)
+                {
+                    coberturaFinal = CoberturaCita.ObraSocial;
+                }
+            }
+
+            turno.Estado = EstadoTurno.Reservado;
+            turno.RowVersion = Guid.NewGuid();
+
+            // Aclaración RF-SADM-03.A: Cobertura de múltiples turnos si el estudio dura más que un slot individual
+            var turnosAdicionales = new List<Turno>();
+            Estudio? estudioObj = null;
 
             if (dto.EstudioId.HasValue)
             {
-                var est = prof.Estudios.FirstOrDefault(e => e.EstudioId == dto.EstudioId.Value);
-                if (est != null && est.Coberturas.Any(c => c.ObraSocialId == dto.ObraSocialId.Value))
+                estudioObj = await _db.Estudios.FirstOrDefaultAsync(e => e.Id == dto.EstudioId.Value);
+                if (estudioObj == null)
                 {
-                    aceptaObraSocial = true;
+                    _logger.LogWarning("Estudio ID {EstudioId} no encontrado", dto.EstudioId.Value);
+                    throw new EstudioNotFoundException(dto.EstudioId.Value);
                 }
-            }
-            else
-            {
-                aceptaObraSocial = prof.ObrasSociales.Any(o => o.ObraSocialId == dto.ObraSocialId.Value);
-            }
 
-            if (aceptaObraSocial)
-            {
-                coberturaFinal = CoberturaCita.ObraSocial;
-            }
-        }
+                int duracionEstudio = estudioObj.Duracion > 0 ? estudioObj.Duracion : 30;
+                int duracionSlot = (int)(turno.HoraFin - turno.HoraInicio).TotalMinutes;
+                if (duracionSlot <= 0) duracionSlot = 30;
 
-        turno.Estado = EstadoTurno.Reservado;
+                int turnosRequeridos = (int)Math.Ceiling((double)duracionEstudio / duracionSlot);
 
-        // Aclaración RF-SADM-03.A: Cobertura de múltiples turnos si el estudio dura más que un slot individual
-        var turnosAdicionales = new List<Turno>();
-        Estudio? estudioObj = null;
-
-        if (dto.EstudioId.HasValue)
-        {
-            estudioObj = await _db.Estudios.FirstOrDefaultAsync(e => e.Id == dto.EstudioId.Value);
-            if (estudioObj == null)
-            {
-                _logger.LogWarning("Estudio ID {EstudioId} no encontrado", dto.EstudioId.Value);
-                throw new EstudioNotFoundException(dto.EstudioId.Value);
-            }
-
-            int duracionEstudio = estudioObj.Duracion > 0 ? estudioObj.Duracion : 30;
-            int duracionSlot = (int)(turno.HoraFin - turno.HoraInicio).TotalMinutes;
-            if (duracionSlot <= 0) duracionSlot = 30;
-
-            int turnosRequeridos = (int)Math.Ceiling((double)duracionEstudio / duracionSlot);
-
-            if (turnosRequeridos > 1)
-            {
-                TimeSpan siguienteInicio = turno.HoraFin;
-                for (int i = 1; i < turnosRequeridos; i++)
+                if (turnosRequeridos > 1)
                 {
-                    var sigTurno = await _db.Turnos
-                        .FirstOrDefaultAsync(t => t.AgendaId == turno.AgendaId && t.Fecha == turno.Fecha && t.HoraInicio == siguienteInicio);
-
-                    if (sigTurno == null || sigTurno.Estado != EstadoTurno.Disponible)
+                    TimeSpan siguienteInicio = turno.HoraFin;
+                    for (int i = 1; i < turnosRequeridos; i++)
                     {
-                        _logger.LogWarning("Turnos continuos insuficientes para estudio ID {EstudioId}. Se requieren {Req} turnos.", dto.EstudioId.Value, turnosRequeridos);
-                        throw new ConflictException($"El estudio '{estudioObj.Nombre}' requiere {turnosRequeridos} turnos consecutivos ({duracionEstudio} min) y no hay disponibilidad continua a partir del horario seleccionado.");
+                        var sigTurno = await _db.Turnos
+                            .FirstOrDefaultAsync(t => t.AgendaId == turno.AgendaId && t.Fecha == turno.Fecha && t.HoraInicio == siguienteInicio);
+
+                        if (sigTurno == null || sigTurno.Estado != EstadoTurno.Disponible)
+                        {
+                            _logger.LogWarning("Turnos continuos insuficientes para estudio ID {EstudioId}. Se requieren {Req} turnos.", dto.EstudioId.Value, turnosRequeridos);
+                            throw new ConflictException($"El estudio '{estudioObj.Nombre}' requiere {turnosRequeridos} turnos consecutivos ({duracionEstudio} min) y no hay disponibilidad continua a partir del horario seleccionado.");
+                        }
+
+                        turnosAdicionales.Add(sigTurno);
+                        siguienteInicio = sigTurno.HoraFin;
                     }
 
-                    turnosAdicionales.Add(sigTurno);
-                    siguienteInicio = sigTurno.HoraFin;
-                }
-
-                foreach (var sig in turnosAdicionales)
-                {
-                    sig.Estado = EstadoTurno.Reservado;
+                    foreach (var sig in turnosAdicionales)
+                    {
+                        sig.Estado = EstadoTurno.Reservado;
+                        sig.RowVersion = Guid.NewGuid();
+                    }
                 }
             }
+
+            var cita = new Cita
+            {
+                TurnoId = turno.Id,
+                PacienteCuil = paciente.Cuil,
+                Fecha = turno.Fecha,
+                Estado = EstadoCita.Confirmada,
+                Tipo = dto.Tipo,
+                Cobertura = coberturaFinal,
+                EstudioId = dto.EstudioId,
+                DocumentoPedidoMedico = dto.DocumentoPedidoMedico
+            };
+
+            _db.Citas.Add(cita);
+            await _db.SaveChangesAsync();
+
+            // Vincular los turnos cubiertos con la Cita
+            turno.CitaId = cita.Id;
+            foreach (var sig in turnosAdicionales)
+            {
+                sig.CitaId = cita.Id;
+            }
+            await _db.SaveChangesAsync();
+
+            if (tx != null)
+            {
+                await tx.CommitAsync();
+            }
+
+            _logger.LogInformation("Cita médica creada exitosamente con ID {CitaId} cubriendo {Cant} turnos", cita.Id, turnosAdicionales.Count + 1);
+
+            cita.Estudio = estudioObj;
+            cita.Turnos = new List<Turno> { turno };
+            foreach (var ta in turnosAdicionales) cita.Turnos.Add(ta);
+
+            return MapCitaDto(cita, turno, paciente, prof);
         }
-
-        var cita = new Cita
+        catch (DbUpdateConcurrencyException ex)
         {
-            TurnoId = turno.Id,
-            PacienteCuil = paciente.Cuil,
-            Fecha = turno.Fecha,
-            Estado = EstadoCita.Confirmada,
-            Tipo = dto.Tipo,
-            Cobertura = coberturaFinal,
-            EstudioId = dto.EstudioId,
-            DocumentoPedidoMedico = dto.DocumentoPedidoMedico
-        };
-
-        _db.Citas.Add(cita);
-        await _db.SaveChangesAsync();
-
-        // Vincular los turnos cubiertos con la Cita
-        turno.CitaId = cita.Id;
-        foreach (var sig in turnosAdicionales)
-        {
-            sig.CitaId = cita.Id;
+            if (tx != null) await tx.RollbackAsync();
+            _logger.LogWarning(ex, "Conflicto de concurrencia detectado al reservar turno(s).");
+            throw new ConflictException("El turno o una de sus franjas horarias fue modificado o reservado por otro usuario simultáneamente. Por favor, seleccione otro horario.");
         }
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("Cita médica creada exitosamente con ID {CitaId} cubriendo {Cant} turnos", cita.Id, turnosAdicionales.Count + 1);
-
-        cita.Estudio = estudioObj;
-        cita.Turnos = new List<Turno> { turno };
-        foreach (var ta in turnosAdicionales) cita.Turnos.Add(ta);
-
-        return MapCitaDto(cita, turno, paciente, prof);
+        catch (DbUpdateException ex)
+        {
+            if (tx != null) await tx.RollbackAsync();
+            _logger.LogWarning(ex, "Violación de integridad al guardar la cita.");
+            throw new ConflictException("No se pudo completar la reserva debido a un conflicto de asignación o disponibilidad del turno.");
+        }
+        catch
+        {
+            if (tx != null) await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<CitaResponseDto> ModificarCitaEstadoAsync(int citaId, EstadoCita estado)
     {
         _logger.LogInformation("Modificando estado de cita ID {CitaId} a {Estado}", citaId, estado);
 
-        var cita = await _db.Citas
-            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
-            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
-            .Include(c => c.Turnos)
-            .Include(c => c.Estudio)
-            .Include(c => c.Paciente)
-            .Include(c => c.Observacion)
-            .Include(c => c.Cuestionario)
-            .FirstOrDefaultAsync(c => c.Id == citaId);
-
-        if (cita == null)
+        using var tx = _db.Database.IsRelational() ? await _db.Database.BeginTransactionAsync() : null;
+        try
         {
-            _logger.LogWarning("Cita ID {CitaId} no encontrada", citaId);
-            throw new CitaNotFoundException(citaId);
-        }
+            var cita = await _db.Citas
+                .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
+                .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+                .Include(c => c.Turnos)
+                .Include(c => c.Estudio)
+                .Include(c => c.Paciente)
+                .Include(c => c.Observacion)
+                .Include(c => c.Cuestionario)
+                .FirstOrDefaultAsync(c => c.Id == citaId);
 
-        cita.Estado = estado;
-
-        // Regla de Negocio RN-01: Si se cancela la cita, todos los turnos asociados pasan a estar Disponibles.
-        var turnosDeCita = await _db.Turnos
-            .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
-            .ToListAsync();
-
-        if (estado == EstadoCita.Cancelada)
-        {
-            _logger.LogInformation("Cita cancelada: restableciendo {Cant} turnos a Disponible", turnosDeCita.Count);
-            foreach (var t in turnosDeCita)
+            if (cita == null)
             {
-                t.Estado = EstadoTurno.Disponible;
-                t.CitaId = null;
+                _logger.LogWarning("Cita ID {CitaId} no encontrada", citaId);
+                throw new CitaNotFoundException(citaId);
             }
-        }
-        else if (estado == EstadoCita.Atendida)
-        {
-            foreach (var t in turnosDeCita)
+
+            cita.Estado = estado;
+
+            // Regla de Negocio RN-01: Si se cancela la cita, todos los turnos asociados pasan a estar Disponibles.
+            var turnosDeCita = await _db.Turnos
+                .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
+                .ToListAsync();
+
+            if (estado == EstadoCita.Cancelada)
             {
-                t.Estado = EstadoTurno.Atendido;
+                _logger.LogInformation("Cita cancelada: restableciendo {Cant} turnos a Disponible", turnosDeCita.Count);
+                foreach (var t in turnosDeCita)
+                {
+                    t.Estado = EstadoTurno.Disponible;
+                    t.CitaId = null;
+                    t.RowVersion = Guid.NewGuid();
+                }
             }
+            else if (estado == EstadoCita.Atendida)
+            {
+                foreach (var t in turnosDeCita)
+                {
+                    t.Estado = EstadoTurno.Atendido;
+                    t.RowVersion = Guid.NewGuid();
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            if (tx != null)
+            {
+                await tx.CommitAsync();
+            }
+
+            _logger.LogInformation("Estado de cita ID {CitaId} actualizado correctamente", cita.Id);
+
+            return MapCitaDto(cita, cita.Turno!, cita.Paciente!, cita.Turno!.Agenda!.Profesional!);
         }
-
-        await _db.SaveChangesAsync();
-        _logger.LogInformation("Estado de cita ID {CitaId} actualizado correctamente", cita.Id);
-
-        return MapCitaDto(cita, cita.Turno!, cita.Paciente!, cita.Turno!.Agenda!.Profesional!);
+        catch
+        {
+            if (tx != null) await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task BajaCitaAsync(int citaId)

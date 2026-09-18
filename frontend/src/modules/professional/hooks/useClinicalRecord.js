@@ -40,7 +40,6 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
       setClinicalHistory(history);
       setPastAppointments(pastCitas || []);
     } catch (err) {
-      console.error('Error al cargar la historia clínica:', err);
       setError(err.message || 'Error al cargar los antecedentes clínicos del paciente.');
     } finally {
       setIsLoading(false);
@@ -49,14 +48,14 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
 
   useEffect(() => {
     loadPatientData();
-    // Inicializar campos con datos existentes si los hubiera
     setMotivo(appointment?.motivoObservacion || '');
     setDetalle(appointment?.detalleObservacion || '');
     setIsSaved(appointment?.estado === 3);
   }, [appointment, loadPatientData]);
 
   /**
-   * Guarda la evolución en ObservacionesController (RN-04) y actualiza el estado de la cita
+   * Guarda la evolución en ObservacionesController (RN-04) y actualiza automáticamente
+   * el estado de la cita a Atendida en la misma transacción atómica en backend.
    */
   const saveEvolution = async () => {
     if (!motivo.trim()) {
@@ -83,7 +82,8 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
 
       const doctorCuil = appointment?.profesionalCuil || user?.cuil || '20123456789';
 
-      // 1. Guardar Observación en la Historia Clínica Unificada (RN-04)
+      // 1. Guardar Observación en la Historia Clínica Unificada (RN-04).
+      // El backend actualiza automáticamente la Cita a Atendida y los turnos a Atendido bajo transacción ACID.
       await professionalService.saveClinicalObservation({
         citaId: appointment.id,
         historiaClinicaId: clinicalHistory?.id || null,
@@ -91,11 +91,6 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
         motivo: motivo.trim(),
         detalle: detalle.trim(),
       });
-
-      // 2. Si se solicitó finalizar consulta, marcar como Atendida (Estado = 3)
-      if (markAsAttended && appointment.estado !== 3) {
-        await professionalService.updateAppointmentStatus(appointment.id, 3);
-      }
 
       setIsSaved(true);
       addToast({
@@ -113,7 +108,6 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
 
       return true;
     } catch (err) {
-      console.error('Error al guardar la observación clínica:', err);
       setError(err.message || 'Ocurrió un error al guardar la evolución.');
       addToast({
         title: 'Error al Guardar',

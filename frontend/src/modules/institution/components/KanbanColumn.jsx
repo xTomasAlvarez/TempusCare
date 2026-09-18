@@ -10,6 +10,7 @@ export const KanbanColumn = ({
   isLoading = false,
   isActionLoading = false,
   emptyMessage = 'No hay pacientes en esta etapa',
+  onMarkArrived,
   onStartAttention,
   onFinishAttention,
   onCancel,
@@ -60,6 +61,7 @@ export const KanbanColumn = ({
               key={item.id}
               item={item}
               columnType={columnType}
+              onMarkArrived={onMarkArrived}
               onStartAttention={onStartAttention}
               onFinishAttention={onFinishAttention}
               onCancel={onCancel}

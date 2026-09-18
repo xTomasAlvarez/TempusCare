@@ -27,7 +27,6 @@ export const useVitalityInstitutions = () => {
       const data = await vitalityService.getInstitutions();
       setInstitutions(data);
     } catch (err) {
-      console.error('Error al cargar instituciones:', err);
       setError(err.message || 'Error al obtener la lista de clientes B2B.');
     } finally {
       setIsLoading(false);
@@ -41,9 +40,9 @@ export const useVitalityInstitutions = () => {
   const handleCreateInstitution = async ({ nombre, cuit, email, plan }) => {
     try {
       setIsSubmitting(true);
-      const res = await vitalityService.createInstitution({ nombre, cuit, email });
+      const res = await vitalityService.createInstitution({ nombre, cuit, email, plan });
 
-      // Asociar el plan seleccionado al CUIT
+      // Asociar el plan seleccionado al CUIT como fallback
       if (plan) {
         setPlanMap((prev) => ({ ...prev, [cuit]: plan }));
       }
@@ -58,7 +57,6 @@ export const useVitalityInstitutions = () => {
       await fetchInstitutions();
       return true;
     } catch (err) {
-      console.error('Error al registrar institución:', err);
       addToast({
         title: 'Error en el Alta',
         description: err.message || 'No se pudo dar de alta la institución médica.',
@@ -81,7 +79,6 @@ export const useVitalityInstitutions = () => {
       await fetchInstitutions();
       return true;
     } catch (err) {
-      console.error('Error al dar de baja:', err);
       addToast({
         title: 'Error al Desvincular',
         description: err.message || 'No se pudo eliminar la institución.',
@@ -94,7 +91,7 @@ export const useVitalityInstitutions = () => {
   // Enriquecer datos con planes de suscripción
   const enrichedInstitutions = useMemo(() => {
     return institutions.map((inst) => {
-      const assignedPlan = planMap[inst.cuit] || (inst.id % 2 === 0 ? 'Profesional' : 'Enterprise');
+      const assignedPlan = inst.plan || planMap[inst.cuit] || (inst.id % 2 === 0 ? 'Profesional' : 'Enterprise');
       return {
         ...inst,
         plan: assignedPlan,

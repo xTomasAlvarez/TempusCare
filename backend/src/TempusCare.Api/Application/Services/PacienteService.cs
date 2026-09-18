@@ -153,6 +153,14 @@ public class PacienteService : IPacienteService
             throw new PacienteNotFoundException(cuil);
         }
 
+        // RNF-SEG-06: Confidencialidad y protección de datos médicos (Ley 25.326)
+        var tieneHistoria = await _db.HistoriasClinicas.AnyAsync(h => h.PacienteCuil == cuil);
+        if (tieneHistoria)
+        {
+            _logger.LogWarning("No se puede eliminar el paciente CUIL {Cuil} porque posee Historia Clínica registrada (RNF-SEG-06 / Ley 25.326).", cuil);
+            throw new ConflictException("No es posible eliminar un paciente con Historia Clínica registrada para garantizar la confidencialidad e integridad médica (RNF-SEG-06 / Ley 25.326).");
+        }
+
         _db.Pacientes.Remove(pac);
         await _db.SaveChangesAsync();
         _logger.LogInformation("Paciente CUIL {Cuil} eliminado", cuil);

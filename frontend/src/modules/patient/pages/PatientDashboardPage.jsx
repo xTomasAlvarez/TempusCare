@@ -1,41 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../core/context/AuthContext';
-import { patientService } from '../services/patientService';
+import { usePatientDashboard } from '../hooks/usePatientDashboard';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../shared/components/ui/Card';
-import { Calendar, Search, FileText, HeartPulse, ArrowRight, Clock, Star, CheckCircle } from 'lucide-react';
+import { Calendar, Search, HeartPulse, ArrowRight, Clock } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
-import { Badge } from '../../../shared/components/ui/Badge';
 
+/**
+ * Dashboard Principal del Paciente.
+ * Componente puramente visual que delega el estado y las llamadas de red al hook usePatientDashboard.
+ */
 export const PatientDashboardPage = () => {
-  const { user } = useAuth();
-  const [nextAppointment, setNextAppointment] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadNext() {
-      if (!user?.cuil) return;
-      try {
-        const list = await patientService.getPatientAppointments(user.cuil);
-        const future = list.filter(
-          (c) => c.estado === 1 || c.estado === 2 || c.estado === 'Solicitada' || c.estado === 'Confirmada'
-        );
-        if (isMounted && future.length > 0) {
-          setNextAppointment(future[0]);
-        }
-      } catch (err) {
-        console.error('Error cargando próxima cita:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    loadNext();
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.cuil]);
+  const { user, nextAppointment, isLoading } = usePatientDashboard();
 
   return (
     <div className="space-y-6">
@@ -60,8 +35,20 @@ export const PatientDashboardPage = () => {
         </div>
       </div>
 
+      {/* Skeleton Loader mientras se consulta la próxima cita */}
+      {isLoading && (
+        <div className="bg-slate-100/80 rounded-2xl p-5 sm:p-6 border border-slate-200/80 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2.5">
+            <div className="h-4 w-32 bg-slate-200 rounded-full" />
+            <div className="h-6 w-56 bg-slate-300 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+          </div>
+          <div className="h-9 w-28 bg-slate-200 rounded-xl" />
+        </div>
+      )}
+
       {/* Banner de Próxima Cita Si Existe */}
-      {nextAppointment && (
+      {!isLoading && nextAppointment && (
         <div className="bg-gradient-to-r from-teal-700 to-emerald-800 rounded-2xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-300">
           <div className="space-y-1">
             <div className="flex items-center gap-2">

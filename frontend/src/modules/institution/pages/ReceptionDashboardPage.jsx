@@ -21,6 +21,7 @@ export const ReceptionDashboardPage = () => {
     isLoading,
     isActionLoading,
     error,
+    markAsArrived,
     startAttention,
     finishAttention,
     cancelCita,
@@ -115,6 +116,7 @@ export const ReceptionDashboardPage = () => {
           columnFinalizados={columnFinalizados}
           isLoading={isLoading}
           isActionLoading={isActionLoading}
+          onMarkArrived={markAsArrived}
           onStartAttention={startAttention}
           onFinishAttention={handleFinishAttention}
           onCancel={handleCancelAppointment}

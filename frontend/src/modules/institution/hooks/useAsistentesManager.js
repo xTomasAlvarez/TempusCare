@@ -25,7 +25,6 @@ export const useAsistentesManager = () => {
       setAsistentes(data);
       setInstituciones(insts);
     } catch (err) {
-      console.error('Error al cargar asistentes:', err);
       setError(err.message || 'Error al cargar personal operativo.');
     } finally {
       setIsLoading(false);
@@ -51,7 +50,6 @@ export const useAsistentesManager = () => {
       await fetchAsistentes();
       return true;
     } catch (err) {
-      console.error('Error al crear asistente:', err);
       addToast({
         title: 'Error al Registrar Personal',
         description: err.message || 'No se pudo dar de alta al asistente.',
@@ -74,7 +72,6 @@ export const useAsistentesManager = () => {
       await fetchAsistentes();
       return true;
     } catch (err) {
-      console.error('Error al eliminar asistente:', err);
       addToast({
         title: 'Error al Dar de Baja',
         description: err.message || 'No se pudo eliminar al asistente.',

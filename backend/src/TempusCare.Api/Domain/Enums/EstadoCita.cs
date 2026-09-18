@@ -6,5 +6,7 @@ public enum EstadoCita
     Confirmada = 2,
     Atendida = 3,
     Ausente = 4,
-    Cancelada = 5
+    Cancelada = 5,
+    EnSalaDeEspera = 6,
+    EnAtencion = 7
 }

@@ -86,7 +86,9 @@ export const ConsultoriosTable = ({
       key: 'profesionalesNombres',
       label: 'Médicos Asignados',
       render: (row) => {
-        const profs = row.profesionalesNombres || [];
+        const profs = (row.profesionales && row.profesionales.length > 0)
+          ? row.profesionales.map((p) => `${p.nombre} ${p.apellido}`.trim())
+          : (row.profesionalesNombres || []);
         if (profs.length === 0) {
           return <span className="text-xs text-slate-400 italic">Sin médicos asignados</span>;
         }

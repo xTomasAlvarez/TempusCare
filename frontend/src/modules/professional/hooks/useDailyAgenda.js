@@ -38,7 +38,6 @@ export const useDailyAgenda = (initialDate = new Date()) => {
         }
       }
     } catch (err) {
-      console.error('Error al cargar la agenda diaria:', err);
       setError(err.message || 'No se pudieron cargar los turnos del día.');
     } finally {
       setIsLoading(false);

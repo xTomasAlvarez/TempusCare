@@ -40,7 +40,8 @@ public record ConsultorioResponseDto(
     string NivelAccesibilidad,
     string? InstitucionNombre,
     string DireccionCompleta,
-    List<string> ProfesionalesNombres
+    List<string> ProfesionalesNombres,
+    List<ProfesionalVinculadoDto> Profesionales
 );
 
 public record ProfesionalVinculadoDto(

@@ -5,6 +5,7 @@ import { Badge } from '../../../shared/components/ui/Badge';
 export const KanbanCard = ({
   item,
   columnType, // 'disponible' | 'espera' | 'atendiendo' | 'finalizado'
+  onMarkArrived,
   onStartAttention,
   onFinishAttention,
   onCancel,
@@ -62,10 +63,15 @@ export const KanbanCard = ({
             <Badge variant="primary" size="sm">Consulta</Badge>
           )}
 
-          {columnType === 'espera' && (
+          {columnType === 'espera' && item.hasArrived && (
             <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               En Espera
+            </span>
+          )}
+          {columnType === 'espera' && !item.hasArrived && (
+            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-amber-200">
+              Citado
             </span>
           )}
         </div>
@@ -94,9 +100,23 @@ export const KanbanCard = ({
 
       {/* Acciones Rápidas */}
       <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-        {/* En Sala de Espera -> Botón Primario Verde "Llamar a Consultorio" */}
+        {/* En Sala de Espera */}
         {columnType === 'espera' && (
           <>
+            {!item.hasArrived && onMarkArrived && (
+              <button
+                type="button"
+                onClick={() => onMarkArrived(item.id)}
+                disabled={isActionLoading}
+                tabIndex={0}
+                aria-label={`Registrar llegada de ${patientName}`}
+                className="py-2 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-1 shadow-xs"
+              >
+                <User className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                <span>Llegó</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => onStartAttention(item.id)}

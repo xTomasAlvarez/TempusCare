@@ -179,6 +179,10 @@ public class BusinessRulesTests
         var cita1 = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20888888888", turnos[0].Id, TipoCita.Consulta, null, null));
         var cita2 = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20888888888", turnos[1].Id, TipoCita.Consulta, null, null));
 
+        // Marcar citas como Atendidas para permitir responder encuestas (RF-PAC-12)
+        await citaService.ModificarCitaEstadoAsync(cita1.Id, EstadoCita.Atendida);
+        await citaService.ModificarCitaEstadoAsync(cita2.Id, EstadoCita.Atendida);
+
         // Cuestionario 1: Puntualidad=5, Atencion=4, Profesionalismo=5 -> Promedio = 4.67
         await cuestionarioService.CompletarCuestionarioAsync(new CompletarCuestionarioDto(cita1.Id, 5, 4, 5, "Excelente atención"));
         // Cuestionario 2: Puntualidad=3, Atencion=3, Profesionalismo=3 -> Promedio = 3.0
@@ -632,4 +636,255 @@ public class BusinessRulesTests
         Assert.Contains(estudiosDeEspecialidad, e => e.Nombre == "Doppler Transvaginal");
         Assert.All(estudiosDeEspecialidad, e => Assert.Equal("Imágenes Médicas", e.EspecialidadNombre));
     }
+
+    [Fact]
+    public async Task RNF_SEG_06_BajaPaciente_ConHistoriaClinica_DebeLanzarConflictException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RNF_SEG_06_BajaPaciente_ConHistoriaClinica_DebeLanzarConflictException));
+        var pacienteService = new PacienteService(db, NullLogger<PacienteService>.Instance);
+
+        var pacienteConHistoria = new Paciente
+        {
+            Cuil = "27112233445",
+            Nombre = "Esteban",
+            Apellido = "Quito"
+        };
+        db.Pacientes.Add(pacienteConHistoria);
+        db.HistoriasClinicas.Add(new HistoriaClinica
+        {
+            PacienteCuil = pacienteConHistoria.Cuil,
+            GrupSang = "0+"
+        });
+
+        var pacienteSinHistoria = new Paciente
+        {
+            Cuil = "27998877665",
+            Nombre = "Laura",
+            Apellido = "Méndez"
+        };
+        db.Pacientes.Add(pacienteSinHistoria);
+        await db.SaveChangesAsync();
+
+        // Act & Assert 1: Paciente con HC debe ser protegido (RNF-SEG-06 / Ley 25.326)
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => pacienteService.BajaPerfilAsync(pacienteConHistoria.Cuil));
+        Assert.Contains("Historia Clínica", ex.Message);
+        Assert.Contains("Ley 25.326", ex.Message);
+
+        // Act & Assert 2: Paciente sin HC puede eliminarse normalmente
+        await pacienteService.BajaPerfilAsync(pacienteSinHistoria.Cuil);
+        var pacEliminado = await db.Pacientes.FirstOrDefaultAsync(p => p.Cuil == pacienteSinHistoria.Cuil);
+        Assert.Null(pacEliminado);
+    }
+
+    [Fact]
+    public async Task RF_IADM_01_BajaConsultorio_DebeEliminarCuentasUsuarioDeAdministradoresConsultorio()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RF_IADM_01_BajaConsultorio_DebeEliminarCuentasUsuarioDeAdministradoresConsultorio));
+        var consultorioService = new ConsultorioService(db, NullLogger<ConsultorioService>.Instance);
+
+        var consultorio = new Consultorio
+        {
+            Cuit = "30123456789",
+            Nombre = "Sede Centro"
+        };
+        db.Consultorios.Add(consultorio);
+
+        var usuarioAdmin = new Usuario
+        {
+            NombreUsuario = "admin.sede.centro",
+            Contrasena = "Pass123!",
+            Mail = "admin.sede@tempuscare.com",
+            Rol = RolUsuario.AdminConsultorio
+        };
+        db.Usuarios.Add(usuarioAdmin);
+        await db.SaveChangesAsync();
+
+        var adminCons = new AdministradorConsultorio
+        {
+            Cuil = "20123456789",
+            Nombre = "Federico",
+            Apellido = "Gómez",
+            UsuarioId = usuarioAdmin.Id,
+            ConsultorioCuit = consultorio.Cuit
+        };
+        db.AdministradoresConsultorio.Add(adminCons);
+        await db.SaveChangesAsync();
+
+        // Act: Dar de baja el consultorio
+        await consultorioService.BajaConsultorioAsync(consultorio.Cuit);
+
+        // Assert: Se eliminó el consultorio y no quedan usuarios huérfanos
+        var consDb = await db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == consultorio.Cuit);
+        var adminDb = await db.AdministradoresConsultorio.FirstOrDefaultAsync(a => a.Cuil == adminCons.Cuil);
+        var usuarioDb = await db.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioAdmin.Id);
+
+        Assert.Null(consDb);
+        Assert.Null(adminDb);
+        Assert.Null(usuarioDb);
+    }
+
+    [Fact]
+    public async Task RF_PAC_06_TurnoRowVersion_SeActualizaAlReservarYAlCancelar()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RF_PAC_06_TurnoRowVersion_SeActualizaAlReservarYAlCancelar));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20888888888", Nombre = "Martín", Apellido = "Sosa", Matricula = "MP8888" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30444444444", Nombre = "Clínica Este" });
+        db.Pacientes.Add(new Paciente { Cuil = "27444444444", Nombre = "Camila", Apellido = "Reyes" });
+        await db.SaveChangesAsync();
+
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20888888888", "30444444444", 15, 12, 2026, new TimeSpan(10, 0, 0), new TimeSpan(10, 30, 0), 30));
+        var turno = await db.Turnos.FirstAsync(t => t.AgendaId == agenda.Id);
+        var rowVersionInicial = turno.RowVersion;
+
+        // Act 1: Reserva
+        var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27444444444", "20888888888", turno.Id, TipoCita.Consulta, null, null));
+        var turnoPostReserva = await db.Turnos.AsNoTracking().FirstAsync(t => t.Id == turno.Id);
+
+        // Assert 1: RowVersion se modificó
+        Assert.NotEqual(rowVersionInicial, turnoPostReserva.RowVersion);
+        var rowVersionPostReserva = turnoPostReserva.RowVersion;
+
+        // Act 2: Cancelación
+        await citaService.BajaCitaAsync(cita.Id);
+        var turnoPostCancelacion = await db.Turnos.AsNoTracking().FirstAsync(t => t.Id == turno.Id);
+
+        // Assert 2: RowVersion se volvió a renovar para asegurar concurrencia
+        Assert.NotEqual(rowVersionPostReserva, turnoPostCancelacion.RowVersion);
+        Assert.Equal(EstadoTurno.Disponible, turnoPostCancelacion.Estado);
+        Assert.Null(turnoPostCancelacion.CitaId);
+    }
+
+    [Fact]
+    public async Task RF_MED_06_CompletarObservacion_ActualizaCitaYTurnoA_Atendido()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RF_MED_06_CompletarObservacion_ActualizaCitaYTurnoA_Atendido));
+        var agendaService = new AgendaService(db, NullLogger<AgendaService>.Instance);
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+        var observacionService = new ObservacionService(db, NullLogger<ObservacionService>.Instance);
+
+        db.Profesionales.Add(new Profesional { Cuil = "20101010101", Nombre = "Mariana", Apellido = "Rios", Matricula = "MP9090" });
+        db.Consultorios.Add(new Consultorio { Cuit = "30101010101", Nombre = "Sede Norte" });
+        db.Pacientes.Add(new Paciente { Cuil = "27101010101", Nombre = "Gabriel", Apellido = "Ruiz" });
+        await db.SaveChangesAsync();
+
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20101010101", "30101010101", 12, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(8, 30, 0), 30));
+        var turno = await db.Turnos.FirstAsync(t => t.AgendaId == agenda.Id);
+
+        var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27101010101", "20101010101", turno.Id, TipoCita.Consulta, null, null));
+        Assert.Equal(EstadoCita.Confirmada, cita.Estado);
+
+        // Act: El profesional registra la evolución médica de la consulta (RF-MED-06 & RN-04)
+        var dtoObs = new CompletarObservacionDto(cita.Id, null, null, "Control clínico de rutina", "Paciente normotenso, sin particularidades.");
+        var resObs = await observacionService.CompletarObservacionAsync(dtoObs);
+
+        // Assert: La observación fue registrada y la Cita y el Turno pasaron a Atendido
+        Assert.NotNull(resObs);
+        var citaDb = await db.Citas.FindAsync(cita.Id);
+        var turnoDb = await db.Turnos.FindAsync(turno.Id);
+
+        Assert.Equal(EstadoCita.Atendida, citaDb?.Estado);
+        Assert.Equal(EstadoTurno.Atendido, turnoDb?.Estado);
+
+        // La observación está vinculada a la Historia Clínica unificada del paciente
+        var hcDb = await db.HistoriasClinicas.Include(h => h.Observaciones).FirstOrDefaultAsync(h => h.PacienteCuil == "27101010101");
+        Assert.NotNull(hcDb);
+        Assert.Contains(hcDb.Observaciones, o => o.Id == resObs.Id);
+    }
+
+    [Fact]
+    public async Task RF_PAC_12_CompletarCuestionario_EnCitaNoAtendida_LanzaConflictException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RF_PAC_12_CompletarCuestionario_EnCitaNoAtendida_LanzaConflictException));
+        var cuestionarioService = new CuestionarioService(db, NullLogger<CuestionarioService>.Instance);
+
+        var citaConfirmada = new Cita
+        {
+            PacienteCuil = "27202020202",
+            Fecha = DateTime.Now,
+            Estado = EstadoCita.Confirmada,
+            Tipo = TipoCita.Consulta
+        };
+        db.Citas.Add(citaConfirmada);
+        await db.SaveChangesAsync();
+
+        // Act & Assert 1: Intentar contestar la encuesta antes de ser atendido debe fallar (RF-PAC-12)
+        var dto = new CompletarCuestionarioDto(citaConfirmada.Id, 5, 5, 5, "Muy buena atención");
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => cuestionarioService.CompletarCuestionarioAsync(dto));
+        Assert.Contains("Atendidas", ex.Message);
+        Assert.Contains("RF-PAC-12", ex.Message);
+
+        // Act & Assert 2: Al ser atendida, se permite completar la encuesta
+        citaConfirmada.Estado = EstadoCita.Atendida;
+        await db.SaveChangesAsync();
+
+        var res = await cuestionarioService.CompletarCuestionarioAsync(dto);
+        Assert.NotNull(res);
+        Assert.Equal(5.0, res.Promedio);
+    }
+
+    [Fact]
+    public async Task Vitality_AltaInstitucion_PersistePlanSuscripcion()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Vitality_AltaInstitucion_PersistePlanSuscripcion));
+        var institucionService = new InstitucionService(db, NullLogger<InstitucionService>.Instance);
+
+        var dtoAlta = new AltaInstitucionDto("Sanatorio Modelo", "30777888999", "admin@sanatoriomodelo.com", "Starter");
+
+        // Act
+        var res = await institucionService.AltaInstitucionAsync(dtoAlta);
+
+        // Assert
+        Assert.NotNull(res);
+        Assert.Equal("Starter", res.Plan);
+
+        var instDb = await institucionService.ObtenerPorIdAsync(res.Id);
+        Assert.Equal("Starter", instDb.Plan);
+    }
+
+    [Fact]
+    public async Task Consultorios_RetornaObjetosProfesionalVinculadoDto()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Consultorios_RetornaObjetosProfesionalVinculadoDto));
+        var consultorioService = new ConsultorioService(db, NullLogger<ConsultorioService>.Instance);
+
+        var esp = new Especialidad { Nombre = "Neurología", Descripcion = "Especialidad del sistema nervioso" };
+        db.Especialidades.Add(esp);
+        await db.SaveChangesAsync();
+
+        var prof = new Profesional { Cuil = "20303030303", Nombre = "Esteban", Apellido = "Britez", Matricula = "MN5555", Telefono = "3814445566" };
+        prof.Especialidades.Add(new ProfesionalEspecialidad { ProfesionalCuil = prof.Cuil, EspecialidadId = esp.Id });
+        db.Profesionales.Add(prof);
+
+        var consultorio = new Consultorio { Cuit = "30303030303", Nombre = "Centro Neurológico" };
+        db.Consultorios.Add(consultorio);
+        await db.SaveChangesAsync();
+
+        await consultorioService.AsignarProfesionalAsync(consultorio.Cuit, prof.Cuil);
+
+        // Act
+        var consDto = await consultorioService.ObtenerPorCuitAsync(consultorio.Cuit);
+
+        // Assert: Retorna objetos completos ProfesionalVinculadoDto
+        Assert.NotNull(consDto);
+        Assert.Single(consDto.Profesionales);
+        var profVinculado = consDto.Profesionales.First();
+
+        Assert.Equal("20303030303", profVinculado.Cuil);
+        Assert.Equal("Esteban", profVinculado.Nombre);
+        Assert.Equal("Britez", profVinculado.Apellido);
+        Assert.Equal("MN5555", profVinculado.Matricula);
+        Assert.Contains("Neurología", profVinculado.Especialidades);
+    }
 }
+
+

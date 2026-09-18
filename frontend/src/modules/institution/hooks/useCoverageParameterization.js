@@ -49,7 +49,6 @@ export const useCoverageParameterization = () => {
           setSelectedDoctorCuil(profs[0].cuil);
         }
       } catch (err) {
-        console.error('Error al cargar catálogos:', err);
         setError('Error al cargar catálogos de cobertura médica.');
       } finally {
         if (isMounted) setIsLoadingCatalogs(false);
@@ -73,7 +72,6 @@ export const useCoverageParameterization = () => {
       const data = await institutionAdminService.getProfesionalEstudios(cuil);
       setDoctorStudies(data);
     } catch (err) {
-      console.error('Error al cargar estudios del médico:', err);
       setDoctorStudies([]);
     } finally {
       setIsLoadingStudies(false);
@@ -193,7 +191,6 @@ export const useCoverageParameterization = () => {
       setPrecioParticular('');
       return true;
     } catch (err) {
-      console.error('Error al guardar parametrización de cobertura:', err);
       addToast({
         title: 'Error al Parametrizar',
         description: err.message || 'No se pudo guardar la parametrización de cobertura.',
@@ -217,7 +214,6 @@ export const useCoverageParameterization = () => {
       await fetchDoctorStudies(selectedDoctorCuil);
       return true;
     } catch (err) {
-      console.error('Error al desvincular estudio:', err);
       addToast({
         title: 'Error al Desvincular',
         description: err.message || 'No se pudo desvincular el estudio.',

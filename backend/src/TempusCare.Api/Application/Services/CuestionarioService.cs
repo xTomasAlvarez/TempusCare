@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Exceptions;
 using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Domain.Enums;
 using TempusCare.Api.Infrastructure.Data;
 
 namespace TempusCare.Api.Application.Services;
@@ -29,6 +30,13 @@ public class CuestionarioService : ICuestionarioService
         {
             _logger.LogWarning("Cita ID {CitaId} no encontrada", dto.CitaId);
             throw new CitaNotFoundException(dto.CitaId);
+        }
+
+        // Validación de Encuesta (RF-PAC-12): El paciente contesta el cuestionario de satisfacción únicamente luego de ser atendido.
+        if (cita.Estado != EstadoCita.Atendida)
+        {
+            _logger.LogWarning("RF-PAC-12: Intento de completar encuesta para cita ID {CitaId} en estado {Estado} (debe ser Atendida).", dto.CitaId, cita.Estado);
+            throw new ConflictException("Solo se pueden responder encuestas de satisfacción para citas que hayan sido marcadas como Atendidas (RF-PAC-12).");
         }
 
         if (cita.Cuestionario != null)

@@ -1,17 +1,26 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HeartPulse, LogOut, User, Building2, Stethoscope, Calendar, Settings } from 'lucide-react';
+import { HeartPulse, LogOut, User, Building2, Stethoscope, Calendar, Search, LayoutDashboard } from 'lucide-react';
 import { Button } from '../../shared/components/ui/Button';
 
 export const MainLayout = () => {
   const { user, clearAuthData } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     clearAuthData();
     navigate('/login', { replace: true });
   };
+
+  const isPatient = user?.rol === 'Paciente';
+
+  const navLinks = [
+    { label: 'Inicio', path: '/patient/dashboard', icon: LayoutDashboard },
+    { label: 'Buscar Médicos', path: '/patient/search', icon: Search },
+    { label: 'Mis Citas', path: '/patient/appointments', icon: Calendar },
+  ];
 
   const getRoleBadge = (rol) => {
     switch (rol) {
@@ -27,11 +36,11 @@ export const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Barra Superior de Navegación Accesible */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 sm:gap-8">
             <Link
               to="/"
               tabIndex={0}
@@ -45,6 +54,31 @@ export const MainLayout = () => {
                 Tempus<span className="text-teal-600">Care</span>
               </span>
             </Link>
+
+            {/* Enlaces de Navegación para Paciente en Desktop */}
+            {isPatient && (
+              <nav aria-label="Navegación del paciente" className="hidden md:flex items-center gap-1">
+                {navLinks.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      tabIndex={0}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                        isActive
+                          ? 'bg-teal-50 text-teal-700 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -76,9 +110,35 @@ export const MainLayout = () => {
       </header>
 
       {/* Área Central de Contenido */}
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 md:pb-8">
         <Outlet />
       </main>
+
+      {/* Menú de Navegación Inferior Móvil (Bottom Navigation) */}
+      {isPatient && (
+        <nav
+          aria-label="Navegación inferior móvil"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-around shadow-lg"
+        >
+          {navLinks.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                tabIndex={0}
+                className={`flex flex-col items-center gap-1 p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  isActive ? 'text-teal-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} aria-hidden="true" />
+                <span className="text-[10px] tracking-tight">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 };

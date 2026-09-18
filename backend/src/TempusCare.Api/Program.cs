@@ -144,9 +144,144 @@ using (var scope = app.Services.CreateScope())
             new TempusCare.Api.Domain.Entities.ObraSocial { Nombre = "Swiss Medical", Catalogo = "Prepaga nacional" },
             new TempusCare.Api.Domain.Entities.ObraSocial { Nombre = "PAMI", Catalogo = "Jubilados y pensionados" }
         );
+        db.SaveChanges();
     }
 
-    db.SaveChanges();
+    // Seed Consultorios, Asignaciones, Agendas y Turnos si no existen
+    if (!db.Consultorios.Any())
+    {
+        var inst1 = db.Instituciones.FirstOrDefault();
+        if (inst1 != null)
+        {
+            var cons1 = new TempusCare.Api.Domain.Entities.Consultorio
+            {
+                Cuit = "3011122233401",
+                Nombre = "Consultorio 101 - Cardiología",
+                Email = "cardio101@sanatoriotucuman.com",
+                InstitucionId = inst1.Id
+            };
+            var cons2 = new TempusCare.Api.Domain.Entities.Consultorio
+            {
+                Cuit = "3011122233402",
+                Nombre = "Consultorio 102 - Pediatría",
+                Email = "pediatria102@sanatoriotucuman.com",
+                InstitucionId = inst1.Id
+            };
+            db.Consultorios.AddRange(cons1, cons2);
+            db.SaveChanges();
+
+            var med = db.Profesionales.FirstOrDefault(p => p.Cuil == "20123456789");
+            var espCardio = db.Especialidades.FirstOrDefault(e => e.Nombre == "Cardiología");
+            var osOsde = db.ObrasSociales.FirstOrDefault(o => o.Nombre == "OSDE");
+            var osSwiss = db.ObrasSociales.FirstOrDefault(o => o.Nombre == "Swiss Medical");
+            var osSubsidio = db.ObrasSociales.FirstOrDefault(o => o.Nombre == "Subsidio de Salud");
+
+            if (med != null && espCardio != null)
+            {
+                // Asociar especialidad
+                if (!db.ProfesionalEspecialidades.Any(pe => pe.ProfesionalCuil == med.Cuil && pe.EspecialidadId == espCardio.Id))
+                {
+                    db.ProfesionalEspecialidades.Add(new TempusCare.Api.Domain.Entities.ProfesionalEspecialidad
+                    {
+                        ProfesionalCuil = med.Cuil,
+                        EspecialidadId = espCardio.Id
+                    });
+                }
+
+                // Asociar consultorio
+                if (!db.ProfesionalConsultorios.Any(pc => pc.ProfesionalCuil == med.Cuil && pc.ConsultorioCuit == cons1.Cuit))
+                {
+                    db.ProfesionalConsultorios.Add(new TempusCare.Api.Domain.Entities.ProfesionalConsultorio
+                    {
+                        ProfesionalCuil = med.Cuil,
+                        ConsultorioCuit = cons1.Cuit
+                    });
+                }
+
+                // Asociar obras sociales
+                if (osOsde != null && !db.ProfesionalObrasSociales.Any(po => po.ProfesionalCuil == med.Cuil && po.ObraSocialId == osOsde.Id))
+                {
+                    db.ProfesionalObrasSociales.Add(new TempusCare.Api.Domain.Entities.ProfesionalObraSocial { ProfesionalCuil = med.Cuil, ObraSocialId = osOsde.Id });
+                }
+                if (osSwiss != null && !db.ProfesionalObrasSociales.Any(po => po.ProfesionalCuil == med.Cuil && po.ObraSocialId == osSwiss.Id))
+                {
+                    db.ProfesionalObrasSociales.Add(new TempusCare.Api.Domain.Entities.ProfesionalObraSocial { ProfesionalCuil = med.Cuil, ObraSocialId = osSwiss.Id });
+                }
+                if (osSubsidio != null && !db.ProfesionalObrasSociales.Any(po => po.ProfesionalCuil == med.Cuil && po.ObraSocialId == osSubsidio.Id))
+                {
+                    db.ProfesionalObrasSociales.Add(new TempusCare.Api.Domain.Entities.ProfesionalObraSocial { ProfesionalCuil = med.Cuil, ObraSocialId = osSubsidio.Id });
+                }
+
+                db.SaveChanges();
+
+                // Crear Agenda y Turnos disponibles
+                var hoy = DateTime.Today;
+                var agenda = new TempusCare.Api.Domain.Entities.Agenda
+                {
+                    ProfesionalCuil = med.Cuil,
+                    ConsultorioCuit = cons1.Cuit,
+                    Dia = hoy.Day,
+                    Mes = hoy.Month,
+                    Anio = hoy.Year,
+                    HoraEntrada = new TimeSpan(8, 0, 0),
+                    HoraSalida = new TimeSpan(18, 0, 0)
+                };
+                db.Agendas.Add(agenda);
+                db.SaveChanges();
+
+                // Generar slots de turnos para hoy y próximos días
+                var turnos = new List<TempusCare.Api.Domain.Entities.Turno>();
+                for (int d = 0; d <= 2; d++)
+                {
+                    var fechaDia = hoy.AddDays(d);
+                    var horas = new[] { 9, 10, 11, 14, 15, 16 };
+                    foreach (var h in horas)
+                    {
+                        turnos.Add(new TempusCare.Api.Domain.Entities.Turno
+                        {
+                            AgendaId = agenda.Id,
+                            Fecha = fechaDia,
+                            HoraInicio = new TimeSpan(h, 0, 0),
+                            HoraFin = new TimeSpan(h, 30, 0),
+                            Estado = TempusCare.Api.Domain.Enums.EstadoTurno.Disponible
+                        });
+                        turnos.Add(new TempusCare.Api.Domain.Entities.Turno
+                        {
+                            AgendaId = agenda.Id,
+                            Fecha = fechaDia,
+                            HoraInicio = new TimeSpan(h, 30, 0),
+                            HoraFin = new TimeSpan(h + 1, 0, 0),
+                            Estado = TempusCare.Api.Domain.Enums.EstadoTurno.Disponible
+                        });
+                    }
+                }
+                db.Turnos.AddRange(turnos);
+                db.SaveChanges();
+
+                // Cita previa Atendida para probar el Cuestionario de satisfacción
+                var pac = db.Pacientes.FirstOrDefault(p => p.Cuil == "27000000001");
+                if (pac != null && turnos.Count > 0)
+                {
+                    var turnoPasado = turnos[0];
+                    turnoPasado.Estado = TempusCare.Api.Domain.Enums.EstadoTurno.Atendido;
+
+                    var citaPasada = new TempusCare.Api.Domain.Entities.Cita
+                    {
+                        TurnoId = turnoPasado.Id,
+                        PacienteCuil = pac.Cuil,
+                        Fecha = hoy.AddDays(-2),
+                        Estado = TempusCare.Api.Domain.Enums.EstadoCita.Atendida,
+                        Tipo = TempusCare.Api.Domain.Enums.TipoCita.Consulta,
+                        Cobertura = TempusCare.Api.Domain.Enums.CoberturaCita.ObraSocial
+                    };
+                    db.Citas.Add(citaPasada);
+                    db.SaveChanges();
+                    turnoPasado.CitaId = citaPasada.Id;
+                    db.SaveChanges();
+                }
+            }
+        }
+    }
 }
 
 app.Run();

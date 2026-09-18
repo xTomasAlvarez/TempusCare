@@ -4,6 +4,8 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
 import { LoginPage } from '../../modules/auth/pages/LoginPage';
 import { PatientDashboardPage } from '../../modules/patient/pages/PatientDashboardPage';
+import { SearchProfessionalsPage } from '../../modules/patient/pages/SearchProfessionalsPage';
+import { MyAppointmentsPage } from '../../modules/patient/pages/MyAppointmentsPage';
 import { ProfessionalDashboardPage } from '../../modules/professional/pages/ProfessionalDashboardPage';
 import { ReceptionDashboardPage } from '../../modules/institution/pages/ReceptionDashboardPage';
 import { AdminDashboardPage } from '../../modules/institution/pages/AdminDashboardPage';
@@ -69,6 +71,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['Paciente']}>
             <PatientDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/patient/search',
+        element: (
+          <ProtectedRoute allowedRoles={['Paciente']}>
+            <SearchProfessionalsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/patient/appointments',
+        element: (
+          <ProtectedRoute allowedRoles={['Paciente']}>
+            <MyAppointmentsPage />
           </ProtectedRoute>
         ),
       },

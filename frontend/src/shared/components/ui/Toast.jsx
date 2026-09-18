@@ -81,3 +81,62 @@ export const useToast = () => {
   }
   return context;
 };
+
+/**
+ * Componente Toast Autónomo Accesible (para uso sin context o inline)
+ */
+export const Toast = ({
+  type = 'info',
+  variant,
+  title,
+  message,
+  description,
+  onClose,
+  className,
+}) => {
+  const finalVariant = variant || (type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info');
+  const finalMessage = message || description;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'fixed bottom-5 right-5 z-50 flex items-start gap-3 p-4 rounded-2xl border shadow-xl transition-all duration-300 max-w-md w-full animate-in slide-in-from-bottom-3',
+        finalVariant === 'success' && 'bg-emerald-50 border-emerald-200 text-emerald-950',
+        finalVariant === 'error' && 'bg-rose-50 border-rose-200 text-rose-950',
+        finalVariant === 'warning' && 'bg-amber-50 border-amber-200 text-amber-950',
+        finalVariant === 'info' && 'bg-slate-900 border-slate-800 text-white',
+        className
+      )}
+    >
+      <div className="flex-shrink-0 mt-0.5">
+        {finalVariant === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />}
+        {finalVariant === 'error' && <XCircle className="w-5 h-5 text-rose-600" aria-hidden="true" />}
+        {finalVariant === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" aria-hidden="true" />}
+        {finalVariant === 'info' && <Info className="w-5 h-5 text-teal-400" aria-hidden="true" />}
+      </div>
+
+      <div className="flex-1 text-sm">
+        {title && <p className="font-semibold font-heading">{title}</p>}
+        {finalMessage && (
+          <p className={cn('text-xs mt-0.5', finalVariant === 'info' ? 'text-slate-300' : 'opacity-90')}>
+            {finalMessage}
+          </p>
+        )}
+      </div>
+
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar notificación"
+          tabIndex={0}
+          className="flex-shrink-0 rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-teal-500"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+};

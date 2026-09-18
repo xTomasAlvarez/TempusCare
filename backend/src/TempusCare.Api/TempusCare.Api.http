@@ -1,0 +1,6 @@
+@TempusCare.Api_HostAddress = http://localhost:5269
+
+GET {{TempusCare.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

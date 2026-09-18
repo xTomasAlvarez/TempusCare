@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-heading: 'Ranade', 'Object Sans', 'Plus Jakarta Sans', sans-serif;
+    --font-sans: 'Manrope', 'DM Sans', sans-serif;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
+  }
+}
+
+/* Custom focus ring for accessibility (WCAG) */
+*:focus-visible {
+  outline: 2px solid #0d9488 !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 3px solid Highlight !important;
+  }
+}

@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { HeartPulse, LogOut, User, Building2, Stethoscope, Calendar, Search, LayoutDashboard } from 'lucide-react';
 import { Button } from '../../shared/components/ui/Button';
+import { ContextSwitcher } from '../../modules/professional/components/ContextSwitcher';
 
 export const MainLayout = () => {
   const { user, clearAuthData } = useAuth();
@@ -82,6 +83,10 @@ export const MainLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {user?.rol === 'Profesional' && (
+              <ContextSwitcher />
+            )}
+
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex flex-col items-end">

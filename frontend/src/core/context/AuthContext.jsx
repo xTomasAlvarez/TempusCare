@@ -6,6 +6,7 @@ export const AuthProvider = ({ children }) => {
   // Estado en memoria puro para máxima seguridad (PROHIBIDO persistir JWT sensible en localStorage)
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [activeConsultorio, setActiveConsultorio] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const setAuthData = useCallback((userData, jwtToken) => {
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const clearAuthData = useCallback(() => {
     setUser(null);
     setToken(null);
+    setActiveConsultorio(null);
   }, []);
 
   /**
@@ -42,6 +44,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    activeConsultorio,
+    setActiveConsultorio,
     isAuthenticated: Boolean(user && token),
     isLoading,
     setIsLoading,

@@ -188,13 +188,21 @@ using (var scope = app.Services.CreateScope())
                     });
                 }
 
-                // Asociar consultorio
+                // Asociar consultorios
                 if (!db.ProfesionalConsultorios.Any(pc => pc.ProfesionalCuil == med.Cuil && pc.ConsultorioCuit == cons1.Cuit))
                 {
                     db.ProfesionalConsultorios.Add(new TempusCare.Api.Domain.Entities.ProfesionalConsultorio
                     {
                         ProfesionalCuil = med.Cuil,
                         ConsultorioCuit = cons1.Cuit
+                    });
+                }
+                if (!db.ProfesionalConsultorios.Any(pc => pc.ProfesionalCuil == med.Cuil && pc.ConsultorioCuit == cons2.Cuit))
+                {
+                    db.ProfesionalConsultorios.Add(new TempusCare.Api.Domain.Entities.ProfesionalConsultorio
+                    {
+                        ProfesionalCuil = med.Cuil,
+                        ConsultorioCuit = cons2.Cuit
                     });
                 }
 
@@ -258,10 +266,30 @@ using (var scope = app.Services.CreateScope())
                 db.Turnos.AddRange(turnos);
                 db.SaveChanges();
 
-                // Cita previa Atendida para probar el Cuestionario de satisfacción
+                // Cita previa Atendida para probar el Cuestionario de satisfacción y Ficha Clínica
                 var pac = db.Pacientes.FirstOrDefault(p => p.Cuil == "27000000001");
                 if (pac != null && turnos.Count > 0)
                 {
+                    // Crear Historia Clínica Unificada (RN-04)
+                    var hc = db.HistoriasClinicas.FirstOrDefault(h => h.PacienteCuil == pac.Cuil);
+                    if (hc == null)
+                    {
+                        hc = new TempusCare.Api.Domain.Entities.HistoriaClinica
+                        {
+                            PacienteCuil = pac.Cuil,
+                            GrupSang = "A+",
+                            Alergias = "Penicilina",
+                            EnfermedadesCronicas = "Hipertensión leve",
+                            Medicamentos = "Losartán 50mg/día",
+                            Discapacidad = "Ninguna",
+                            NombreContacto = "María",
+                            ApellidoContacto = "García",
+                            TelefonoContacto = "3815998877"
+                        };
+                        db.HistoriasClinicas.Add(hc);
+                        db.SaveChanges();
+                    }
+
                     var turnoPasado = turnos[0];
                     turnoPasado.Estado = TempusCare.Api.Domain.Enums.EstadoTurno.Atendido;
 
@@ -277,6 +305,41 @@ using (var scope = app.Services.CreateScope())
                     db.Citas.Add(citaPasada);
                     db.SaveChanges();
                     turnoPasado.CitaId = citaPasada.Id;
+
+                    // Observación previa en la Historia Clínica
+                    if (!db.Observaciones.Any(o => o.CitaId == citaPasada.Id))
+                    {
+                        var obsPrevia = new TempusCare.Api.Domain.Entities.Observacion
+                        {
+                            CitaId = citaPasada.Id,
+                            HistoriaClinicaId = hc.Id,
+                            ProfesionalCuil = med.Cuil,
+                            Motivo = "Consulta Cardiológica de Rutina",
+                            Detalle = "Paciente lúcida, normotensa (125/80 mmHg). Ruidos cardíacos normofonéticos. Se renueva prescripción habitual y se sugiere ergometría preventiva."
+                        };
+                        db.Observaciones.Add(obsPrevia);
+                    }
+
+                    // Turno y Cita agendada para HOY para probar la atención médica activa
+                    if (turnos.Count > 1)
+                    {
+                        var turnoHoy = turnos[1];
+                        turnoHoy.Estado = TempusCare.Api.Domain.Enums.EstadoTurno.Reservado;
+
+                        var citaHoy = new TempusCare.Api.Domain.Entities.Cita
+                        {
+                            TurnoId = turnoHoy.Id,
+                            PacienteCuil = pac.Cuil,
+                            Fecha = hoy,
+                            Estado = TempusCare.Api.Domain.Enums.EstadoCita.Confirmada,
+                            Tipo = TempusCare.Api.Domain.Enums.TipoCita.Consulta,
+                            Cobertura = TempusCare.Api.Domain.Enums.CoberturaCita.ObraSocial
+                        };
+                        db.Citas.Add(citaHoy);
+                        db.SaveChanges();
+                        turnoHoy.CitaId = citaHoy.Id;
+                    }
+
                     db.SaveChanges();
                 }
             }

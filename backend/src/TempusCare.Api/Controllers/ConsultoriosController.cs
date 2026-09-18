@@ -52,4 +52,25 @@ public class ConsultoriosController : ControllerBase
         var res = await _consultorioService.ObtenerPorCuitAsync(cuit);
         return Ok(res);
     }
+
+    [HttpGet("{cuit}/profesionales")]
+    public async Task<IActionResult> ObtenerProfesionales(string cuit)
+    {
+        var res = await _consultorioService.ObtenerProfesionalesPorConsultorioAsync(cuit);
+        return Ok(res);
+    }
+
+    [HttpPost("{cuit}/profesionales/{profesionalCuil}")]
+    public async Task<IActionResult> AsignarProfesional(string cuit, string profesionalCuil)
+    {
+        await _consultorioService.AsignarProfesionalAsync(cuit, profesionalCuil);
+        return Ok(new { message = "Profesional vinculado correctamente al consultorio." });
+    }
+
+    [HttpDelete("{cuit}/profesionales/{profesionalCuil}")]
+    public async Task<IActionResult> DesasignarProfesional(string cuit, string profesionalCuil)
+    {
+        await _consultorioService.DesasignarProfesionalAsync(cuit, profesionalCuil);
+        return NoContent();
+    }
 }

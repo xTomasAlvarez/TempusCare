@@ -13,4 +13,6 @@ public class AdministradorConsultorio
     public string Apellido { get; set; } = string.Empty;
     public string Telefono { get; set; } = string.Empty;
     public DateTime FechaNacimiento { get; set; }
+
+    public ICollection<Asistente> Asistentes { get; set; } = new List<Asistente>();
 }

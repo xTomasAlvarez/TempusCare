@@ -10,4 +10,7 @@ public interface IConsultorioService
     Task<List<ConsultorioResponseDto>> ObtenerTodosAsync();
     Task<ConsultorioResponseDto> ObtenerPorCuitAsync(string cuit);
     Task<List<ConsultorioResponseDto>> ObtenerPorInstitucionAsync(int institucionId);
+    Task<List<ProfesionalVinculadoDto>> ObtenerProfesionalesPorConsultorioAsync(string consultorioCuit);
+    Task AsignarProfesionalAsync(string consultorioCuit, string profesionalCuil);
+    Task DesasignarProfesionalAsync(string consultorioCuit, string profesionalCuil);
 }

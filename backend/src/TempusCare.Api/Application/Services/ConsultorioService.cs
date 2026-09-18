@@ -174,6 +174,82 @@ public class ConsultorioService : IConsultorioService
         return lista.Select(c => MapToDto(c)).ToList();
     }
 
+    public async Task<List<ProfesionalVinculadoDto>> ObtenerProfesionalesPorConsultorioAsync(string consultorioCuit)
+    {
+        _logger.LogInformation("Obteniendo profesionales del consultorio {Cuit}", consultorioCuit);
+
+        var consultorioExiste = await _db.Consultorios.AnyAsync(c => c.Cuit == consultorioCuit);
+        if (!consultorioExiste)
+        {
+            throw new ConsultorioNotFoundException(consultorioCuit);
+        }
+
+        var vinculaciones = await _db.ProfesionalConsultorios
+            .Include(pc => pc.Profesional)
+                .ThenInclude(p => p.Especialidades)
+                    .ThenInclude(e => e.Especialidad)
+            .Where(pc => pc.ConsultorioCuit == consultorioCuit)
+            .ToListAsync();
+
+        return vinculaciones.Select(pc => new ProfesionalVinculadoDto(
+            pc.ProfesionalCuil,
+            pc.Profesional?.Nombre ?? "",
+            pc.Profesional?.Apellido ?? "",
+            pc.Profesional?.Matricula ?? "",
+            pc.Profesional?.Telefono ?? "",
+            pc.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList() ?? new List<string>()
+        )).ToList();
+    }
+
+    public async Task AsignarProfesionalAsync(string consultorioCuit, string profesionalCuil)
+    {
+        _logger.LogInformation("Asignando profesional {Cuil} a consultorio {Cuit}", profesionalCuil, consultorioCuit);
+
+        var consultorioExiste = await _db.Consultorios.AnyAsync(c => c.Cuit == consultorioCuit);
+        if (!consultorioExiste)
+            throw new ConsultorioNotFoundException(consultorioCuit);
+
+        var profesionalExiste = await _db.Profesionales.AnyAsync(p => p.Cuil == profesionalCuil);
+        if (!profesionalExiste)
+            throw new ProfesionalNotFoundException(profesionalCuil);
+
+        var yaExiste = await _db.ProfesionalConsultorios
+            .AnyAsync(pc => pc.ConsultorioCuit == consultorioCuit && pc.ProfesionalCuil == profesionalCuil);
+
+        if (yaExiste)
+        {
+            _logger.LogWarning("El profesional {Cuil} ya se encuentra vinculado al consultorio {Cuit}", profesionalCuil, consultorioCuit);
+            throw new ConflictException("El profesional ya se encuentra vinculado a este consultorio.");
+        }
+
+        _db.ProfesionalConsultorios.Add(new ProfesionalConsultorio
+        {
+            ConsultorioCuit = consultorioCuit,
+            ProfesionalCuil = profesionalCuil
+        });
+
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Profesional {Cuil} vinculado exitosamente al consultorio {Cuit}", profesionalCuil, consultorioCuit);
+    }
+
+    public async Task DesasignarProfesionalAsync(string consultorioCuit, string profesionalCuil)
+    {
+        _logger.LogInformation("Desasignando profesional {Cuil} de consultorio {Cuit}", profesionalCuil, consultorioCuit);
+
+        var vinculacion = await _db.ProfesionalConsultorios
+            .FirstOrDefaultAsync(pc => pc.ConsultorioCuit == consultorioCuit && pc.ProfesionalCuil == profesionalCuil);
+
+        if (vinculacion == null)
+        {
+            _logger.LogWarning("No se encontró la vinculación entre {Cuil} y consultorio {Cuit}", profesionalCuil, consultorioCuit);
+            throw new NotFoundException($"El profesional {profesionalCuil} no está vinculado al consultorio {consultorioCuit}.");
+        }
+
+        _db.ProfesionalConsultorios.Remove(vinculacion);
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Profesional {Cuil} desvinculado de consultorio {Cuit}", profesionalCuil, consultorioCuit);
+    }
+
     private static ConsultorioResponseDto MapToDto(Consultorio c)
     {
         string dirStr = c.Direccion != null

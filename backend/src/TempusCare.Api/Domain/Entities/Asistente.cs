@@ -21,5 +21,8 @@ public class Asistente
     public string? ConsultorioCuit { get; set; }
     public Consultorio? Consultorio { get; set; }
 
+    public string? AdminConsultorioCuil { get; set; }
+    public AdministradorConsultorio? AdminConsultorio { get; set; }
+
     public ICollection<AsistenteAgenda> AgendasAsignadas { get; set; } = new List<AsistenteAgenda>();
 }

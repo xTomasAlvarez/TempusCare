@@ -77,6 +77,10 @@ using (var scope = app.Services.CreateScope())
     // Asegura la creación física de la base de datos y sus tablas (tempuscare.db)
     db.Database.EnsureCreated();
 
+    // Migraciones ligeras automáticas para columnas agregadas a SQLite existente
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Asistentes ADD COLUMN ConsultorioCuit TEXT;"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Asistentes ADD COLUMN AdminConsultorioCuil TEXT;"); } catch { }
+
     if (!db.Usuarios.Any())
     {
         var uInst1 = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "30111222334", Contrasena = "Institucion123!", Mail = "contacto@sanatoriotucuman.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Institucion };
@@ -85,8 +89,9 @@ using (var scope = app.Services.CreateScope())
         var uPac = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "27000000001", Contrasena = "Paciente123!", Mail = "paciente@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Paciente };
         var uMed = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "20123456789", Contrasena = "Medico123!", Mail = "medico@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Profesional };
         var uAsis = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "27111111111", Contrasena = "Asistente123!", Mail = "asistente@tempuscare.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.Asistente };
+        var uSuper = new TempusCare.Api.Domain.Entities.Usuario { NombreUsuario = "admin@vitality.com", Contrasena = "Admin123!", Mail = "admin@vitality.com", Rol = TempusCare.Api.Domain.Enums.RolUsuario.SuperAdmin };
 
-        db.Usuarios.AddRange(uInst1, uInst2, uPac, uMed, uAsis);
+        db.Usuarios.AddRange(uInst1, uInst2, uPac, uMed, uAsis, uSuper);
         db.SaveChanges();
 
         var inst1 = new TempusCare.Api.Domain.Entities.Institucion { UsuarioId = uInst1.Id, Nombre = "Sanatorio Tucumán", Cuit = "30111222334", Email = "contacto@sanatoriotucuman.com" };
@@ -133,6 +138,18 @@ using (var scope = app.Services.CreateScope())
             new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Resonancia Magnética", Descripcion = "Estudio por resonancia", Duracion = 60, Preparacion = "Sin objetos metálicos" },
             new TempusCare.Api.Domain.Entities.Estudio { Nombre = "Electrocardiograma", Descripcion = "Registro de actividad cardíaca", Duracion = 30, Preparacion = "Ninguna" }
         );
+        db.SaveChanges();
+    }
+
+    if (!db.Usuarios.Any(u => u.Rol == TempusCare.Api.Domain.Enums.RolUsuario.SuperAdmin))
+    {
+        db.Usuarios.Add(new TempusCare.Api.Domain.Entities.Usuario
+        {
+            NombreUsuario = "admin@vitality.com",
+            Contrasena = "Admin123!",
+            Mail = "admin@vitality.com",
+            Rol = TempusCare.Api.Domain.Enums.RolUsuario.SuperAdmin
+        });
         db.SaveChanges();
     }
 
@@ -343,6 +360,51 @@ using (var scope = app.Services.CreateScope())
                     db.SaveChanges();
                 }
             }
+        }
+    }
+
+    // Seed Administrador de Consultorio (Rol Intermedio Sede) y vinculación con Asistente
+    var consCardio = db.Consultorios.FirstOrDefault(c => c.Cuit == "3011122233401");
+    if (consCardio != null)
+    {
+        var adminConsCuil = "20334455667";
+        var adminUser = db.Usuarios.FirstOrDefault(u => u.NombreUsuario == "admin.cons101");
+        if (adminUser == null)
+        {
+            adminUser = new TempusCare.Api.Domain.Entities.Usuario
+            {
+                NombreUsuario = "admin.cons101",
+                Contrasena = "AdminCons123!",
+                Mail = "admin.cons101@sanatoriotucuman.com",
+                Rol = TempusCare.Api.Domain.Enums.RolUsuario.AdminConsultorio
+            };
+            db.Usuarios.Add(adminUser);
+            db.SaveChanges();
+        }
+
+        if (!db.AdministradoresConsultorio.Any(ac => ac.Cuil == adminConsCuil))
+        {
+            var adminCons = new TempusCare.Api.Domain.Entities.AdministradorConsultorio
+            {
+                Cuil = adminConsCuil,
+                UsuarioId = adminUser.Id,
+                Nombre = "Mariana",
+                Apellido = "Gómez",
+                Telefono = "3814455667",
+                FechaNacimiento = new DateTime(1985, 4, 12),
+                ConsultorioCuit = consCardio.Cuit
+            };
+            db.AdministradoresConsultorio.Add(adminCons);
+            db.SaveChanges();
+        }
+
+        // Asignar al asistente del seed su sede y admin
+        var asisExistente = db.Asistentes.FirstOrDefault(a => a.Cuil == "27111111111");
+        if (asisExistente != null && (string.IsNullOrEmpty(asisExistente.ConsultorioCuit) || asisExistente.AdminConsultorioCuil != adminConsCuil))
+        {
+            asisExistente.ConsultorioCuit = consCardio.Cuit;
+            asisExistente.AdminConsultorioCuil = adminConsCuil;
+            db.SaveChanges();
         }
     }
 }

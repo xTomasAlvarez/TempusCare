@@ -40,9 +40,21 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> ObtenerTodos()
+    public async Task<IActionResult> ObtenerTodos([FromQuery] string? consultorioCuit)
     {
+        if (!string.IsNullOrEmpty(consultorioCuit))
+        {
+            var filtrados = await _asistenteService.ObtenerPorConsultorioAsync(consultorioCuit);
+            return Ok(filtrados);
+        }
         var res = await _asistenteService.ObtenerTodosAsync();
+        return Ok(res);
+    }
+
+    [HttpGet("consultorio/{cuit}")]
+    public async Task<IActionResult> ObtenerPorConsultorio(string cuit)
+    {
+        var res = await _asistenteService.ObtenerPorConsultorioAsync(cuit);
         return Ok(res);
     }
 

@@ -60,6 +60,13 @@ public class AsistenteService : IAsistenteService
             throw new InstitucionNotFoundException(dto.InstitucionId.Value);
         }
 
+        int? instId = dto.InstitucionId;
+        if (!instId.HasValue && !string.IsNullOrEmpty(dto.ConsultorioCuit))
+        {
+            var cons = await _db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == dto.ConsultorioCuit);
+            if (cons != null) instId = cons.InstitucionId;
+        }
+
         var asistente = new Asistente
         {
             Cuil = dto.Cuil,
@@ -70,7 +77,9 @@ public class AsistenteService : IAsistenteService
             Telefono = dto.Telefono,
             Genero = dto.Genero,
             DireccionId = dir?.Id,
-            InstitucionId = dto.InstitucionId
+            InstitucionId = instId,
+            ConsultorioCuit = dto.ConsultorioCuit,
+            AdminConsultorioCuil = dto.AdminConsultorioCuil
         };
 
         _db.Asistentes.Add(asistente);
@@ -106,6 +115,8 @@ public class AsistenteService : IAsistenteService
         asistente.Telefono = dto.Telefono;
         asistente.Genero = dto.Genero;
         asistente.InstitucionId = dto.InstitucionId ?? asistente.InstitucionId;
+        asistente.ConsultorioCuit = dto.ConsultorioCuit ?? asistente.ConsultorioCuit;
+        asistente.AdminConsultorioCuil = dto.AdminConsultorioCuil ?? asistente.AdminConsultorioCuil;
 
         if (asistente.Direccion != null)
         {
@@ -161,6 +172,7 @@ public class AsistenteService : IAsistenteService
         var asistente = await _db.Asistentes
             .Include(a => a.Direccion)
             .Include(a => a.Institucion)
+            .Include(a => a.Consultorio)
             .FirstOrDefaultAsync(a => a.Cuil == cuil);
 
         if (asistente == null)
@@ -179,6 +191,21 @@ public class AsistenteService : IAsistenteService
         var lista = await _db.Asistentes
             .Include(a => a.Direccion)
             .Include(a => a.Institucion)
+            .Include(a => a.Consultorio)
+            .ToListAsync();
+
+        return lista.Select(a => MapToDto(a)).ToList();
+    }
+
+    public async Task<List<AsistenteResponseDto>> ObtenerPorConsultorioAsync(string consultorioCuit)
+    {
+        _logger.LogInformation("Listando asistentes del consultorio {Cuit}", consultorioCuit);
+
+        var lista = await _db.Asistentes
+            .Include(a => a.Direccion)
+            .Include(a => a.Institucion)
+            .Include(a => a.Consultorio)
+            .Where(a => a.ConsultorioCuit == consultorioCuit)
             .ToListAsync();
 
         return lista.Select(a => MapToDto(a)).ToList();
@@ -211,15 +238,13 @@ public class AsistenteService : IAsistenteService
     {
         _logger.LogInformation("Removiendo permiso de agenda ID {AgendaId} al asistente CUIL {Cuil}", agendaId, asistenteCuil);
 
-        if (!await _db.Asistentes.AnyAsync(a => a.Cuil == asistenteCuil))
-            throw new AsistenteNotFoundException(asistenteCuil);
+        var asignacion = await _db.AsistenteAgendas
+            .FirstOrDefaultAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
 
-        var relacion = await _db.AsistenteAgendas.FirstOrDefaultAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
-        if (relacion != null)
+        if (asignacion != null)
         {
-            _db.AsistenteAgendas.Remove(relacion);
+            _db.AsistenteAgendas.Remove(asignacion);
             await _db.SaveChangesAsync();
-            _logger.LogInformation("Permiso de agenda ID {AgendaId} removido del asistente CUIL {Cuil}", agendaId, asistenteCuil);
         }
     }
 
@@ -232,9 +257,9 @@ public class AsistenteService : IAsistenteService
 
         var agendas = await _db.AsistenteAgendas
             .Where(aa => aa.AsistenteCuil == asistenteCuil)
-            .Include(aa => aa.Agenda).ThenInclude(a => a!.Profesional)
-            .Include(aa => aa.Agenda).ThenInclude(a => a!.Consultorio)
-            .Include(aa => aa.Agenda).ThenInclude(a => a!.Turnos)
+            .Include(aa => aa.Agenda).ThenInclude(ag => ag.Profesional)
+            .Include(aa => aa.Agenda).ThenInclude(ag => ag.Consultorio)
+            .Include(aa => aa.Agenda).ThenInclude(ag => ag.Turnos)
             .Select(aa => aa.Agenda)
             .ToListAsync();
 
@@ -274,7 +299,10 @@ public class AsistenteService : IAsistenteService
             a.Genero,
             dirStr,
             a.InstitucionId,
-            a.Institucion?.Nombre
+            a.Institucion?.Nombre,
+            a.ConsultorioCuit,
+            a.Consultorio?.Nombre,
+            a.AdminConsultorioCuil
         );
     }
 }

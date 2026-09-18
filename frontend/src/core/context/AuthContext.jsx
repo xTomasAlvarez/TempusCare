@@ -12,6 +12,9 @@ export const AuthProvider = ({ children }) => {
   const setAuthData = useCallback((userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
+    if (userData?.consultorioCuit) {
+      setActiveConsultorio(userData.consultorioCuit);
+    }
   }, []);
 
   const clearAuthData = useCallback(() => {
@@ -31,9 +34,11 @@ export const AuthProvider = ({ children }) => {
         return '/professional/dashboard';
       case 'Asistente':
         return '/institution/reception';
-      case 'AdminConsultorio':
-      case 'AdminInstitucion':
       case 'SuperAdmin':
+        return '/vitality/clients';
+      case 'AdminConsultorio':
+        return '/institution/sede-admin';
+      case 'AdminInstitucion':
       case 'Institucion':
         return '/institution/admin';
       default:

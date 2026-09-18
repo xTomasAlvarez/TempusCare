@@ -35,6 +35,9 @@ export const authService = {
         rol: data.rol,
         cuil: data.cuil,
         token: data.token,
+        consultorioCuit: data.consultorioCuit || null,
+        institucionId: data.institucionId || null,
+        sedeNombre: data.sedeNombre || null,
       };
     } catch (err) {
       if (err instanceof TypeError && err.message.includes('Failed to fetch')) {

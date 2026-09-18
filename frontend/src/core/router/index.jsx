@@ -9,6 +9,9 @@ import { MyAppointmentsPage } from '../../modules/patient/pages/MyAppointmentsPa
 import { ProfessionalDashboardPage } from '../../modules/professional/pages/ProfessionalDashboardPage';
 import { ReceptionDashboardPage } from '../../modules/institution/pages/ReceptionDashboardPage';
 import { AdminDashboardPage } from '../../modules/institution/pages/AdminDashboardPage';
+import { ConsultorioAdminPage } from '../../modules/institution/pages/ConsultorioAdminPage';
+import { VitalityLayout } from '../../modules/vitality/layouts/VitalityLayout';
+import { VitalityClientsPage } from '../../modules/vitality/pages/VitalityClientsPage';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -109,10 +112,31 @@ export const router = createBrowserRouter([
       {
         path: '/institution/admin',
         element: (
-          <ProtectedRoute allowedRoles={['AdminConsultorio', 'AdminInstitucion', 'SuperAdmin', 'Institucion']}>
+          <ProtectedRoute allowedRoles={['AdminInstitucion', 'SuperAdmin', 'Institucion']}>
             <AdminDashboardPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: '/institution/sede-admin',
+        element: (
+          <ProtectedRoute allowedRoles={['AdminConsultorio', 'AdminInstitucion', 'SuperAdmin', 'Institucion']}>
+            <ConsultorioAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+  {
+    element: (
+      <ProtectedRoute allowedRoles={['SuperAdmin']}>
+        <VitalityLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: '/vitality/clients',
+        element: <VitalityClientsPage />,
       },
     ],
   },

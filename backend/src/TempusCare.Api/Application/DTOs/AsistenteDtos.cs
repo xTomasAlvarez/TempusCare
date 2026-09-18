@@ -13,7 +13,9 @@ public record AltaAsistenteDto(
     string? Localidad,
     string? Provincia,
     string? CodPostal,
-    int? InstitucionId = null
+    int? InstitucionId = null,
+    string? ConsultorioCuit = null,
+    string? AdminConsultorioCuil = null
 );
 
 public record ModificarAsistenteDto(
@@ -29,7 +31,9 @@ public record ModificarAsistenteDto(
     string? Localidad,
     string? Provincia,
     string? CodPostal,
-    int? InstitucionId = null
+    int? InstitucionId = null,
+    string? ConsultorioCuit = null,
+    string? AdminConsultorioCuil = null
 );
 
 public record AsistenteResponseDto(
@@ -41,5 +45,8 @@ public record AsistenteResponseDto(
     string Genero,
     string? DireccionCompleta,
     int? InstitucionId = null,
-    string? InstitucionNombre = null
+    string? InstitucionNombre = null,
+    string? ConsultorioCuit = null,
+    string? ConsultorioNombre = null,
+    string? AdminConsultorioCuil = null
 );

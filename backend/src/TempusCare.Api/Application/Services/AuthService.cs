@@ -72,9 +72,9 @@ public class AuthService : IAuthService
         var usuario = await _db.Usuarios
             .Include(u => u.Paciente)
             .Include(u => u.Profesional)
-            .Include(u => u.Asistente)
+            .Include(u => u.Asistente).ThenInclude(a => a.Consultorio)
             .Include(u => u.AdministradorInstitucion)
-            .Include(u => u.AdministradorConsultorio)
+            .Include(u => u.AdministradorConsultorio).ThenInclude(ac => ac.Consultorio)
             .Include(u => u.Institucion)
             .FirstOrDefaultAsync(u => u.NombreUsuario == dto.Usuario && u.Contrasena == dto.Contra);
 
@@ -95,9 +95,42 @@ public class AuthService : IAuthService
             _ => null
         };
 
+        string? consultorioCuit = usuario.Rol switch
+        {
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.ConsultorioCuit,
+            RolUsuario.Asistente => usuario.Asistente?.ConsultorioCuit,
+            _ => null
+        };
+
+        string? sedeNombre = usuario.Rol switch
+        {
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Consultorio?.Nombre,
+            RolUsuario.Asistente => usuario.Asistente?.Consultorio?.Nombre,
+            _ => null
+        };
+
+        int? institucionId = usuario.Rol switch
+        {
+            RolUsuario.AdminInstitucion => usuario.AdministradorInstitucion?.InstitucionId,
+            RolUsuario.Institucion => usuario.Institucion?.Id,
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Consultorio?.InstitucionId,
+            RolUsuario.Asistente => usuario.Asistente?.InstitucionId ?? usuario.Asistente?.Consultorio?.InstitucionId,
+            _ => null
+        };
+
         string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
         _logger.LogInformation("Inicio de sesión exitoso para usuario ID {UsuarioId}, Rol: {Rol}", usuario.Id, usuario.Rol);
 
-        return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, cuil, mockToken);
+        return new UsuarioAutenticadoDto(
+            usuario.Id,
+            usuario.NombreUsuario,
+            usuario.Mail,
+            usuario.Rol,
+            cuil,
+            mockToken,
+            consultorioCuit,
+            institucionId,
+            sedeNombre
+        );
     }
 }

@@ -42,3 +42,12 @@ public record ConsultorioResponseDto(
     string DireccionCompleta,
     List<string> ProfesionalesNombres
 );
+
+public record ProfesionalVinculadoDto(
+    string Cuil,
+    string Nombre,
+    string Apellido,
+    string Matricula,
+    string Telefono,
+    List<string> Especialidades
+);

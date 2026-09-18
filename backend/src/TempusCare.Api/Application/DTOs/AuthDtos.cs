@@ -6,4 +6,14 @@ public record RegistrarUsuarioDto(string Usuario, string Contra, string Mail, Ro
 
 public record IniciarSesionDto(string Usuario, string Contra);
 
-public record UsuarioAutenticadoDto(int Id, string Usuario, string Mail, RolUsuario Rol, string? Cuil, string Token);
+public record UsuarioAutenticadoDto(
+    int Id,
+    string Usuario,
+    string Mail,
+    RolUsuario Rol,
+    string? Cuil,
+    string Token,
+    string? ConsultorioCuit = null,
+    int? InstitucionId = null,
+    string? SedeNombre = null
+);

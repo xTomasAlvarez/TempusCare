@@ -22,6 +22,13 @@ public class PacientesController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPerfil), new { cuil = res.Cuil }, res);
     }
 
+    [HttpPost("presencial")]
+    public async Task<IActionResult> RegistrarPresencial([FromBody] RegistroPacientePresencialDto dto)
+    {
+        var res = await _pacienteService.RegistrarPresencialAsync(dto);
+        return Ok(res);
+    }
+
     [HttpPut("{cuil}")]
     public async Task<IActionResult> Modificar(string cuil, [FromBody] ModificacionPerfilPacienteDto dto)
     {

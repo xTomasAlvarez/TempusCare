@@ -42,3 +42,22 @@ public record PacientePerfilResponseDto(
     string? DireccionCompleta,
     List<string> ObrasSociales
 );
+
+public record RegistroPacientePresencialDto(
+    string Dni,
+    string Nombre,
+    string? Apellido,
+    string? Telefono,
+    string? Email = null,
+    int? ObraSocialId = null
+);
+
+public record PacientePresencialResponseDto(
+    string Cuil,
+    string Nombre,
+    string Apellido,
+    string Email,
+    string Telefono,
+    string ContrasenaProvisoria,
+    string Mensaje
+);

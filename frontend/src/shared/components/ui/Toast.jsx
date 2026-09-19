@@ -50,7 +50,7 @@ export const ToastProvider = ({ children }) => {
             </div>
 
             <div className="flex-1 text-sm">
-              {toast.title && <p className="font-semibold">{toast.title}</p>}
+              {toast.title && <p className="font-semibold font-heading">{toast.title}</p>}
               {toast.description && (
                 <p className={cn("text-xs mt-0.5", toast.variant === 'info' ? "text-slate-300" : "opacity-90")}>
                   {toast.description}

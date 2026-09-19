@@ -4,6 +4,15 @@ namespace TempusCare.Api.Application.DTOs;
 
 public record RegistrarUsuarioDto(string Usuario, string Contra, string Mail, RolUsuario Rol);
 
+public record RegistrarPacienteDto(
+    string Nombre,
+    string Apellido,
+    string Dni,
+    string Email,
+    string Contrasena,
+    int? ObraSocialId = null
+);
+
 public record IniciarSesionDto(string Usuario, string Contra);
 
 public record UsuarioAutenticadoDto(

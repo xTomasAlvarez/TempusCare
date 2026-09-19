@@ -67,6 +67,14 @@ export const institutionAdminService = {
     return true;
   },
 
+  async registerDoctor(dto) {
+    return await apiClient.post('profesionales', dto);
+  },
+
+  async createAdminConsultorio(dto) {
+    return await apiClient.post('administradores/consultorio', dto);
+  },
+
   // ==========================================
   // Catálogos y Coberturas (RN-02)
   // ==========================================

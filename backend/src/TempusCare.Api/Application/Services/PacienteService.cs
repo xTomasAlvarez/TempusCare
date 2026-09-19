@@ -196,6 +196,96 @@ public class PacienteService : IPacienteService
         return lista.Select(p => MapToDto(p)).ToList();
     }
 
+    public async Task<PacientePresencialResponseDto> RegistrarPresencialAsync(RegistroPacientePresencialDto dto)
+    {
+        _logger.LogInformation("Registrando paciente presencial (walk-in) con DNI {Dni}", dto.Dni);
+
+        var dniClean = dto.Dni.Trim().Replace(".", "").Replace("-", "");
+
+        if (string.IsNullOrWhiteSpace(dniClean))
+        {
+            throw new ValidationException("El DNI del paciente es obligatorio.");
+        }
+
+        if (await _db.Pacientes.AnyAsync(p => p.Cuil == dniClean))
+        {
+            _logger.LogWarning("El paciente con DNI {Dni} ya se encuentra registrado", dniClean);
+            throw new ConflictException($"Ya existe un paciente registrado con el DNI {dniClean}.");
+        }
+
+        var provisoryEmail = !string.IsNullOrWhiteSpace(dto.Email)
+            ? dto.Email.Trim().ToLower()
+            : $"{dniClean}@paciente.tempuscare.com";
+
+        var provisoryPassword = $"Tempus.{dniClean}!";
+
+        if (await _db.Usuarios.AnyAsync(u => u.NombreUsuario == dniClean || u.Mail.ToLower() == provisoryEmail))
+        {
+            provisoryEmail = $"{dniClean}.{DateTime.UtcNow.Ticks % 10000}@paciente.tempuscare.com";
+        }
+
+        var usuario = new Usuario
+        {
+            NombreUsuario = dniClean,
+            Contrasena = provisoryPassword,
+            Mail = provisoryEmail,
+            Rol = RolUsuario.Paciente
+        };
+
+        _db.Usuarios.Add(usuario);
+        await _db.SaveChangesAsync();
+
+        var nombreClean = dto.Nombre.Trim();
+        var apellidoClean = (dto.Apellido ?? string.Empty).Trim();
+        var telefonoClean = (dto.Telefono ?? string.Empty).Trim();
+
+        var paciente = new Paciente
+        {
+            Cuil = dniClean,
+            UsuarioId = usuario.Id,
+            Nombre = nombreClean,
+            Apellido = apellidoClean,
+            Telefono = telefonoClean,
+            FechaNacimiento = DateTime.UtcNow,
+            Genero = string.Empty
+        };
+
+        _db.Pacientes.Add(paciente);
+
+        if (dto.ObraSocialId.HasValue && dto.ObraSocialId.Value > 0)
+        {
+            var obraSocialExiste = await _db.ObrasSociales.AnyAsync(os => os.Id == dto.ObraSocialId.Value);
+            if (obraSocialExiste)
+            {
+                _db.PacienteObrasSociales.Add(new PacienteObraSocial
+                {
+                    PacienteCuil = paciente.Cuil,
+                    ObraSocialId = dto.ObraSocialId.Value
+                });
+            }
+        }
+
+        // Crear HistoriaClinica inicial para el paciente (RNF-SEG-06 / Ley 25.326)
+        _db.HistoriasClinicas.Add(new HistoriaClinica
+        {
+            PacienteCuil = paciente.Cuil
+        });
+
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Paciente presencial registrado exitosamente. DNI/CUIL: {Cuil}", paciente.Cuil);
+
+        return new PacientePresencialResponseDto(
+            paciente.Cuil,
+            paciente.Nombre,
+            paciente.Apellido,
+            usuario.Mail,
+            paciente.Telefono,
+            provisoryPassword,
+            "Paciente presencial registrado con éxito. Ya puede agendarse su cita inmediatamente."
+        );
+    }
+
     private static PacientePerfilResponseDto MapToDto(Paciente pac)
     {
         string? dirStr = pac.Direccion != null

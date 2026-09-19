@@ -38,4 +38,27 @@ export const authService = {
       rol,
     });
   },
+
+  /**
+   * Conecta con AuthController POST /api/auth/register/patient
+   */
+  async registerPatient({ nombre, apellido, dni, email, contrasena, obraSocialId }) {
+    const data = await apiClient.post('auth/register/patient', {
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      dni: dni.trim(),
+      email: email.trim().toLowerCase(),
+      contrasena,
+      obraSocialId: obraSocialId ? Number(obraSocialId) : null,
+    });
+
+    return {
+      id: data.id,
+      usuario: data.usuario,
+      mail: data.mail,
+      rol: data.rol,
+      cuil: data.cuil,
+      token: data.token,
+    };
+  },
 };

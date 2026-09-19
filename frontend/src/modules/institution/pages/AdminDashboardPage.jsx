@@ -134,11 +134,7 @@ export const AdminDashboardPage = () => {
             asistentes={asistentesState.asistentes}
             instituciones={asistentesState.instituciones}
             isLoading={asistentesState.isLoading}
-            isSubmitting={asistentesState.isSubmitting}
-            isModalOpen={asistentesState.isModalOpen}
-            setIsModalOpen={asistentesState.setIsModalOpen}
-            onCreateAsistente={asistentesState.createAsistente}
-            onDeleteAsistente={asistentesState.deleteAsistente}
+            readOnly={true}
           />
         )}
 

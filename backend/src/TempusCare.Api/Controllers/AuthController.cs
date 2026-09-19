@@ -22,6 +22,14 @@ public class AuthController : ControllerBase
         return Ok(res);
     }
 
+    [HttpPost("register/patient")]
+    [HttpPost("registrar-paciente")]
+    public async Task<IActionResult> RegistrarPaciente([FromBody] RegistrarPacienteDto dto)
+    {
+        var res = await _authService.RegistrarPacienteAsync(dto);
+        return Ok(res);
+    }
+
     [HttpPost("iniciar-sesion")]
     public async Task<IActionResult> IniciarSesion([FromBody] IniciarSesionDto dto)
     {

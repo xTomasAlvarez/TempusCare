@@ -38,11 +38,30 @@ export const useConsultoriosManager = () => {
   const handleCreateConsultorio = async (dto) => {
     try {
       setIsSubmitting(true);
-      await institutionAdminService.createConsultorio(dto);
+      const { adminConsultorio, ...consultorioDto } = dto;
+      await institutionAdminService.createConsultorio(consultorioDto);
+
+      if (adminConsultorio && adminConsultorio.cuil) {
+        try {
+          await institutionAdminService.createAdminConsultorio({
+            cuil: adminConsultorio.cuil,
+            nombre: adminConsultorio.nombre,
+            apellido: adminConsultorio.apellido,
+            telefono: adminConsultorio.telefono || consultorioDto.telefono,
+            fechaNacimiento: adminConsultorio.fechaNacimiento || '1990-01-01',
+            consultorioCuit: consultorioDto.cuit,
+            nombreUsuario: adminConsultorio.cuil,
+            contrasena: `Admin.${adminConsultorio.cuil}!`,
+            mail: adminConsultorio.mail || `${adminConsultorio.cuil}@adminconsultorio.com`,
+          });
+        } catch (adminErr) {
+          console.warn('Consultorio creado pero falló creación de admin:', adminErr);
+        }
+      }
 
       addToast({
         title: 'Sede Registrada',
-        description: `El consultorio "${dto.nombre}" ha sido registrado correctamente.`,
+        description: `El consultorio "${dto.nombre}" ha sido registrado correctamente${adminConsultorio?.nombre ? ' con su administrador asignado' : ''}.`,
         variant: 'success',
       });
 

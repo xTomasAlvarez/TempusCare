@@ -9,4 +9,5 @@ public interface IPacienteService
     Task BajaPerfilAsync(string cuil);
     Task<PacientePerfilResponseDto> ObtenerPerfilAsync(string cuil);
     Task<List<PacientePerfilResponseDto>> ObtenerTodosAsync();
+    Task<PacientePresencialResponseDto> RegistrarPresencialAsync(RegistroPacientePresencialDto dto);
 }

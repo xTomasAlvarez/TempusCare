@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar as CalendarIcon, Plus, RotateCcw } from 'lucide-react';
+import { User, Calendar as CalendarIcon, Plus, RotateCcw, UserPlus } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
 
 export const ReceptionFilters = ({
@@ -9,6 +9,7 @@ export const ReceptionFilters = ({
   selectedDate,
   onDateChange,
   onOpenCreateAgenda,
+  onOpenCreateWalkInPatient,
   onRefresh,
   isLoading = false,
 }) => {
@@ -102,8 +103,18 @@ export const ReceptionFilters = ({
         </div>
       </div>
 
-      {/* Botón Primario: Nueva Agenda Horaria */}
-      <div className="shrink-0">
+      {/* Botones de Acción de Recepción */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+        <Button
+          variant="outline"
+          size="md"
+          onClick={onOpenCreateWalkInPatient}
+          className="w-full sm:w-auto gap-2 rounded-xl shadow-xs font-semibold border-teal-200 text-teal-800 hover:bg-teal-50 hover:text-teal-900"
+        >
+          <UserPlus className="w-4 h-4 text-teal-600" aria-hidden="true" />
+          <span>+ Nuevo Paciente Presencial</span>
+        </Button>
+
         <Button
           variant="primary"
           size="md"

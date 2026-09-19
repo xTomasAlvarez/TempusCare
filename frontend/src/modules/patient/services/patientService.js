@@ -111,4 +111,12 @@ export const patientService = {
       return null;
     }
   },
+
+  /**
+   * Registra un paciente presencial (walk-in) en recepción sin verificación previa de email
+   */
+  async registerWalkInPatient(dto) {
+    return await apiClient.post('pacientes/presencial', dto);
+  },
 };
+

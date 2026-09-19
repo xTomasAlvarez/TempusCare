@@ -2,7 +2,9 @@ import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
+import { HomePage } from '../../modules/public/pages/HomePage';
 import { LoginPage } from '../../modules/auth/pages/LoginPage';
+import { RegisterPage } from '../../modules/auth/pages/RegisterPage';
 import { PatientDashboardPage } from '../../modules/patient/pages/PatientDashboardPage';
 import { SearchProfessionalsPage } from '../../modules/patient/pages/SearchProfessionalsPage';
 import { MyAppointmentsPage } from '../../modules/patient/pages/MyAppointmentsPage';
@@ -33,25 +35,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 /**
- * Redirección de la raíz según autenticación y rol
- */
-const RootRedirect = () => {
-  const { user, isAuthenticated, getDashboardRoute } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Navigate to={getDashboardRoute(user?.rol)} replace />;
-};
-
-/**
  * Enrutamiento estático instanciado a nivel de módulo (Cumplimiento estricto de Design.md)
  */
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <RootRedirect />,
+    element: <HomePage />,
   },
   {
     element: <AuthLayout />,
@@ -59,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginPage />,
+      },
+      {
+        path: '/register',
+        element: <RegisterPage />,
       },
     ],
   },

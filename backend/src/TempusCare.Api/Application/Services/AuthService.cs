@@ -65,6 +65,76 @@ public class AuthService : IAuthService
         return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, cuil, mockToken);
     }
 
+    public async Task<UsuarioAutenticadoDto> RegistrarPacienteAsync(RegistrarPacienteDto dto)
+    {
+        _logger.LogInformation("Iniciando registro de paciente: DNI {Dni}, Email {Email}", dto.Dni, dto.Email);
+
+        var dniClean = dto.Dni.Trim();
+        var emailClean = dto.Email.Trim().ToLower();
+
+        if (await _db.Usuarios.AnyAsync(u => u.NombreUsuario == dniClean || u.Mail.ToLower() == emailClean))
+        {
+            _logger.LogWarning("El DNI o correo ya se encuentra registrado: {Dni}, {Email}", dniClean, emailClean);
+            throw new ConflictException("El DNI o correo electrónico ya se encuentra registrado en el sistema.");
+        }
+
+        if (await _db.Pacientes.AnyAsync(p => p.Cuil == dniClean))
+        {
+            _logger.LogWarning("Ya existe un paciente con CUIL/DNI: {Dni}", dniClean);
+            throw new ConflictException("Ya existe un paciente registrado con ese documento.");
+        }
+
+        var usuario = new Usuario
+        {
+            NombreUsuario = dniClean,
+            Contrasena = dto.Contrasena,
+            Mail = emailClean,
+            Rol = RolUsuario.Paciente
+        };
+
+        _db.Usuarios.Add(usuario);
+        await _db.SaveChangesAsync();
+
+        var paciente = new Paciente
+        {
+            Cuil = dniClean,
+            UsuarioId = usuario.Id,
+            Nombre = dto.Nombre.Trim(),
+            Apellido = dto.Apellido.Trim(),
+            FechaNacimiento = DateTime.UtcNow,
+            Telefono = string.Empty,
+            Genero = string.Empty
+        };
+
+        _db.Pacientes.Add(paciente);
+
+        if (dto.ObraSocialId.HasValue && dto.ObraSocialId.Value > 0)
+        {
+            var obraSocialExiste = await _db.ObrasSociales.AnyAsync(os => os.Id == dto.ObraSocialId.Value);
+            if (obraSocialExiste)
+            {
+                _db.PacienteObrasSociales.Add(new PacienteObraSocial
+                {
+                    PacienteCuil = paciente.Cuil,
+                    ObraSocialId = dto.ObraSocialId.Value
+                });
+            }
+        }
+
+        // Crear HistoriaClinica inicial para el nuevo paciente (RNF-SEG-06)
+        _db.HistoriasClinicas.Add(new HistoriaClinica
+        {
+            PacienteCuil = paciente.Cuil
+        });
+
+        await _db.SaveChangesAsync();
+
+        string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
+        _logger.LogInformation("Paciente registrado con éxito. Usuario ID: {UsuarioId}, CUIL: {Cuil}", usuario.Id, paciente.Cuil);
+
+        return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, paciente.Cuil, mockToken);
+    }
+
     public async Task<UsuarioAutenticadoDto> IniciarSesionAsync(IniciarSesionDto dto)
     {
         _logger.LogInformation("Intento de inicio de sesión para el usuario: {Usuario}", dto.Usuario);
@@ -76,7 +146,16 @@ public class AuthService : IAuthService
             .Include(u => u.AdministradorInstitucion)
             .Include(u => u.AdministradorConsultorio).ThenInclude(ac => ac.Consultorio)
             .Include(u => u.Institucion)
-            .FirstOrDefaultAsync(u => u.NombreUsuario == dto.Usuario && u.Contrasena == dto.Contra);
+            .FirstOrDefaultAsync(u =>
+                (u.NombreUsuario == dto.Usuario ||
+                 u.Mail == dto.Usuario ||
+                 (u.AdministradorConsultorio != null && u.AdministradorConsultorio.Cuil == dto.Usuario) ||
+                 (u.AdministradorInstitucion != null && u.AdministradorInstitucion.Cuil == dto.Usuario) ||
+                 (u.Asistente != null && u.Asistente.Cuil == dto.Usuario) ||
+                 (u.Profesional != null && u.Profesional.Cuil == dto.Usuario) ||
+                 (u.Paciente != null && u.Paciente.Cuil == dto.Usuario) ||
+                 (u.Institucion != null && u.Institucion.Cuit == dto.Usuario)) &&
+                u.Contrasena == dto.Contra);
 
         if (usuario == null)
         {

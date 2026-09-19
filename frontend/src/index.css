@@ -1,20 +1,35 @@
+@import url('https://api.fontshare.com/v2/css?f[]=ranade@300,400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@200..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --font-heading: 'Ranade', 'Object Sans', 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Ranade', 'Object Sans', sans-serif;
     --font-sans: 'Manrope', 'DM Sans', sans-serif;
   }
 
   html {
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  body {
+    font-family: var(--font-sans);
+  }
+
+  /* Títulos, Encabezados, Modales y Métricas según Design.md (Sección 4) */
   h1, h2, h3, h4, h5, h6, .font-heading {
     font-family: var(--font-heading);
     letter-spacing: -0.025em;
+  }
+
+  /* Componentes UI, Tablas, Botones y Formularios según Design.md (Sección 4) */
+  button, input, optgroup, select, textarea, table, th, td {
+    font-family: inherit;
   }
 }
 

@@ -32,8 +32,13 @@ export const MainLayout = () => {
         ];
       case 'Institucion':
       case 'AdminInstitucion':
+        return [
+          { label: 'Administración B2B', path: '/institution/admin', icon: Building2 },
+          { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
+        ];
       case 'SuperAdmin':
         return [
+          { label: 'Consola Vitality', path: '/vitality/clients', icon: Building2 },
           { label: 'Administración B2B', path: '/institution/admin', icon: Building2 },
           { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
         ];

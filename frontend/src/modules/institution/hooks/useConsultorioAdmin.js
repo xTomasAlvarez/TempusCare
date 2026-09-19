@@ -151,6 +151,31 @@ export const useConsultorioAdmin = (consultorioCuit) => {
     }
   };
 
+  const registerDoctor = async (dto) => {
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        ...dto,
+        consultoriosCuits: [consultorioCuit],
+      };
+      await institutionAdminService.registerDoctor(payload);
+      addToast({
+        type: 'success',
+        message: `Dr./Dra. ${dto.nombre} ${dto.apellido} registrado y habilitado para esta sede.`,
+      });
+      await loadData();
+      return true;
+    } catch (err) {
+      addToast({
+        type: 'error',
+        message: err.message || 'No se pudo registrar al profesional.',
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     consultorio,
     asistentes,
@@ -162,6 +187,7 @@ export const useConsultorioAdmin = (consultorioCuit) => {
     deleteAsistente,
     assignProfesional,
     removeProfesional,
+    registerDoctor,
     refresh: loadData,
   };
 };

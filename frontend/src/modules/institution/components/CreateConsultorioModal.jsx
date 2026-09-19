@@ -28,6 +28,14 @@ export const CreateConsultorioModal = ({
     codPostal: '4000',
   });
 
+  const [adminData, setAdminData] = useState({
+    cuil: '',
+    nombre: '',
+    apellido: '',
+    telefono: '',
+    mail: '',
+  });
+
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -57,6 +65,7 @@ export const CreateConsultorioModal = ({
     const success = await onSubmit({
       ...formData,
       institucionId: formData.institucionId ? Number(formData.institucionId) : null,
+      adminConsultorio: adminData.cuil.trim() ? adminData : null,
     });
 
     if (success) {
@@ -73,6 +82,13 @@ export const CreateConsultorioModal = ({
         localidad: 'San Miguel de Tucumán',
         provincia: 'Tucumán',
         codPostal: '4000',
+      });
+      setAdminData({
+        cuil: '',
+        nombre: '',
+        apellido: '',
+        telefono: '',
+        mail: '',
       });
       setErrors({});
     }
@@ -282,6 +298,93 @@ export const CreateConsultorioModal = ({
                 onChange={handleChange}
                 placeholder="Cód. Postal"
                 className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Asignación de Administrador de Consultorio (Cadena de Mando) */}
+        <div className="pt-3 border-t border-slate-100">
+          <div className="mb-2">
+            <p className="text-xs font-bold font-heading text-slate-800 uppercase tracking-wider">
+              Asignar Administrador de Consultorio (Responsable de Sede)
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Solo el Administrador de Institución puede designar al responsable que administrará a los médicos y asistentes de esta sede física.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
+            <div>
+              <label htmlFor="adminCuil" className="block text-[11px] font-semibold text-slate-700 mb-1">
+                CUIL del Administrador (Opcional)
+              </label>
+              <input
+                id="adminCuil"
+                name="adminCuil"
+                type="text"
+                value={adminData.cuil}
+                onChange={(e) => setAdminData((prev) => ({ ...prev, cuil: e.target.value }))}
+                placeholder="Ej: 20334455667"
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-teal-500"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                Nombre y Apellido
+              </label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <input
+                  aria-label="Nombre del administrador"
+                  name="adminNombre"
+                  type="text"
+                  value={adminData.nombre}
+                  onChange={(e) => setAdminData((prev) => ({ ...prev, nombre: e.target.value }))}
+                  placeholder="Nombre"
+                  className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-teal-500"
+                  disabled={isSubmitting}
+                />
+                <input
+                  aria-label="Apellido del administrador"
+                  name="adminApellido"
+                  type="text"
+                  value={adminData.apellido}
+                  onChange={(e) => setAdminData((prev) => ({ ...prev, apellido: e.target.value }))}
+                  placeholder="Apellido"
+                  className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-teal-500"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="adminTelefono" className="block text-[11px] font-semibold text-slate-700 mb-1">
+                Teléfono
+              </label>
+              <input
+                id="adminTelefono"
+                name="adminTelefono"
+                type="text"
+                value={adminData.telefono}
+                onChange={(e) => setAdminData((prev) => ({ ...prev, telefono: e.target.value }))}
+                placeholder="Ej: 381-4556677"
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-teal-500"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label htmlFor="adminMail" className="block text-[11px] font-semibold text-slate-700 mb-1">
+                Email Profesional
+              </label>
+              <input
+                id="adminMail"
+                name="adminMail"
+                type="email"
+                value={adminData.mail}
+                onChange={(e) => setAdminData((prev) => ({ ...prev, mail: e.target.value }))}
+                placeholder="admin.sede@tempuscare.com"
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-teal-500"
                 disabled={isSubmitting}
               />
             </div>

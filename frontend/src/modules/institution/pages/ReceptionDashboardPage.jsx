@@ -3,6 +3,7 @@ import { useReceptionDashboard } from '../hooks/useReceptionDashboard';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { ReceptionFilters } from '../components/ReceptionFilters';
 import { CreateAgendaModal } from '../components/CreateAgendaModal';
+import { CreateWalkInPatientModal } from '../components/CreateWalkInPatientModal';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { AlertCircle } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export const ReceptionDashboardPage = () => {
   } = useReceptionDashboard();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const handleAgendaCreated = () => {
@@ -95,6 +97,7 @@ export const ReceptionDashboardPage = () => {
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         onOpenCreateAgenda={() => setIsCreateModalOpen(true)}
+        onOpenCreateWalkInPatient={() => setIsWalkInModalOpen(true)}
         onRefresh={refreshDashboard}
         isLoading={isLoading}
       />
@@ -130,6 +133,19 @@ export const ReceptionDashboardPage = () => {
         doctors={doctors}
         consultorios={consultorios}
         onAgendaCreated={handleAgendaCreated}
+      />
+
+      {/* Modal de Registro de Paciente Presencial (Walk-in) */}
+      <CreateWalkInPatientModal
+        isOpen={isWalkInModalOpen}
+        onClose={() => setIsWalkInModalOpen(false)}
+        onPatientCreated={(patient) => {
+          setToastMessage({
+            type: 'success',
+            title: 'Paciente Presencial Registrado',
+            message: `El paciente ${patient.nombre} ${patient.apellido} (DNI ${patient.dni}) fue registrado y está listo para recibir turnos.`,
+          });
+        }}
       />
     </div>
   );

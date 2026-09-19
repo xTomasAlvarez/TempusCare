@@ -40,6 +40,7 @@ export const ConsultorioAdminPage = () => {
     deleteAsistente,
     assignProfesional,
     removeProfesional,
+    registerDoctor,
   } = useConsultorioAdmin(consultorioCuit);
 
   const [activeTab, setActiveTab] = useState('asistentes'); // 'asistentes' | 'profesionales'
@@ -341,7 +342,7 @@ export const ConsultorioAdminPage = () => {
               onClick={() => setIsProfesionalModalOpen(true)}
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              Vincular Profesional
+              Nuevo / Vincular Médico
             </Button>
           }
         />
@@ -362,12 +363,17 @@ export const ConsultorioAdminPage = () => {
         sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
 
-      {/* Modal para Vincular Profesional */}
+      {/* Modal para Vincular o Registrar Profesional */}
       <AssignProfesionalModal
         isOpen={isProfesionalModalOpen}
         onClose={() => setIsProfesionalModalOpen(false)}
         onSubmit={async (cuil) => {
           const success = await assignProfesional(cuil);
+          if (success) setIsProfesionalModalOpen(false);
+          return success;
+        }}
+        onRegisterDoctor={async (dto) => {
+          const success = await registerDoctor(dto);
           if (success) setIsProfesionalModalOpen(false);
           return success;
         }}

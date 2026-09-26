@@ -3,7 +3,7 @@ import { useCoverageParameterization } from '../hooks/useCoverageParameterizatio
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
 import {
-  Shield,
+  ShieldPlus,
   Stethoscope,
   FileCheck2,
   Clock,
@@ -46,6 +46,9 @@ export const CoverageParameterizationForm = () => {
     isLoadingCatalogs,
     isLoadingStudies,
     isSubmitting,
+    error,
+    fieldErrors,
+    clearFieldError,
     saveParameterization,
     removeDoctorStudy,
   } = useCoverageParameterization();
@@ -72,7 +75,7 @@ export const CoverageParameterizationForm = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
             <h3 className="text-base sm:text-lg font-bold font-heading text-slate-900 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-teal-600" aria-hidden="true" />
+              <ShieldPlus className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
               Parametrización de Cobertura y Estudios (RN-02)
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -102,8 +105,12 @@ export const CoverageParameterizationForm = () => {
                 onChange={(e) => {
                   setSelectedDoctorCuil(e.target.value);
                   setSelectedEstudioId('');
+                  clearFieldError('profesionalCuil');
                 }}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-medium text-slate-900"
+                className={cn(
+                  'w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium text-slate-900',
+                  fieldErrors.profesionalCuil ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                )}
                 disabled={isSubmitting}
               >
                 {profesionales.map((p) => (
@@ -113,14 +120,19 @@ export const CoverageParameterizationForm = () => {
                 ))}
               </select>
             </div>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {fieldErrors.profesionalCuil && (
+                <p className="text-[11px] text-rose-600 font-medium">{fieldErrors.profesionalCuil}</p>
+              )}
+            </div>
 
             {selectedDoctor && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 <span className="font-semibold text-slate-700">Matrícula: {selectedDoctor.matricula}</span>
                 <span>•</span>
                 <span>{selectedDoctor.especialidades?.length || 0} especialidades</span>
                 <span>•</span>
-                <span className="text-teal-700 font-medium">{doctorStudies.length} estudios activos</span>
+                <span className="text-primary-700 font-medium">{doctorStudies.length} estudios activos</span>
               </div>
             )}
           </div>
@@ -136,8 +148,14 @@ export const CoverageParameterizationForm = () => {
             <select
               id="select-estudio"
               value={selectedEstudioId}
-              onChange={(e) => setSelectedEstudioId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-medium text-slate-900"
+              onChange={(e) => {
+                setSelectedEstudioId(e.target.value);
+                clearFieldError('estudioId');
+              }}
+              className={cn(
+                'w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium text-slate-900',
+                fieldErrors.estudioId ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+              )}
               disabled={isSubmitting || !selectedDoctorCuil}
             >
               <option value="">-- Seleccionar estudio del catálogo --</option>
@@ -150,8 +168,13 @@ export const CoverageParameterizationForm = () => {
                 );
               })}
             </select>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {fieldErrors.estudioId && (
+                <p className="text-[11px] text-rose-600 font-medium">{fieldErrors.estudioId}</p>
+              )}
+            </div>
 
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-400">
               Catálogo de estudios disponibles para la institución.
             </p>
           </div>
@@ -184,8 +207,14 @@ export const CoverageParameterizationForm = () => {
                   min="5"
                   step="5"
                   value={duracionTurno}
-                  onChange={(e) => setDuracionTurno(Number(e.target.value))}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white font-medium"
+                  onChange={(e) => {
+                    setDuracionTurno(Number(e.target.value));
+                    clearFieldError('duracionTurno');
+                  }}
+                  className={cn(
+                    'w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white font-medium',
+                    fieldErrors.duracionTurno ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  )}
                   disabled={isSubmitting}
                 />
               </div>
@@ -196,11 +225,14 @@ export const CoverageParameterizationForm = () => {
                   <button
                     key={mins}
                     type="button"
-                    onClick={() => setDuracionTurno(mins)}
+                    onClick={() => {
+                      setDuracionTurno(mins);
+                      clearFieldError('duracionTurno');
+                    }}
                     className={cn(
                       'px-2 py-1.5 rounded-lg text-xs font-medium transition-colors',
                       duracionTurno === mins
-                        ? 'bg-teal-600 text-white shadow-xs'
+                        ? 'bg-primary-600 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     )}
                   >
@@ -208,6 +240,11 @@ export const CoverageParameterizationForm = () => {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {fieldErrors.duracionTurno && (
+                <p className="text-[11px] text-rose-600 font-medium">{fieldErrors.duracionTurno}</p>
+              )}
             </div>
           </div>
 
@@ -226,11 +263,22 @@ export const CoverageParameterizationForm = () => {
                 min="0"
                 step="500"
                 value={precioParticular}
-                onChange={(e) => setPrecioParticular(e.target.value)}
+                onChange={(e) => {
+                  setPrecioParticular(e.target.value);
+                  clearFieldError('precioParticular');
+                }}
                 placeholder="Ej: 18000 (0 para sin arancel)"
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white font-medium"
+                className={cn(
+                  'w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white font-medium',
+                  fieldErrors.precioParticular ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                )}
                 disabled={isSubmitting}
               />
+            </div>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {fieldErrors.precioParticular && (
+                <p className="text-[11px] text-rose-600 font-medium">{fieldErrors.precioParticular}</p>
+              )}
             </div>
           </div>
         </div>
@@ -251,7 +299,7 @@ export const CoverageParameterizationForm = () => {
               <button
                 type="button"
                 onClick={selectAllObrasSociales}
-                className="text-xs text-teal-600 hover:text-teal-800 font-medium transition-colors"
+                className="text-xs text-primary-600 hover:text-primary-800 font-medium transition-colors"
               >
                 Seleccionar todas
               </button>
@@ -279,13 +327,13 @@ export const CoverageParameterizationForm = () => {
                   className={cn(
                     'flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-200',
                     isSelected
-                      ? 'bg-teal-50/70 border-teal-300 text-teal-950 shadow-xs'
+                      ? 'bg-primary-50/70 border-primary-300 text-primary-950 shadow-xs'
                       : 'bg-slate-50 hover:bg-slate-100/70 border-slate-200 text-slate-700'
                   )}
                 >
                   <div className="flex items-center gap-2.5">
                     {isSelected ? (
-                      <CheckSquare className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                      <CheckSquare className="w-4 h-4 text-primary-600 flex-shrink-0" />
                     ) : (
                       <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     )}
@@ -293,7 +341,7 @@ export const CoverageParameterizationForm = () => {
                   </div>
 
                   {isSelected && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-600 text-white px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-600 text-white px-1.5 py-0.5 rounded">
                       Cubre
                     </span>
                   )}
@@ -312,8 +360,16 @@ export const CoverageParameterizationForm = () => {
           )}
         </div>
 
-        {/* Botón de Guardado */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        {/* Botón de Guardado y Error inline */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium">
+            {error && (
+              <span className="flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                {error}
+              </span>
+            )}
+          </div>
           <Button
             type="button"
             variant="primary"
@@ -383,7 +439,7 @@ export const CoverageParameterizationForm = () => {
                     </td>
                     <td className="py-3.5 px-4 text-slate-600">
                       <span className="flex items-center gap-1 font-medium">
-                        <Clock className="w-3.5 h-3.5 text-teal-600" />
+                        <Clock className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} />
                         {pe.duracionTurno} min
                       </span>
                     </td>
@@ -410,7 +466,7 @@ export const CoverageParameterizationForm = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedEstudioId(String(pe.estudioId))}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                           title="Cargar en formulario para editar"
                           aria-label={`Editar estudio ${pe.estudioNombre}`}
                         >

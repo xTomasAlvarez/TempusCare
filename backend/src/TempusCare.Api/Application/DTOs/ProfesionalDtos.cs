@@ -72,5 +72,7 @@ public record ProfesionalResponseDto(
     List<string> Especialidades,
     List<string> Consultorios,
     List<string> ObrasSociales,
-    List<ProfesionalEstudioResponseDto> Estudios
+    List<ProfesionalEstudioResponseDto> Estudios,
+    List<ConsultorioUbicacionDto>? ConsultoriosDetalle = null,
+    List<string>? Instituciones = null
 );

@@ -47,7 +47,9 @@ public class ConsultorioService : IConsultorioService
             Telefono = dto.Telefono,
             NivelAccesibilidad = dto.NivelAccesibilidad,
             InstitucionId = dto.InstitucionId,
-            DireccionId = dir.Id
+            DireccionId = dir.Id,
+            Latitud = dto.Latitud,
+            Longitud = dto.Longitud
         };
         _db.Consultorios.Add(cons);
 
@@ -86,6 +88,8 @@ public class ConsultorioService : IConsultorioService
         cons.Telefono = dto.Telefono;
         cons.NivelAccesibilidad = dto.NivelAccesibilidad;
         cons.InstitucionId = dto.InstitucionId;
+        if (dto.Latitud.HasValue) cons.Latitud = dto.Latitud;
+        if (dto.Longitud.HasValue) cons.Longitud = dto.Longitud;
 
         if (cons.Direccion != null)
         {
@@ -292,7 +296,12 @@ public class ConsultorioService : IConsultorioService
             c.Institucion?.Nombre,
             dirStr,
             c.Profesionales.Select(p => $"{p.Profesional?.Nombre} {p.Profesional?.Apellido}".Trim()).ToList(),
-            profesionalesVinculados
+            profesionalesVinculados,
+            c.Latitud,
+            c.Longitud,
+            c.Direccion?.Calle,
+            c.Direccion?.Nro,
+            c.Direccion?.Localidad
         );
     }
 }

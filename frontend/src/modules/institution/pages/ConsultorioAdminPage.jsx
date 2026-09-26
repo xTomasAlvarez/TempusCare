@@ -7,7 +7,7 @@ import { AssignProfesionalModal } from '../components/AssignProfesionalModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
 import {
-  Building2,
+  Hospital,
   Users,
   Stethoscope,
   Phone,
@@ -16,6 +16,7 @@ import {
   Plus,
   Trash2,
   UserCheck,
+  UserRoundPlus,
   ShieldCheck,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
@@ -27,7 +28,7 @@ import { cn } from '../../../shared/utils/cn';
  */
 export const ConsultorioAdminPage = () => {
   const { user } = useAuth();
-  const consultorioCuit = user?.consultorioCuit || '3011122233401';
+  const consultorioCuit = user?.consultorioCuit || '30111222331';
 
   const {
     consultorio,
@@ -55,7 +56,7 @@ export const ConsultorioAdminPage = () => {
       className: 'min-w-[220px]',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0 font-bold font-heading">
+          <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0 font-bold font-heading">
             {row.nombre?.[0]}{row.apellido?.[0]}
           </div>
           <div>
@@ -81,7 +82,7 @@ export const ConsultorioAdminPage = () => {
       key: 'sede',
       label: 'Sede Asignada',
       render: (row) => (
-        <Badge variant="teal" size="sm">
+        <Badge variant="primary" size="sm">
           {row.consultorioNombre || consultorio?.nombre || 'Sede Actual'}
         </Badge>
       ),
@@ -114,7 +115,7 @@ export const ConsultorioAdminPage = () => {
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0 font-bold font-heading">
-            <Stethoscope className="w-4 h-4" />
+            <Stethoscope className="w-4 h-4" strokeWidth={2} />
           </div>
           <div>
             <p className="font-bold font-heading text-slate-900 leading-snug">
@@ -193,15 +194,15 @@ export const ConsultorioAdminPage = () => {
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-teal-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-teal-500/20">
-              <Building2 className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-primary-600/20">
+              <Hospital className="w-6 h-6" strokeWidth={2} />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
                 <h1 className="text-xl sm:text-2xl font-bold font-heading text-slate-900 tracking-tight">
                   {consultorio?.nombre || user?.sedeNombre || 'Sede Física'}
                 </h1>
-                <Badge variant="teal" size="sm">
+                <Badge variant="primary" size="sm">
                   Administración de Sede
                 </Badge>
               </div>
@@ -257,18 +258,18 @@ export const ConsultorioAdminPage = () => {
             aria-selected={activeTab === 'asistentes'}
             onClick={() => setActiveTab('asistentes')}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-teal-500',
+              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
               activeTab === 'asistentes'
-                ? 'border-teal-600 text-teal-700 bg-white shadow-xs'
+                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
                 : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             )}
           >
-            <Users className={cn('w-4 h-4', activeTab === 'asistentes' ? 'text-teal-600' : 'text-slate-400')} />
+            <Users className={cn('w-4 h-4', activeTab === 'asistentes' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
             <span>Asistentes de Recepción</span>
             <span
               className={cn(
                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5',
-                activeTab === 'asistentes' ? 'bg-teal-100 text-teal-800' : 'bg-slate-200/70 text-slate-600'
+                activeTab === 'asistentes' ? 'bg-primary-100 text-primary-800' : 'bg-slate-200/70 text-slate-600'
               )}
             >
               {asistentes.length}
@@ -280,18 +281,18 @@ export const ConsultorioAdminPage = () => {
             aria-selected={activeTab === 'profesionales'}
             onClick={() => setActiveTab('profesionales')}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-teal-500',
+              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
               activeTab === 'profesionales'
-                ? 'border-teal-600 text-teal-700 bg-white shadow-xs'
+                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
                 : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             )}
           >
-            <Stethoscope className={cn('w-4 h-4', activeTab === 'profesionales' ? 'text-teal-600' : 'text-slate-400')} />
+            <Stethoscope className={cn('w-4 h-4', activeTab === 'profesionales' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
             <span>Profesionales Vinculados</span>
             <span
               className={cn(
                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5',
-                activeTab === 'profesionales' ? 'bg-teal-100 text-teal-800' : 'bg-slate-200/70 text-slate-600'
+                activeTab === 'profesionales' ? 'bg-primary-100 text-primary-800' : 'bg-slate-200/70 text-slate-600'
               )}
             >
               {profesionales.length}
@@ -317,7 +318,7 @@ export const ConsultorioAdminPage = () => {
               size="sm"
               onClick={() => setIsAsistenteModalOpen(true)}
             >
-              <Plus className="w-4 h-4 mr-1.5" />
+              <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
               Dar de alta Asistente
             </Button>
           }
@@ -341,7 +342,7 @@ export const ConsultorioAdminPage = () => {
               size="sm"
               onClick={() => setIsProfesionalModalOpen(true)}
             >
-              <Plus className="w-4 h-4 mr-1.5" />
+              <Stethoscope className="w-4 h-4 mr-1.5" strokeWidth={2} />
               Nuevo / Vincular Médico
             </Button>
           }

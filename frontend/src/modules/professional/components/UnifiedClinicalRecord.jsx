@@ -4,7 +4,7 @@ import { PatientTimeline } from './PatientTimeline';
 import { ClinicalEvolutionEditor } from './ClinicalEvolutionEditor';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
-import { ArrowLeft, User, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, UserRound, Clock, CalendarHeart, AlertCircle } from 'lucide-react';
 
 /**
  * Ficha Clínica Unificada (Atención Médica):
@@ -24,6 +24,7 @@ export const UnifiedClinicalRecord = ({
     isSaving,
     isSaved,
     error,
+    fieldErrors,
     motivo,
     setMotivo,
     detalle,
@@ -74,18 +75,18 @@ export const UnifiedClinicalRecord = ({
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
               <span className="flex items-center gap-1 font-mono">
-                <User className="w-3.5 h-3.5 text-slate-400" />
+                <UserRound className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                 CUIL: {appointment.pacienteCuil}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <Clock className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                 Horario: {formatTime(appointment.horaInicio)} - {formatTime(appointment.horaFin)}
               </span>
               {appointment.estudioNombre && (
                 <>
                   <span>•</span>
-                  <span className="font-medium text-teal-700">
+                  <span className="font-medium text-primary-700">
                     {appointment.estudioNombre}
                   </span>
                 </>
@@ -94,13 +95,6 @@ export const UnifiedClinicalRecord = ({
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Pantalla Dividida en Dos Paneles (Split-Screen) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -126,6 +120,8 @@ export const UnifiedClinicalRecord = ({
             setMarkAsAttended={setMarkAsAttended}
             isSaving={isSaving}
             isSaved={isSaved}
+            error={error}
+            fieldErrors={fieldErrors}
             onSave={saveEvolution}
           />
         </div>

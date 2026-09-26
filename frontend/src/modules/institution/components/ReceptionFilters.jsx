@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar as CalendarIcon, Plus, RotateCcw, UserPlus } from 'lucide-react';
+import { Stethoscope, CalendarPlus, RotateCcw, UserRoundPlus } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
 
 export const ReceptionFilters = ({
@@ -29,8 +29,8 @@ export const ReceptionFilters = ({
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 flex-wrap">
         {/* Selector de Médico */}
         <div className="flex items-center gap-2 min-w-[260px]">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-            <User className="w-4 h-4" aria-hidden="true" />
+          <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center shrink-0 border border-primary-100">
+            <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           </div>
           <div className="flex-1">
             <label htmlFor="filter-reception-doctor" className="sr-only">
@@ -40,7 +40,7 @@ export const ReceptionFilters = ({
               id="filter-reception-doctor"
               value={selectedDoctorCuil}
               onChange={(e) => onDoctorChange(e.target.value)}
-              className="w-full h-10 px-3 pr-8 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-colors cursor-pointer"
+              className="w-full h-10 px-3 pr-8 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
             >
               {doctors.map((doc) => (
                 <option key={doc.cuil} value={doc.cuil}>
@@ -62,7 +62,7 @@ export const ReceptionFilters = ({
               value={selectedDate}
               onChange={(e) => onDateChange(e.target.value)}
               aria-label="Seleccionar fecha de atención"
-              className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-colors cursor-pointer"
+              className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
             />
           </div>
 
@@ -96,9 +96,9 @@ export const ReceptionFilters = ({
             onClick={onRefresh}
             disabled={isLoading}
             aria-label="Actualizar datos del tablero"
-            className="w-10 h-10 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 shrink-0"
+            className="w-10 h-10 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 shrink-0"
           >
-            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-teal-600' : ''}`} aria-hidden="true" />
+            <RotateCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary-600' : ''}`} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -109,9 +109,9 @@ export const ReceptionFilters = ({
           variant="outline"
           size="md"
           onClick={onOpenCreateWalkInPatient}
-          className="w-full sm:w-auto gap-2 rounded-xl shadow-xs font-semibold border-teal-200 text-teal-800 hover:bg-teal-50 hover:text-teal-900"
+          className="w-full sm:w-auto gap-2 rounded-xl shadow-xs font-semibold border-primary-200 text-primary-800 hover:bg-primary-50 hover:text-primary-900"
         >
-          <UserPlus className="w-4 h-4 text-teal-600" aria-hidden="true" />
+          <UserRoundPlus className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           <span>+ Nuevo Paciente Presencial</span>
         </Button>
 
@@ -121,7 +121,7 @@ export const ReceptionFilters = ({
           onClick={onOpenCreateAgenda}
           className="w-full sm:w-auto gap-2 rounded-xl shadow-xs font-semibold"
         >
-          <Plus className="w-4 h-4" aria-hidden="true" />
+          <CalendarPlus className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           <span>+ Nueva Agenda Horaria</span>
         </Button>
       </div>

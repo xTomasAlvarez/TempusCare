@@ -41,12 +41,18 @@ public class AgendaService : IAgendaService
         }
 
         // RN-01 / RN-05: Un profesional no puede tener dos turnos/agendas superpuestas en la misma franja horaria (incluso en distintos consultorios).
-        bool solapado = await _db.Agendas.AnyAsync(a =>
-            a.ProfesionalCuil == dto.ProfesionalCuil &&
-            a.Dia == dto.Dia && a.Mes == dto.Mes && a.Anio == dto.Anio &&
-            ((dto.HoraEntrada >= a.HoraEntrada && dto.HoraEntrada < a.HoraSalida) ||
-             (dto.HoraSalida > a.HoraEntrada && dto.HoraSalida <= a.HoraSalida) ||
-             (dto.HoraEntrada <= a.HoraEntrada && dto.HoraSalida >= a.HoraSalida)));
+        // 1. Traer de la base de datos las agendas de ese médico para ese día específico en memoria para evitar excepciones de traducción LINQ en EF Core
+        var agendasDelDia = await _db.Agendas
+            .Where(a => a.ProfesionalCuil == dto.ProfesionalCuil &&
+                        a.Dia == dto.Dia &&
+                        a.Mes == dto.Mes &&
+                        a.Anio == dto.Anio)
+            .ToListAsync();
+
+        // 2. Validación de superposición de horas en memoria con LINQ to Objects:
+        // (nuevaHoraInicio < agendaExistente.HoraSalida && nuevaHoraFin > agendaExistente.HoraEntrada)
+        bool solapado = agendasDelDia.Any(a =>
+            dto.HoraEntrada < a.HoraSalida && dto.HoraSalida > a.HoraEntrada);
 
         if (solapado)
         {
@@ -122,6 +128,23 @@ public class AgendaService : IAgendaService
         {
             _logger.LogWarning("Agenda ID {IdAgenda} no encontrada", dto.IdAgenda);
             throw new AgendaNotFoundException(dto.IdAgenda);
+        }
+
+        var agendasDelDia = await _db.Agendas
+            .Where(a => a.ProfesionalCuil == agenda.ProfesionalCuil &&
+                        a.Dia == agenda.Dia &&
+                        a.Mes == agenda.Mes &&
+                        a.Anio == agenda.Anio &&
+                        a.Id != agenda.Id)
+            .ToListAsync();
+
+        bool solapado = agendasDelDia.Any(a =>
+            dto.NuevaHoraEntrada < a.HoraSalida && dto.NuevaHoraSalida > a.HoraEntrada);
+
+        if (solapado)
+        {
+            _logger.LogWarning("RN-05 violada: solapamiento al modificar agenda {IdAgenda} para profesional {Cuil} en día {Dia}/{Mes}/{Anio}", agenda.Id, agenda.ProfesionalCuil, agenda.Dia, agenda.Mes, agenda.Anio);
+            throw new ConflictException("RN-05: La nueva franja horaria se solapa con otra agenda existente del profesional.");
         }
 
         agenda.HoraEntrada = dto.NuevaHoraEntrada;

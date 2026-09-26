@@ -33,6 +33,7 @@ public class TempusCareDbContext : DbContext
     public DbSet<ProfesionalObraSocial> ProfesionalObrasSociales => Set<ProfesionalObraSocial>();
     public DbSet<PacienteObraSocial> PacienteObrasSociales => Set<PacienteObraSocial>();
     public DbSet<AsistenteAgenda> AsistenteAgendas => Set<AsistenteAgenda>();
+    public DbSet<SolicitudSuperAdmin> SolicitudesSuperAdmin => Set<SolicitudSuperAdmin>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,10 @@ public class TempusCareDbContext : DbContext
         // AdministradorInstitucion
         modelBuilder.Entity<AdministradorInstitucion>()
             .HasKey(ai => ai.Cuil);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .Property(ai => ai.Cuil)
+            .HasMaxLength(11);
 
         modelBuilder.Entity<AdministradorInstitucion>()
             .HasOne(ai => ai.Usuario)
@@ -59,6 +64,14 @@ public class TempusCareDbContext : DbContext
             .HasKey(ac => ac.Cuil);
 
         modelBuilder.Entity<AdministradorConsultorio>()
+            .Property(ac => ac.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .Property(ac => ac.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
             .HasOne(ac => ac.Usuario)
             .WithOne(u => u.AdministradorConsultorio)
             .HasForeignKey<AdministradorConsultorio>(ac => ac.UsuarioId)
@@ -73,6 +86,18 @@ public class TempusCareDbContext : DbContext
         // Asistente primary key: Cuil
         modelBuilder.Entity<Asistente>()
             .HasKey(a => a.Cuil);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.AdminConsultorioCuil)
+            .HasMaxLength(11);
 
         modelBuilder.Entity<Asistente>()
             .HasOne(a => a.Usuario)
@@ -109,6 +134,10 @@ public class TempusCareDbContext : DbContext
             .HasKey(p => p.Cuil);
 
         modelBuilder.Entity<Paciente>()
+            .Property(p => p.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Paciente>()
             .HasOne(p => p.Usuario)
             .WithOne(u => u.Paciente)
             .HasForeignKey<Paciente>(p => p.UsuarioId)
@@ -123,6 +152,10 @@ public class TempusCareDbContext : DbContext
         // Profesional primary key: Cuil
         modelBuilder.Entity<Profesional>()
             .HasKey(pr => pr.Cuil);
+
+        modelBuilder.Entity<Profesional>()
+            .Property(pr => pr.Cuil)
+            .HasMaxLength(11);
 
         modelBuilder.Entity<Profesional>()
             .HasOne(pr => pr.Usuario)
@@ -145,6 +178,10 @@ public class TempusCareDbContext : DbContext
             .HasKey(i => i.Id);
 
         modelBuilder.Entity<Institucion>()
+            .Property(i => i.Cuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Institucion>()
             .HasOne(i => i.Usuario)
             .WithOne(u => u.Institucion)
             .HasForeignKey<Institucion>(i => i.UsuarioId)
@@ -161,12 +198,28 @@ public class TempusCareDbContext : DbContext
             .HasKey(c => c.Cuit);
 
         modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Cuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Latitud)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Longitud)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<Consultorio>()
             .HasOne(c => c.Direccion)
             .WithMany()
             .HasForeignKey(c => c.DireccionId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Historia Clinica 1:1 Paciente (RNF-SEG-06: Confidencialidad y protección de datos médicos Ley 25.326)
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.PacienteCuil)
+            .HasMaxLength(11);
+
         modelBuilder.Entity<HistoriaClinica>()
             .HasOne(hc => hc.Paciente)
             .WithOne(p => p.HistoriaClinica)
@@ -181,6 +234,10 @@ public class TempusCareDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // Profesional 1:N Observaciones
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.ProfesionalCuil)
+            .HasMaxLength(11);
+
         modelBuilder.Entity<Observacion>()
             .HasOne(o => o.Profesional)
             .WithMany(p => p.Observaciones)
@@ -202,6 +259,10 @@ public class TempusCareDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // Turno <-> Cita (Turno principal de la cita)
+        modelBuilder.Entity<Cita>()
+            .Property(c => c.PacienteCuil)
+            .HasMaxLength(11);
+
         modelBuilder.Entity<Cita>()
             .HasOne(c => c.Turno)
             .WithMany()
@@ -243,6 +304,10 @@ public class TempusCareDbContext : DbContext
         // Estudio <-> ProfesionalEstudio (1:N)
         modelBuilder.Entity<ProfesionalEstudio>()
             .HasKey(pe => pe.Id);
+
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .Property(pe => pe.ProfesionalCuil)
+            .HasMaxLength(11);
 
         // RN-02: Unicidad en la relación Profesional - Estudio
         modelBuilder.Entity<ProfesionalEstudio>()
@@ -287,6 +352,14 @@ public class TempusCareDbContext : DbContext
             .HasKey(pc => new { pc.ProfesionalCuil, pc.ConsultorioCuit });
 
         modelBuilder.Entity<ProfesionalConsultorio>()
+            .Property(pc => pc.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .Property(pc => pc.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
             .HasOne(pc => pc.Profesional)
             .WithMany(p => p.Consultorios)
             .HasForeignKey(pc => pc.ProfesionalCuil);
@@ -299,6 +372,10 @@ public class TempusCareDbContext : DbContext
         // Junction: Profesional <-> Especialidad
         modelBuilder.Entity<ProfesionalEspecialidad>()
             .HasKey(pe => new { pe.ProfesionalCuil, pe.EspecialidadId });
+
+        modelBuilder.Entity<ProfesionalEspecialidad>()
+            .Property(pe => pe.ProfesionalCuil)
+            .HasMaxLength(11);
 
         modelBuilder.Entity<ProfesionalEspecialidad>()
             .HasOne(pe => pe.Profesional)
@@ -315,6 +392,10 @@ public class TempusCareDbContext : DbContext
             .HasKey(po => new { po.ProfesionalCuil, po.ObraSocialId });
 
         modelBuilder.Entity<ProfesionalObraSocial>()
+            .Property(po => po.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalObraSocial>()
             .HasOne(po => po.Profesional)
             .WithMany(p => p.ObrasSociales)
             .HasForeignKey(po => po.ProfesionalCuil);
@@ -327,6 +408,10 @@ public class TempusCareDbContext : DbContext
         // Junction: Paciente <-> ObraSocial
         modelBuilder.Entity<PacienteObraSocial>()
             .HasKey(pao => new { pao.PacienteCuil, pao.ObraSocialId });
+
+        modelBuilder.Entity<PacienteObraSocial>()
+            .Property(pao => pao.PacienteCuil)
+            .HasMaxLength(11);
 
         modelBuilder.Entity<PacienteObraSocial>()
             .HasOne(pao => pao.Paciente)
@@ -343,6 +428,10 @@ public class TempusCareDbContext : DbContext
             .HasKey(aa => new { aa.AsistenteCuil, aa.AgendaId });
 
         modelBuilder.Entity<AsistenteAgenda>()
+            .Property(aa => aa.AsistenteCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AsistenteAgenda>()
             .HasOne(aa => aa.Asistente)
             .WithMany(a => a.AgendasAsignadas)
             .HasForeignKey(aa => aa.AsistenteCuil)
@@ -353,5 +442,32 @@ public class TempusCareDbContext : DbContext
             .WithMany(a => a.AsistentesAsignados)
             .HasForeignKey(aa => aa.AgendaId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Agenda
+        modelBuilder.Entity<Agenda>()
+            .Property(a => a.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Agenda>()
+            .Property(a => a.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        // SolicitudSuperAdmin (Consenso Multipartito)
+        modelBuilder.Entity<SolicitudSuperAdmin>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.EmailPropuesto).IsRequired().HasMaxLength(150);
+            entity.Property(s => s.Estado).IsRequired().HasMaxLength(30);
+
+            entity.HasOne(s => s.Proponente)
+                .WithMany()
+                .HasForeignKey(s => s.ProponenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.Aprobador)
+                .WithMany()
+                .HasForeignKey(s => s.AprobadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

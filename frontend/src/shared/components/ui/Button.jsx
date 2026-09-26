@@ -11,11 +11,11 @@ export const Button = React.forwardRef(({
   type = 'button',
   ...props
 }, ref) => {
-  const baseStyles = "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 select-none";
+  const baseStyles = "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 select-none";
 
   const variants = {
-    primary: "bg-teal-600 hover:bg-teal-700 text-white shadow-sm hover:shadow",
-    secondary: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow",
+    primary: "bg-primary-600 hover:bg-primary-700 text-white shadow-sm hover:shadow",
+    secondary: "bg-secondary-600 hover:bg-secondary-700 text-white shadow-sm hover:shadow",
     outline: "border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-slate-300",
     ghost: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80",
     danger: "bg-rose-600 hover:bg-rose-700 text-white shadow-sm",

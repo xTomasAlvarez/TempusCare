@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../core/context/AuthContext';
 import { professionalService } from '../services/professionalService';
-import { Building2, ChevronDown, Check, MapPin } from 'lucide-react';
+import { Hospital, ChevronDown, Check, MapPin } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 
 /**
@@ -94,12 +94,12 @@ export const ContextSwitcher = ({ className }) => {
         className={cn(
           'flex items-center gap-2.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-xl border transition-all duration-200',
           'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs',
-          'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500',
-          isOpen && 'border-teal-500 ring-2 ring-teal-500/20'
+          'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+          isOpen && 'border-primary-500 ring-2 ring-primary-500/20'
         )}
       >
-        <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0">
-          <Building2 className="w-3.5 h-3.5" aria-hidden="true" />
+        <div className="w-6 h-6 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0">
+          <Hospital className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         </div>
 
         <div className="flex flex-col text-left max-w-[140px] sm:max-w-[200px] truncate">
@@ -114,7 +114,7 @@ export const ContextSwitcher = ({ className }) => {
         <ChevronDown
           className={cn(
             'w-4 h-4 text-slate-400 ml-0.5 transition-transform duration-200',
-            isOpen && 'rotate-180 text-teal-600'
+            isOpen && 'rotate-180 text-primary-600'
           )}
           aria-hidden="true"
         />
@@ -145,17 +145,17 @@ export const ContextSwitcher = ({ className }) => {
                   className={cn(
                     'w-full flex items-start gap-3 p-2.5 rounded-xl text-left text-xs sm:text-sm transition-colors',
                     isSelected
-                      ? 'bg-teal-50/80 text-teal-900 font-medium'
+                      ? 'bg-primary-50/80 text-primary-900 font-medium'
                       : 'hover:bg-slate-50 text-slate-700'
                   )}
                 >
                   <div
                     className={cn(
                       'w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5',
-                      isSelected ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500'
+                      isSelected ? 'bg-primary-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500'
                     )}
                   >
-                    <Building2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <Hospital className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -167,7 +167,7 @@ export const ContextSwitcher = ({ className }) => {
                   </div>
 
                   {isSelected && (
-                    <Check className="w-4 h-4 text-teal-600 flex-shrink-0 mt-1" aria-hidden="true" />
+                    <Check className="w-4 h-4 text-primary-600 flex-shrink-0 mt-1" aria-hidden="true" />
                   )}
                 </button>
               );

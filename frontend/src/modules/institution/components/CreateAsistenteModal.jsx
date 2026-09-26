@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
-import { UserCheck, ShieldCheck } from 'lucide-react';
+import { Input } from '../../../shared/components/ui/Input';
+import { UserRoundPlus, ShieldCheck, AlertCircle } from 'lucide-react';
+import { asistenteSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 /**
  * Modal para dar de alta personal operativo (Asistentes y Secretarios).
@@ -36,6 +39,7 @@ export const CreateAsistenteModal = ({
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,47 +49,56 @@ export const CreateAsistenteModal = ({
     }
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.cuil.trim()) newErrors.cuil = 'El CUIL es obligatorio.';
-    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
-    if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio.';
-    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      asistenteSchema,
+      formData
+    );
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
 
     const payload = {
       ...formData,
-      fecNac: new Date(formData.fecNac).toISOString(),
-      institucionId: formData.institucionId ? Number(formData.institucionId) : (defaultInstitucionId ? Number(defaultInstitucionId) : null),
-      consultorioCuit: defaultConsultorioCuit || formData.consultorioCuit || null,
-      adminConsultorioCuil: adminConsultorioCuil || formData.adminConsultorioCuil || null,
+      ...sanitizedData,
+      fecNac: new Date(sanitizedData.fecNac).toISOString(),
+      institucionId: sanitizedData.institucionId ? Number(sanitizedData.institucionId) : (defaultInstitucionId ? Number(defaultInstitucionId) : null),
+      consultorioCuit: defaultConsultorioCuit || sanitizedData.consultorioCuit || null,
+      adminConsultorioCuil: adminConsultorioCuil || sanitizedData.adminConsultorioCuil || null,
     };
 
-    const success = await onSubmit(payload);
+    try {
+      const success = await onSubmit(payload);
 
-    if (success) {
-      setFormData({
-        cuil: '',
-        nombre: '',
-        apellido: '',
-        fecNac: '1995-05-15',
-        telefono: '',
-        genero: 'F',
-        calle: '',
-        nro: '',
-        depto: '',
-        localidad: 'San Miguel de Tucumán',
-        provincia: 'Tucumán',
-        codPostal: '4000',
-        institucionId: instituciones[0]?.id || '',
-      });
-      setErrors({});
+      if (success) {
+        setFormData({
+          cuil: '',
+          nombre: '',
+          apellido: '',
+          fecNac: '1995-05-15',
+          telefono: '',
+          genero: 'F',
+          calle: '',
+          nro: '',
+          depto: '',
+          localidad: 'San Miguel de Tucumán',
+          provincia: 'Tucumán',
+          codPostal: '4000',
+          institucionId: instituciones[0]?.id || '',
+        });
+        setErrors({});
+      }
+    } catch (err) {
+      const parsed = parseBackendError(err, 'Error al registrar al asistente.');
+      if (parsed.isDuplicate) {
+        setErrors((prev) => ({ ...prev, cuil: parsed.message }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: parsed.message }));
+      }
     }
   };
 
@@ -111,10 +124,17 @@ export const CreateAsistenteModal = ({
               value={formData.cuil}
               onChange={handleChange}
               placeholder="Ej: 27351112229"
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-mono"
+              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
+                errors.cuil ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+              }`}
               disabled={isSubmitting}
             />
-            {errors.cuil && <p className="text-[11px] text-rose-600 mt-1">{errors.cuil}</p>}
+            {/* Espacio fijo reservado para error (sin salto de layout) */}
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.cuil && (
+                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.cuil}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -128,10 +148,17 @@ export const CreateAsistenteModal = ({
               value={formData.nombre}
               onChange={handleChange}
               placeholder="Ej: Luciana"
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+              }`}
               disabled={isSubmitting}
             />
-            {errors.nombre && <p className="text-[11px] text-rose-600 mt-1">{errors.nombre}</p>}
+            {/* Espacio fijo reservado para error (sin salto de layout) */}
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.nombre && (
+                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -145,10 +172,17 @@ export const CreateAsistenteModal = ({
               value={formData.apellido}
               onChange={handleChange}
               placeholder="Ej: Herrera"
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                errors.apellido ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+              }`}
               disabled={isSubmitting}
             />
-            {errors.apellido && <p className="text-[11px] text-rose-600 mt-1">{errors.apellido}</p>}
+            {/* Espacio fijo reservado para error (sin salto de layout) */}
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.apellido && (
+                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.apellido}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -165,10 +199,17 @@ export const CreateAsistenteModal = ({
               value={formData.telefono}
               onChange={handleChange}
               placeholder="381-5123456"
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                errors.telefono ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+              }`}
               disabled={isSubmitting}
             />
-            {errors.telefono && <p className="text-[11px] text-rose-600 mt-1">{errors.telefono}</p>}
+            {/* Espacio fijo reservado para error (sin salto de layout) */}
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.telefono && (
+                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.telefono}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -181,7 +222,7 @@ export const CreateAsistenteModal = ({
               type="date"
               value={formData.fecNac}
               onChange={handleChange}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             />
           </div>
@@ -195,7 +236,7 @@ export const CreateAsistenteModal = ({
               name="genero"
               value={formData.genero}
               onChange={handleChange}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             >
               <option value="F">Femenino</option>
@@ -207,8 +248,8 @@ export const CreateAsistenteModal = ({
 
         {/* Sede o Institución Asignada */}
         {defaultConsultorioCuit ? (
-          <div className="p-3 bg-teal-50/60 rounded-xl border border-teal-200/80">
-            <p className="text-[11px] font-bold font-heading text-teal-800 uppercase tracking-wider">
+          <div className="p-3 bg-primary-50/60 rounded-xl border border-primary-200/80">
+            <p className="text-[11px] font-bold font-heading text-primary-800 uppercase tracking-wider">
               Sede Física Asignada
             </p>
             <p className="text-sm font-semibold text-slate-800 mt-0.5">
@@ -226,7 +267,7 @@ export const CreateAsistenteModal = ({
               name="institucionId"
               value={formData.institucionId}
               onChange={handleChange}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             >
               {instituciones.map((inst) => (
@@ -250,7 +291,7 @@ export const CreateAsistenteModal = ({
               value={formData.calle}
               onChange={handleChange}
               placeholder="Calle"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             />
             <input
@@ -259,7 +300,7 @@ export const CreateAsistenteModal = ({
               value={formData.nro}
               onChange={handleChange}
               placeholder="Número"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             />
             <input
@@ -268,40 +309,52 @@ export const CreateAsistenteModal = ({
               value={formData.localidad}
               onChange={handleChange}
               placeholder="Localidad"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             />
           </div>
         </div>
 
         {/* Nota informativa sobre credenciales */}
-        <div className="p-3 rounded-xl bg-teal-50/60 border border-teal-200/80 text-xs text-teal-900 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-teal-600 flex-shrink-0" />
+        <div className="p-3 rounded-xl bg-primary-50/60 border border-primary-200/80 text-xs text-primary-900 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-primary-600 flex-shrink-0" strokeWidth={2} />
           <span>
             Se creará automáticamente la cuenta de acceso al sistema con rol <strong>Asistente</strong> y contraseña temporal inicial.
           </span>
         </div>
 
-        {/* Botones de Acción */}
-        <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
+        {/* Botones de Acción con slot fijo para error inline */}
+        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+            {errors.general && (
+              <span className="flex items-center gap-1 animate-in fade-in-0">
+                <span aria-hidden="true">⚠</span> {errors.general}
+              </span>
+            )}
+          </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            isLoading={isSubmitting}
-          >
-            Registrar Personal
-          </Button>
+          <div className="flex items-center justify-end gap-3 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isSubmitting}
+              className="gap-1.5"
+            >
+              <UserRoundPlus className="w-4 h-4" strokeWidth={2} />
+              <span>Registrar Personal</span>
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

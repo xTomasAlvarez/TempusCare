@@ -4,15 +4,26 @@ export const patientService = {
   /**
    * Consulta profesionales con filtros opcionales
    */
-  async getProfessionals({ nombre, especialidadId, obraSocialId, consultorioCuit } = {}) {
+  async getProfessionals({ nombre, busqueda, especialidadId, obraSocialId, consultorioCuit } = {}) {
     const params = new URLSearchParams();
-    if (nombre) params.append('nombre', nombre.trim());
+    const term = (busqueda || nombre || '').trim();
+    if (term) {
+      params.append('busqueda', term);
+      params.append('nombre', term);
+    }
     if (especialidadId) params.append('especialidadId', especialidadId);
     if (obraSocialId) params.append('obraSocialId', obraSocialId);
     if (consultorioCuit) params.append('consultorioCuit', consultorioCuit);
 
     const query = params.toString();
     return await apiClient.get(`profesionales${query ? `?${query}` : ''}`);
+  },
+
+  /**
+   * Obtiene todos los consultorios con coordenadas geográficas y direcciones
+   */
+  async getConsultorios() {
+    return await apiClient.get('consultorios');
   },
 
   /**
@@ -117,6 +128,13 @@ export const patientService = {
    */
   async registerWalkInPatient(dto) {
     return await apiClient.post('pacientes/presencial', dto);
+  },
+
+  /**
+   * Obtiene el perfil completo del paciente por CUIL, incluyendo sus obras sociales asociadas
+   */
+  async getPatientProfile(pacienteCuil) {
+    return await apiClient.get(`pacientes/${pacienteCuil}`);
   },
 };
 

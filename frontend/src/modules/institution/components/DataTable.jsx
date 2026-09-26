@@ -73,13 +73,13 @@ export const DataTable = ({
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 sm:flex-initial">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              className="w-full sm:w-60 pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-sans"
+              className="w-full sm:w-60 pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-sans"
               aria-label={searchPlaceholder}
             />
           </div>
@@ -123,7 +123,7 @@ export const DataTable = ({
                 <td colSpan={columns.length} className="py-12 px-4 text-center">
                   <div className="max-w-xs mx-auto space-y-2">
                     <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
-                      <Inbox className="w-6 h-6" aria-hidden="true" />
+                      <Inbox className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
                     </div>
                     <p className="font-semibold text-slate-800 text-sm">No se encontraron registros</p>
                     <p className="text-xs text-slate-500">
@@ -176,7 +176,7 @@ export const DataTable = ({
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="ml-2 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="ml-2 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Registros por página"
             >
               <option value={5}>5 por pág.</option>
@@ -193,7 +193,7 @@ export const DataTable = ({
               className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               aria-label="Página anterior"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" strokeWidth={2} />
             </button>
 
             <span className="px-2.5 py-1 text-xs font-medium text-slate-700">
@@ -207,7 +207,7 @@ export const DataTable = ({
               className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               aria-label="Página siguiente"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         </div>

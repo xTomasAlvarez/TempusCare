@@ -8,11 +8,12 @@ import { patientService } from '../services/patientService';
  */
 export const usePatientDashboard = () => {
   const { user } = useAuth();
+  const [paciente, setPaciente] = useState(null);
   const [nextAppointment, setNextAppointment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchNextAppointment = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!user?.cuil) {
       setIsLoading(false);
       return;
@@ -21,40 +22,52 @@ export const usePatientDashboard = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const list = await patientService.getPatientAppointments(user.cuil);
-      const future = list.filter(
-        (c) =>
-          c.estado === 1 ||
-          c.estado === 2 ||
-          c.estado === 6 ||
-          c.estado === 'Solicitada' ||
-          c.estado === 'Confirmada' ||
-          c.estado === 'EnSalaDeEspera'
-      );
 
-      if (future.length > 0) {
-        // Ordenar por fecha y hora más próxima
-        future.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-        setNextAppointment(future[0]);
-      } else {
-        setNextAppointment(null);
+      const [appointmentsResult, profileResult] = await Promise.allSettled([
+        patientService.getPatientAppointments(user.cuil),
+        patientService.getPatientProfile(user.cuil),
+      ]);
+
+      if (appointmentsResult.status === 'fulfilled' && Array.isArray(appointmentsResult.value)) {
+        const list = appointmentsResult.value;
+        const future = list.filter(
+          (c) =>
+            c.estado === 1 ||
+            c.estado === 2 ||
+            c.estado === 6 ||
+            c.estado === 'Solicitada' ||
+            c.estado === 'Confirmada' ||
+            c.estado === 'EnSalaDeEspera'
+        );
+
+        if (future.length > 0) {
+          future.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+          setNextAppointment(future[0]);
+        } else {
+          setNextAppointment(null);
+        }
+      }
+
+      if (profileResult.status === 'fulfilled' && profileResult.value) {
+        setPaciente(profileResult.value);
       }
     } catch (err) {
-      setError(err.message || 'No se pudo cargar la próxima cita.');
+      setError(err.message || 'No se pudo cargar la información del paciente.');
     } finally {
       setIsLoading(false);
     }
   }, [user?.cuil]);
 
   useEffect(() => {
-    fetchNextAppointment();
-  }, [fetchNextAppointment]);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   return {
     user,
+    paciente,
     nextAppointment,
     isLoading,
     error,
-    refreshDashboard: fetchNextAppointment,
+    refreshDashboard: fetchDashboardData,
   };
 };

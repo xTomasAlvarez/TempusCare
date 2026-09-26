@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, RotateCcw, Stethoscope, ShieldCheck, X } from 'lucide-react';
+import { Search, SlidersHorizontal, RotateCcw, Stethoscope, ShieldPlus, X } from 'lucide-react';
 import { Input } from '../../../shared/components/ui/Input';
 import { Button } from '../../../shared/components/ui/Button';
 
@@ -19,15 +19,15 @@ export const SearchFilters = ({
 
   const filterFields = (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {/* Búsqueda por Nombre */}
+      {/* Búsqueda por Nombre, Especialidad, Consultorio o Institución */}
       <div>
         <Input
           id="search-doctor-name"
-          label="Buscar por Nombre"
-          placeholder="Ej: Dr. Pérez, Carlos..."
+          label="Buscar Médico, Especialidad o Sede"
+          placeholder="Ej: Dr. Pérez, Cardiología, Sanatorio Tucumán, Consultorio 101..."
           value={filters.nombre}
           onChange={(e) => onFilterChange('nombre', e.target.value)}
-          icon={<Search className="w-4 h-4 text-slate-400" aria-hidden="true" />}
+          leadingIcon={<Search className="w-4 h-4 text-slate-400" aria-hidden="true" />}
         />
       </div>
 
@@ -40,11 +40,14 @@ export const SearchFilters = ({
           Especialidad
         </label>
         <div className="relative">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
+          </div>
           <select
             id="filter-specialty"
             value={filters.especialidadId}
             onChange={(e) => onFilterChange('especialidadId', e.target.value)}
-            className="w-full h-11 px-3.5 pr-8 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all cursor-pointer"
+            className="w-full h-11 pl-10 pr-8 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer"
           >
             <option value="">Todas las especialidades</option>
             {specialties.map((esp) => (
@@ -53,9 +56,6 @@ export const SearchFilters = ({
               </option>
             ))}
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-            <Stethoscope className="w-4 h-4" aria-hidden="true" />
-          </div>
         </div>
       </div>
 
@@ -68,11 +68,14 @@ export const SearchFilters = ({
           Obra Social / Prepaga
         </label>
         <div className="relative">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <ShieldPlus className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
+          </div>
           <select
             id="filter-insurance"
             value={filters.obraSocialId}
             onChange={(e) => onFilterChange('obraSocialId', e.target.value)}
-            className="w-full h-11 px-3.5 pr-8 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all cursor-pointer"
+            className="w-full h-11 pl-10 pr-8 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer"
           >
             <option value="">Cualquier cobertura / Particular</option>
             {healthInsurances.map((os) => (
@@ -81,9 +84,6 @@ export const SearchFilters = ({
               </option>
             ))}
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-            <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-          </div>
         </div>
       </div>
     </div>
@@ -94,7 +94,7 @@ export const SearchFilters = ({
       {/* Barra superior de filtros: Contador y Botón Móvil */}
       <div className="flex items-center justify-between gap-4 mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-teal-600" aria-hidden="true" />
+          <SlidersHorizontal className="w-4 h-4 text-primary-600" aria-hidden="true" />
           <h2 className="text-sm font-bold text-slate-800 font-heading tracking-tight">
             Filtrar Profesionales
           </h2>
@@ -109,7 +109,7 @@ export const SearchFilters = ({
               type="button"
               onClick={onReset}
               aria-label="Restablecer filtros"
-              className="text-xs text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Limpiar</span>

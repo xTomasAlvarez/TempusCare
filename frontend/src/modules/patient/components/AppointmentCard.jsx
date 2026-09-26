@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, User, Stethoscope, FileText, Ban, Star, CheckCircle2 } from 'lucide-react';
+import { CalendarHeart, Clock, Stethoscope, Ban, Star, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '../../../shared/components/ui/Card';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
@@ -62,7 +62,7 @@ export const AppointmentCard = ({
   const isCancelled = estado === 5 || estado === 'Cancelada';
 
   return (
-    <Card className={`transition-all duration-200 border-slate-200/80 ${isCancelled ? 'opacity-70 bg-slate-50/50' : 'hover:border-teal-200'}`}>
+    <Card className={`transition-all duration-200 border-slate-200/80 ${isCancelled ? 'opacity-70 bg-slate-50/50' : 'hover:border-primary-200'}`}>
       <CardContent className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="space-y-2">
@@ -79,19 +79,20 @@ export const AppointmentCard = ({
             </div>
 
             {/* Profesional */}
-            <h3 className="text-lg font-bold font-heading text-slate-900">
-              Dr. {profesionalNombre}
+            <h3 className="text-lg font-bold font-heading text-slate-900 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-primary-600 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <span>Dr. {profesionalNombre}</span>
             </h3>
 
             {/* Fecha y Hora */}
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
               <div className="flex items-center gap-1.5 font-medium">
-                <Calendar className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                <CalendarHeart className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
                 <span className="capitalize">{formattedDate}</span>
               </div>
 
               <div className="flex items-center gap-1.5 font-medium">
-                <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                <Clock className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
                 <span>{horaStr} hs</span>
               </div>
             </div>

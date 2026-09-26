@@ -24,5 +24,9 @@ public record UsuarioAutenticadoDto(
     string Token,
     string? ConsultorioCuit = null,
     int? InstitucionId = null,
-    string? SedeNombre = null
+    string? SedeNombre = null,
+    string? NombreCompleto = null,
+    string? Nombre = null,
+    string? Apellido = null,
+    List<string>? ObrasSociales = null
 );

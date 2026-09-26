@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartPulse, LogIn, UserPlus, Map, Calendar, Sparkles, ShieldCheck, Activity } from 'lucide-react';
+import { HeartPulse, LogIn, UserRoundPlus, Map, Calendar, ShieldCheck, Activity } from 'lucide-react';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useSearchProfessionals } from '../../patient/hooks/useSearchProfessionals';
 import { SearchFilters } from '../../patient/components/SearchFilters';
@@ -10,6 +10,7 @@ import { BookingModal } from '../../patient/components/BookingModal';
 import { AuthRequiredModal } from '../components/AuthRequiredModal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Toast } from '../../../shared/components/ui/Toast';
+import { UserDropdownMenu } from '../../../shared/components/ui/UserDropdownMenu';
 
 export const HomePage = () => {
   const { user, isAuthenticated, getDashboardRoute, clearAuthData } = useAuth();
@@ -66,7 +67,7 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-teal-100 selection:text-teal-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900">
       {/* Toast Notificación */}
       {toastMessage && (
         <Toast
@@ -77,61 +78,35 @@ export const HomePage = () => {
         />
       )}
 
-      {/* Encabezado Público con Logo y Botones Prominentes */}
+      {/* Encabezado Principal con Logo, Eslogan y Acciones Autenticadas */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/70 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          {/* Logo de TempusCare */}
+          {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
           <Link
             to="/"
             tabIndex={0}
             aria-label="Inicio de TempusCare"
-            className="flex items-center gap-2.5 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
           >
-            <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-600/20">
-              <HeartPulse className="w-6 h-6" aria-hidden="true" />
-            </div>
-            <div>
-              <span className="text-xl font-bold font-heading tracking-tight text-slate-900 block leading-tight">
-                Tempus<span className="text-teal-600">Care</span>
+            <img
+              src="/tempuscare.png"
+              alt="TempusCare Logo"
+              className="w-10 h-10 object-contain transition-transform group-hover:scale-105"
+            />
+            <div className="flex flex-col">
+              <span className="text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+                Tempus<span className="text-primary-600">Care</span>
               </span>
-              <span className="text-[10px] font-medium tracking-widest text-slate-400 uppercase block">
+              <span className="text-sm text-slate-500 font-medium leading-normal">
                 Salud Inclusiva
               </span>
             </div>
           </Link>
 
-          {/* Acciones de Autenticación */}
+          {/* Acciones de Autenticación / Menú de Usuario */}
           <div className="flex items-center gap-2.5 sm:gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-bold text-slate-800 font-heading leading-tight">
-                    {user?.usuario}
-                  </span>
-                  <span className="text-[10px] text-teal-700 font-medium">
-                    Rol: {user?.rol}
-                  </span>
-                </div>
-
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate(getDashboardRoute(user?.rol))}
-                  className="shadow-xs font-semibold gap-1.5"
-                >
-                  <Activity className="w-4 h-4" />
-                  <span>Mi Panel</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAuthData}
-                  className="text-slate-500 hover:text-slate-800 text-xs hidden sm:inline-flex"
-                >
-                  Cerrar Sesión
-                </Button>
-              </div>
+              <UserDropdownMenu />
             ) : (
               <>
                 <Link to="/login">
@@ -140,7 +115,7 @@ export const HomePage = () => {
                     size="sm"
                     className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1.5 shadow-xs"
                   >
-                    <LogIn className="w-4 h-4 text-teal-600" />
+                    <LogIn className="w-4 h-4 text-primary-600" strokeWidth={2} />
                     <span>Iniciar Sesión</span>
                   </Button>
                 </Link>
@@ -149,9 +124,9 @@ export const HomePage = () => {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="shadow-sm font-semibold gap-1.5 bg-teal-600 hover:bg-teal-700 text-white"
+                    className="shadow-sm font-semibold gap-1.5"
                   >
-                    <UserPlus className="w-4 h-4" />
+                    <UserRoundPlus className="w-4 h-4" strokeWidth={2} />
                     <span>Registrarse</span>
                   </Button>
                 </Link>
@@ -164,11 +139,7 @@ export const HomePage = () => {
       {/* Contenido Principal: Buscador Abierto B2C y Mapa Interactivo */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
         {/* Banner Hero Sutil */}
-        <div className="text-center sm:text-left max-w-3xl space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-teal-700 text-xs font-semibold shadow-2xs mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Portal Abierto de Salud y Reserva Inmediata</span>
-          </div>
+        <div className="text-center sm:text-left max-w-3xl space-y-2.5 pt-1 sm:pt-2">
           <h1 className="text-2xl sm:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-tight">
             Encuentra a tu especialista y agenda tu turno en segundos
           </h1>
@@ -196,7 +167,7 @@ export const HomePage = () => {
               onClick={() => setShowMobileMap(!showMobileMap)}
               className="w-full gap-2 text-xs bg-white/80 border-slate-200"
             >
-              <Map className="w-4 h-4 text-teal-600" aria-hidden="true" />
+              <Map className="w-4 h-4 text-primary-600" aria-hidden="true" />
               <span>{showMobileMap ? 'Ocultar Mapa' : 'Explorar Consultorios en el Mapa'}</span>
             </Button>
           </div>
@@ -305,7 +276,7 @@ export const HomePage = () => {
       <footer className="mt-12 bg-white/70 border-t border-slate-200/80 py-4 px-6 sm:px-8 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
         <p className="text-[11px]">© 2026 TempusCare — Vitality. Todos los derechos reservados.</p>
         <p className="flex items-center gap-1 text-[11px]">
-          <ShieldCheck className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
+          <ShieldCheck className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
           Plataforma médica adaptada a pautas de accesibilidad WCAG & Ley 25.326
         </p>
       </footer>

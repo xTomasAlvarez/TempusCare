@@ -3,7 +3,9 @@ import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Input } from '../../../shared/components/ui/Input';
-import { Stethoscope, Search, UserCheck, UserPlus, Link2, AlertCircle } from 'lucide-react';
+import { Stethoscope, Search, Link2, AlertCircle } from 'lucide-react';
+import { profesionalSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 /**
  * Modal para vincular un profesional existente o dar de alta un nuevo médico para la sede física.
@@ -34,6 +36,7 @@ export const AssignProfesionalModal = ({
     fecNac: '1985-06-15',
   });
   const [createError, setCreateError] = useState(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState({});
 
   // Filtrar médicos no asignados aún y que coincidan con la búsqueda
   const unassigned = availableProfesionales.filter(
@@ -63,20 +66,23 @@ export const AssignProfesionalModal = ({
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setCreateError(null);
+    setCreateFieldErrors({});
 
-    const cleanCuil = newDoctor.cuil.replace(/\D/g, '');
-    if (!cleanCuil || cleanCuil.length !== 11) {
-      setCreateError('El CUIL debe contener exactamente 11 dígitos.');
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      profesionalSchema,
+      newDoctor
+    );
+
+    if (!isValid) {
+      setCreateFieldErrors(validationErrors);
+      setCreateError(Object.values(validationErrors)[0]);
       return;
     }
 
-    if (!newDoctor.nombre.trim() || !newDoctor.apellido.trim()) {
-      setCreateError('Nombre y apellido son obligatorios.');
-      return;
-    }
-
-    if (!newDoctor.matricula.trim()) {
-      setCreateError('La matrícula profesional es obligatoria.');
+    // Validación preventiva en memoria si el CUIL ya está vinculado
+    if (alreadyAssignedCuils.includes(sanitizedData.cuil)) {
+      setCreateFieldErrors((p) => ({ ...p, cuil: 'Este profesional ya está vinculado a esta sede.' }));
+      setCreateError('Este profesional ya está vinculado a esta sede.');
       return;
     }
 
@@ -85,27 +91,36 @@ export const AssignProfesionalModal = ({
       return;
     }
 
-    const success = await onRegisterDoctor({
-      cuil: cleanCuil,
-      nombre: newDoctor.nombre.trim(),
-      apellido: newDoctor.apellido.trim(),
-      matricula: newDoctor.matricula.trim(),
-      telefono: newDoctor.telefono.trim() || '11-0000-0000',
-      genero: newDoctor.genero,
-      fecNac: newDoctor.fecNac,
-    });
-
-    if (success) {
-      setNewDoctor({
-        cuil: '',
-        nombre: '',
-        apellido: '',
-        matricula: '',
-        telefono: '',
-        genero: 'Otro',
-        fecNac: '1985-06-15',
+    try {
+      const success = await onRegisterDoctor({
+        cuil: sanitizedData.cuil,
+        nombre: sanitizedData.nombre,
+        apellido: sanitizedData.apellido,
+        matricula: sanitizedData.matricula,
+        telefono: sanitizedData.telefono,
+        genero: sanitizedData.genero,
+        fecNac: sanitizedData.fecNac,
       });
-      onClose();
+
+      if (success) {
+        setNewDoctor({
+          cuil: '',
+          nombre: '',
+          apellido: '',
+          matricula: '',
+          telefono: '',
+          genero: 'Otro',
+          fecNac: '1985-06-15',
+        });
+        setCreateFieldErrors({});
+        onClose();
+      }
+    } catch (err) {
+      const parsed = parseBackendError(err, 'Error al registrar profesional.');
+      setCreateError(parsed.message);
+      if (parsed.isDuplicate) {
+        setCreateFieldErrors((p) => ({ ...p, cuil: parsed.message }));
+      }
     }
   };
 
@@ -141,7 +156,7 @@ export const AssignProfesionalModal = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <UserPlus className="w-3.5 h-3.5" />
+            <Stethoscope className="w-3.5 h-3.5" strokeWidth={2} />
             <span>Dar de Alta Nuevo Médico</span>
           </button>
         </div>
@@ -156,7 +171,7 @@ export const AssignProfesionalModal = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por nombre, matrícula o CUIL..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               />
             </div>
 
@@ -175,7 +190,7 @@ export const AssignProfesionalModal = ({
                     <label
                       key={prof.cuil}
                       className={`flex items-start gap-3 p-3 cursor-pointer transition-colors ${
-                        isSelected ? 'bg-teal-50/70 border-l-4 border-l-teal-600' : 'hover:bg-slate-50'
+                        isSelected ? 'bg-primary-50/70 border-l-4 border-l-primary-600' : 'hover:bg-slate-50'
                       }`}
                     >
                       <input
@@ -184,14 +199,14 @@ export const AssignProfesionalModal = ({
                         value={prof.cuil}
                         checked={isSelected}
                         onChange={() => setSelectedCuil(prof.cuil)}
-                        className="mt-1 text-teal-600 focus:ring-teal-500"
+                        className="mt-1 text-primary-600 focus:ring-primary-500"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="font-bold font-heading text-slate-900 truncate">
                             Dr./Dra. {prof.nombre} {prof.apellido}
                           </p>
-                          <Badge variant="teal" size="sm">
+                          <Badge variant="primary" size="sm">
                             {prof.matricula ? `Mat. ${prof.matricula}` : 'Activo'}
                           </Badge>
                         </div>
@@ -233,26 +248,23 @@ export const AssignProfesionalModal = ({
                 isLoading={isSubmitting}
                 disabled={!selectedCuil}
               >
-                <UserCheck className="w-4 h-4 mr-1.5" />
+                <Stethoscope className="w-4 h-4 mr-1.5" strokeWidth={2} />
                 Vincular a la Sede
               </Button>
             </div>
           </form>
         ) : (
           <form onSubmit={handleCreateSubmit} className="space-y-3.5 font-sans text-xs sm:text-sm">
-            {createError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 text-rose-800 text-xs">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <span>{createError}</span>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Input
                   label="CUIL / CUIT"
                   value={newDoctor.cuil}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, cuil: e.target.value }))}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, cuil: e.target.value }));
+                    if (createFieldErrors.cuil) setCreateFieldErrors((p) => ({ ...p, cuil: '' }));
+                  }}
+                  error={createFieldErrors.cuil}
                   placeholder="Ej: 20301234567"
                   maxLength={11}
                   required
@@ -262,7 +274,11 @@ export const AssignProfesionalModal = ({
                 <Input
                   label="Matrícula Profesional"
                   value={newDoctor.matricula}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, matricula: e.target.value }))}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, matricula: e.target.value }));
+                    if (createFieldErrors.matricula) setCreateFieldErrors((p) => ({ ...p, matricula: '' }));
+                  }}
+                  error={createFieldErrors.matricula}
                   placeholder="Ej: MP-9842"
                   required
                 />
@@ -274,7 +290,11 @@ export const AssignProfesionalModal = ({
                 <Input
                   label="Nombre"
                   value={newDoctor.nombre}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, nombre: e.target.value }))}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, nombre: e.target.value }));
+                    if (createFieldErrors.nombre) setCreateFieldErrors((p) => ({ ...p, nombre: '' }));
+                  }}
+                  error={createFieldErrors.nombre}
                   placeholder="Ej: Esteban"
                   required
                 />
@@ -283,7 +303,11 @@ export const AssignProfesionalModal = ({
                 <Input
                   label="Apellido"
                   value={newDoctor.apellido}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, apellido: e.target.value }))}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, apellido: e.target.value }));
+                    if (createFieldErrors.apellido) setCreateFieldErrors((p) => ({ ...p, apellido: '' }));
+                  }}
+                  error={createFieldErrors.apellido}
                   placeholder="Ej: Rossi"
                   required
                 />
@@ -295,7 +319,11 @@ export const AssignProfesionalModal = ({
                 <Input
                   label="Teléfono"
                   value={newDoctor.telefono}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, telefono: e.target.value }))}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, telefono: e.target.value }));
+                    if (createFieldErrors.telefono) setCreateFieldErrors((p) => ({ ...p, telefono: '' }));
+                  }}
+                  error={createFieldErrors.telefono}
                   placeholder="Ej: 381-4998877"
                 />
               </div>
@@ -306,7 +334,7 @@ export const AssignProfesionalModal = ({
                 <select
                   value={newDoctor.genero}
                   onChange={(e) => setNewDoctor((p) => ({ ...p, genero: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
@@ -315,25 +343,35 @@ export const AssignProfesionalModal = ({
               </div>
             </div>
 
-            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                isLoading={isSubmitting}
-              >
-                <UserPlus className="w-4 h-4 mr-1.5" />
-                Registrar y Habilitar Médico
-              </Button>
+            <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+              <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+                {createError && (
+                  <span className="flex items-center gap-1 animate-in fade-in-0">
+                    <span aria-hidden="true">⚠</span> {createError}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={isSubmitting}
+                >
+                  <Stethoscope className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                  Registrar y Habilitar Médico
+                </Button>
+              </div>
             </div>
           </form>
         )}

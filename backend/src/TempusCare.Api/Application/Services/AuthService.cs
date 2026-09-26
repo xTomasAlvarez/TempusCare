@@ -132,7 +132,29 @@ public class AuthService : IAuthService
         string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
         _logger.LogInformation("Paciente registrado con éxito. Usuario ID: {UsuarioId}, CUIL: {Cuil}", usuario.Id, paciente.Cuil);
 
-        return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, paciente.Cuil, mockToken);
+        string nombreCompleto = $"{paciente.Nombre} {paciente.Apellido}".Trim();
+        var obrasSociales = new List<string>();
+        if (dto.ObraSocialId.HasValue)
+        {
+            var os = await _db.ObrasSociales.FindAsync(dto.ObraSocialId.Value);
+            if (os != null) obrasSociales.Add(os.Nombre);
+        }
+
+        return new UsuarioAutenticadoDto(
+            usuario.Id,
+            usuario.NombreUsuario,
+            usuario.Mail,
+            usuario.Rol,
+            paciente.Cuil,
+            mockToken,
+            null,
+            null,
+            null,
+            nombreCompleto,
+            paciente.Nombre,
+            paciente.Apellido,
+            obrasSociales
+        );
     }
 
     public async Task<UsuarioAutenticadoDto> IniciarSesionAsync(IniciarSesionDto dto)
@@ -140,7 +162,7 @@ public class AuthService : IAuthService
         _logger.LogInformation("Intento de inicio de sesión para el usuario: {Usuario}", dto.Usuario);
 
         var usuario = await _db.Usuarios
-            .Include(u => u.Paciente)
+            .Include(u => u.Paciente).ThenInclude(p => p.ObrasSociales).ThenInclude(pos => pos.ObraSocial)
             .Include(u => u.Profesional)
             .Include(u => u.Asistente).ThenInclude(a => a.Consultorio)
             .Include(u => u.AdministradorInstitucion)
@@ -200,6 +222,46 @@ public class AuthService : IAuthService
         string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
         _logger.LogInformation("Inicio de sesión exitoso para usuario ID {UsuarioId}, Rol: {Rol}", usuario.Id, usuario.Rol);
 
+        string? nombreCompleto = usuario.Rol switch
+        {
+            RolUsuario.Paciente => usuario.Paciente != null ? $"{usuario.Paciente.Nombre} {usuario.Paciente.Apellido}".Trim() : null,
+            RolUsuario.Profesional => usuario.Profesional != null ? $"Dr(a). {usuario.Profesional.Nombre} {usuario.Profesional.Apellido}".Trim() : null,
+            RolUsuario.Asistente => usuario.Asistente != null ? $"{usuario.Asistente.Nombre} {usuario.Asistente.Apellido}".Trim() : null,
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio != null ? $"{usuario.AdministradorConsultorio.Nombre} {usuario.AdministradorConsultorio.Apellido}".Trim() : null,
+            RolUsuario.Institucion => usuario.Institucion?.Nombre,
+            RolUsuario.SuperAdmin => "Super Administrador",
+            _ => null
+        };
+
+        string? nombre = usuario.Rol switch
+        {
+            RolUsuario.Paciente => usuario.Paciente?.Nombre,
+            RolUsuario.Profesional => usuario.Profesional?.Nombre,
+            RolUsuario.Asistente => usuario.Asistente?.Nombre,
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Nombre,
+            RolUsuario.Institucion => usuario.Institucion?.Nombre,
+            RolUsuario.SuperAdmin => "Super Administrador",
+            _ => null
+        };
+
+        string? apellido = usuario.Rol switch
+        {
+            RolUsuario.Paciente => usuario.Paciente?.Apellido,
+            RolUsuario.Profesional => usuario.Profesional?.Apellido,
+            RolUsuario.Asistente => usuario.Asistente?.Apellido,
+            RolUsuario.AdminConsultorio => usuario.AdministradorConsultorio?.Apellido,
+            _ => null
+        };
+
+        List<string>? obrasSocialesList = usuario.Rol switch
+        {
+            RolUsuario.Paciente => usuario.Paciente?.ObrasSociales?
+                .Select(pos => pos.ObraSocial?.Nombre ?? "")
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList(),
+            _ => null
+        };
+
         return new UsuarioAutenticadoDto(
             usuario.Id,
             usuario.NombreUsuario,
@@ -209,7 +271,11 @@ public class AuthService : IAuthService
             mockToken,
             consultorioCuit,
             institucionId,
-            sedeNombre
+            sedeNombre,
+            nombreCompleto,
+            nombre,
+            apellido,
+            obrasSocialesList
         );
     }
 }

@@ -76,9 +76,9 @@ export const Modal = ({
           type="button"
           onClick={onClose}
           aria-label="Cerrar ventana modal"
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
-          <X className="w-5 h-5" aria-hidden="true" />
+          <X className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
         </button>
 
         {/* Encabezado */}

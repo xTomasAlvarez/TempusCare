@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaConsultorioDto dto)
     {
         var res = await _consultorioService.AltaConsultorioAsync(dto);
@@ -23,6 +25,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpPut("{cuit}")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> Modificar(string cuit, [FromBody] ModificarConsultorioDto dto)
     {
         if (cuit != dto.Cuit)
@@ -33,6 +36,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpDelete("{cuit}")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuit)
     {
         await _consultorioService.BajaConsultorioAsync(cuit);
@@ -40,6 +44,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerTodos()
     {
         var res = await _consultorioService.ObtenerTodosAsync();
@@ -47,6 +52,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpGet("{cuit}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerPorCuit(string cuit)
     {
         var res = await _consultorioService.ObtenerPorCuitAsync(cuit);
@@ -54,6 +60,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpGet("{cuit}/profesionales")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerProfesionales(string cuit)
     {
         var res = await _consultorioService.ObtenerProfesionalesPorConsultorioAsync(cuit);
@@ -61,6 +68,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpPost("{cuit}/profesionales/{profesionalCuil}")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> AsignarProfesional(string cuit, string profesionalCuil)
     {
         await _consultorioService.AsignarProfesionalAsync(cuit, profesionalCuil);
@@ -68,6 +76,7 @@ public class ConsultoriosController : ControllerBase
     }
 
     [HttpDelete("{cuit}/profesionales/{profesionalCuil}")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> DesasignarProfesional(string cuit, string profesionalCuil)
     {
         await _consultorioService.DesasignarProfesionalAsync(cuit, profesionalCuil);

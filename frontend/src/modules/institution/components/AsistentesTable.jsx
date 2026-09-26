@@ -2,8 +2,7 @@ import React from 'react';
 import { DataTable } from './DataTable';
 import { CreateAsistenteModal } from './CreateAsistenteModal';
 import { Badge } from '../../../shared/components/ui/Badge';
-import { Button } from '../../../shared/components/ui/Button';
-import { Plus, Trash2, Phone, Building, ShieldCheck } from 'lucide-react';
+import { UserRoundPlus, Trash2, Phone, Hospital, ShieldCheck } from 'lucide-react';
 
 /**
  * Tabla de Personal Operativo (Asistentes y Secretarios).
@@ -55,7 +54,7 @@ export const AsistentesTable = ({
       label: 'Sede / Consultorio',
       render: (row) => (
         <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
-          <Building className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+          <Hospital className="w-3.5 h-3.5 text-primary-600 flex-shrink-0" strokeWidth={2} />
           <span>{row.consultorioNombre || row.institucionNombre || 'Sede Central'}</span>
         </div>
       ),
@@ -120,7 +119,7 @@ export const AsistentesTable = ({
         actionSlot={
           readOnly ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 text-slate-600 text-xs font-medium border border-slate-200 shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+              <ShieldCheck className="w-3.5 h-3.5 text-primary-600 flex-shrink-0" strokeWidth={2} />
               <span>Alta delegada a Administradores de Consultorio</span>
             </div>
           ) : (
@@ -131,7 +130,7 @@ export const AsistentesTable = ({
               className="gap-1.5 text-xs font-semibold"
               aria-label="Dar de alta nuevo asistente"
             >
-              <Plus className="w-4 h-4" aria-hidden="true" />
+              <UserRoundPlus className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               <span>+ Nuevo Asistente</span>
             </Button>
           )

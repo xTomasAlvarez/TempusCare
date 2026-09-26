@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { loginSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 export const useLoginForm = () => {
   const [formData, setFormData] = useState({ usuario: '', contra: '' });
@@ -22,24 +24,25 @@ export const useLoginForm = () => {
   };
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.usuario.trim()) {
-      newErrors.usuario = 'Ingresa tu nombre de usuario o correo';
-    }
-    if (!formData.contra) {
-      newErrors.contra = 'Ingresa tu contraseña';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const { isValid, errors: validationErrors } = validateWithSchema(loginSchema, formData);
+    setErrors(validationErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      loginSchema,
+      formData
+    );
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const response = await authService.login(formData);
+      const response = await authService.login(sanitizedData);
 
       // Almacenar en memoria en el contexto de autenticación
       setAuthData(
@@ -49,6 +52,10 @@ export const useLoginForm = () => {
           mail: response.mail,
           rol: response.rol,
           cuil: response.cuil,
+          consultorioCuit: response.consultorioCuit,
+          sedeNombre: response.sedeNombre,
+          institucionId: response.institucionId,
+          nombreCompleto: response.nombreCompleto || response.usuario,
         },
         response.token
       );
@@ -63,11 +70,12 @@ export const useLoginForm = () => {
       const targetRoute = getDashboardRoute(response.rol);
       navigate(targetRoute, { replace: true });
     } catch (err) {
-      addToast({
-        title: 'Error al iniciar sesión',
-        description: err.message || 'Verifica tus credenciales e intenta nuevamente.',
-        variant: 'error',
-      });
+      const parsed = parseBackendError(err, 'Verifica tus credenciales e intenta nuevamente.');
+      setErrors((prev) => ({
+        ...prev,
+        ...(parsed.fieldErrors || {}),
+        general: parsed.message,
+      }));
     } finally {
       setIsSubmitting(false);
     }

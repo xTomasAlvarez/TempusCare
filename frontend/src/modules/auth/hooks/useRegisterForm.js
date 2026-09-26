@@ -4,6 +4,8 @@ import { authService } from '../services/authService';
 import { apiClient } from '../../../core/api/apiClient';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { patientRegistrationSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 export const useRegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +14,7 @@ export const useRegisterForm = () => {
     dni: '',
     email: '',
     contrasena: '',
+    confirmarContrasena: '',
     obraSocialId: '',
   });
 
@@ -50,64 +53,80 @@ export const useRegisterForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+
+      // Validación cruzada inmediata de coincidencia de contraseñas
+      if (name === 'confirmarContrasena') {
+        if (value && next.contrasena && value !== next.contrasena) {
+          setErrors((errs) => ({ ...errs, confirmarContrasena: 'Las contraseñas no coinciden' }));
+        } else {
+          setErrors((errs) => ({ ...errs, confirmarContrasena: '' }));
+        }
+      } else if (name === 'contrasena') {
+        if (next.confirmarContrasena && value && value !== next.confirmarContrasena) {
+          setErrors((errs) => ({ ...errs, confirmarContrasena: 'Las contraseñas no coinciden' }));
+        } else if (next.confirmarContrasena && value === next.confirmarContrasena) {
+          setErrors((errs) => ({ ...errs, confirmarContrasena: '' }));
+        }
+      }
+
+      return next;
+    });
+
+    if (errors[name] && name !== 'confirmarContrasena') {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const validate = () => {
-    const newErrors = {};
-
-    if (!formData.nombre.trim()) {
-      newErrors.nombre = 'El nombre es obligatorio';
-    } else if (formData.nombre.trim().length < 2) {
-      newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
-    }
-
-    if (!formData.apellido.trim()) {
-      newErrors.apellido = 'El apellido es obligatorio';
-    } else if (formData.apellido.trim().length < 2) {
-      newErrors.apellido = 'El apellido debe tener al menos 2 caracteres';
-    }
-
-    const dniRegex = /^\d{7,10}$/;
-    if (!formData.dni.trim()) {
-      newErrors.dni = 'El DNI es obligatorio';
-    } else if (!dniRegex.test(formData.dni.trim().replace(/\./g, ''))) {
-      newErrors.dni = 'Ingresa un DNI válido (solo números, entre 7 y 10 dígitos)';
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = 'El correo electrónico es obligatorio';
-    } else if (!emailRegex.test(formData.email.trim())) {
-      newErrors.email = 'Ingresa un correo electrónico con formato válido';
-    }
-
-    if (!formData.contrasena) {
-      newErrors.contrasena = 'La contraseña es obligatoria';
-    } else if (formData.contrasena.length < 6) {
-      newErrors.contrasena = 'La contraseña debe tener al menos 6 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const { isValid, errors: validationErrors } = validateWithSchema(
+      patientRegistrationSchema,
+      formData
+    );
+    setErrors(validationErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+
+    // Verificación estricta de confirmación de contraseña antes de habilitar el envío
+    if (!formData.confirmarContrasena) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmarContrasena: 'Debes confirmar tu contraseña',
+      }));
+      return;
+    }
+
+    if (formData.contrasena !== formData.confirmarContrasena) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmarContrasena: 'Las contraseñas no coinciden',
+      }));
+      return;
+    }
+
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      patientRegistrationSchema,
+      formData
+    );
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       const response = await authService.registerPatient({
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        dni: formData.dni.trim().replace(/\./g, ''),
-        email: formData.email,
-        contrasena: formData.contrasena,
-        obraSocialId: formData.obraSocialId ? Number(formData.obraSocialId) : null,
+        nombre: sanitizedData.nombre,
+        apellido: sanitizedData.apellido,
+        dni: sanitizedData.dni,
+        email: sanitizedData.email,
+        contrasena: sanitizedData.contrasena,
+        obraSocialId: sanitizedData.obraSocialId,
       });
 
       // Iniciar sesión en memoria inmediatamente
@@ -118,6 +137,7 @@ export const useRegisterForm = () => {
           mail: response.mail,
           rol: response.rol,
           cuil: response.cuil,
+          nombreCompleto: response.nombreCompleto || `${sanitizedData.nombre} ${sanitizedData.apellido}`.trim(),
         },
         response.token
       );
@@ -132,15 +152,22 @@ export const useRegisterForm = () => {
       const returnUrl = location.state?.from || getDashboardRoute(response.rol);
       navigate(returnUrl, { replace: true });
     } catch (err) {
-      addToast({
-        title: 'Error al registrar paciente',
-        description: err.message || 'Verifica los datos e intenta nuevamente.',
-        variant: 'error',
-      });
+      const parsed = parseBackendError(err, 'No se pudo completar el registro del paciente.');
+      if (parsed.isDuplicate) {
+        setErrors((prev) => ({ ...prev, dni: parsed.message, general: parsed.message }));
+      } else if (parsed.fieldErrors && Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...parsed.fieldErrors, general: parsed.message }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: parsed.message }));
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isPasswordMismatch = Boolean(
+    formData.confirmarContrasena && formData.contrasena !== formData.confirmarContrasena
+  );
 
   return {
     formData,
@@ -148,6 +175,7 @@ export const useRegisterForm = () => {
     obrasSociales,
     isLoadingObrasSociales,
     isSubmitting,
+    isPasswordMismatch,
     handleChange,
     handleSubmit,
   };

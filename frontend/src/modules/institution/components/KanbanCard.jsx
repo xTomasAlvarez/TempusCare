@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Stethoscope, Ban, CheckCircle2, User, PhoneCall, ArrowRight } from 'lucide-react';
+import { Clock, Stethoscope, Ban, UserCheck, ClipboardCheck } from 'lucide-react';
 import { Badge } from '../../../shared/components/ui/Badge';
 
 export const KanbanCard = ({
@@ -20,7 +20,7 @@ export const KanbanCard = ({
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs transition-shadow hover:shadow-md p-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 font-heading font-semibold text-base text-slate-900">
-            <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
+            <Clock className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
             <span>{horaInicioStr} {horaFinStr ? `– ${horaFinStr}` : ''} hs</span>
           </div>
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
@@ -30,7 +30,7 @@ export const KanbanCard = ({
 
         <div className="pt-1 flex items-center justify-between text-sm text-slate-500">
           <span>{item.consultorioNombre || 'Consultorio Central'}</span>
-          <span className="text-xs text-teal-600 font-medium">Libre</span>
+          <span className="text-xs text-primary-600 font-medium">Libre</span>
         </div>
       </div>
     );
@@ -45,14 +45,14 @@ export const KanbanCard = ({
       tabIndex={0}
       className={`bg-white border rounded-xl shadow-xs transition-shadow hover:shadow-md p-4 space-y-3 ${
         columnType === 'atendiendo'
-          ? 'border-teal-300 ring-2 ring-teal-500/20'
+          ? 'border-primary-300 ring-2 ring-primary-500/20'
           : 'border-slate-200'
       }`}
     >
       {/* Hora Prominente y Badges */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 font-heading font-semibold text-base text-slate-900">
-          <Clock className="w-4 h-4 text-teal-600" aria-hidden="true" />
+          <Clock className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           <span>{horaInicioStr} hs</span>
         </div>
 
@@ -92,7 +92,7 @@ export const KanbanCard = ({
           {item.estudioNombre && (
             <>
               <span>•</span>
-              <span className="text-teal-700">{item.estudioNombre}</span>
+              <span className="text-primary-700">{item.estudioNombre}</span>
             </>
           )}
         </div>
@@ -112,7 +112,7 @@ export const KanbanCard = ({
                 aria-label={`Registrar llegada de ${patientName}`}
                 className="py-2 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-1 shadow-xs"
               >
-                <User className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                <UserCheck className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} aria-hidden="true" />
                 <span>Llegó</span>
               </button>
             )}
@@ -123,9 +123,9 @@ export const KanbanCard = ({
               disabled={isActionLoading}
               tabIndex={0}
               aria-label={`Llamar a consultorio a ${patientName}`}
-              className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
+              className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
             >
-              <Stethoscope className="w-4 h-4" aria-hidden="true" />
+              <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               <span>Llamar a Consultorio</span>
             </button>
 
@@ -138,7 +138,7 @@ export const KanbanCard = ({
               title="Cancelar cita y liberar turno"
               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
             >
-              <Ban className="w-4 h-4" aria-hidden="true" />
+              <Ban className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
           </>
         )}
@@ -153,7 +153,7 @@ export const KanbanCard = ({
             aria-label={`Finalizar atención de ${patientName}`}
             className="w-full py-2 px-3 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
           >
-            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+            <ClipboardCheck className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             <span>Finalizar Atención</span>
           </button>
         )}
@@ -162,7 +162,7 @@ export const KanbanCard = ({
         {columnType === 'finalizado' && (
           <div className="w-full flex items-center justify-between text-xs text-slate-500">
             <span className="flex items-center gap-1 text-emerald-700 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+              <ClipboardCheck className="w-4 h-4 text-emerald-600" strokeWidth={2} aria-hidden="true" />
               Atención Finalizada
             </span>
             {item.puntualidadEncuesta && (

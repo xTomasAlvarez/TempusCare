@@ -184,7 +184,12 @@ public class InstitucionService : IInstitucionService
                 p.Profesional?.Matricula ?? "",
                 p.Profesional?.Telefono ?? "",
                 p.Profesional?.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList() ?? new List<string>()
-            )).ToList()
+            )).ToList(),
+            c.Latitud,
+            c.Longitud,
+            c.Direccion?.Calle,
+            c.Direccion?.Nro,
+            c.Direccion?.Localidad
         )).ToList();
     }
 

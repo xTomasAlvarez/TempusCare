@@ -8,6 +8,9 @@ public class Consultorio
     public string Telefono { get; set; } = string.Empty;
     public string NivelAccesibilidad { get; set; } = string.Empty;
 
+    public double? Latitud { get; set; }
+    public double? Longitud { get; set; }
+
     public int? InstitucionId { get; set; }
     public Institucion? Institucion { get; set; }
 

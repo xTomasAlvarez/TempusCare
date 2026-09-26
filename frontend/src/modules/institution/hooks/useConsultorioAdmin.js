@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { institutionAdminService } from '../services/institutionAdminService';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 
 /**
  * Hook para la administración exclusiva de un Consultorio / Sede física.
@@ -15,6 +16,7 @@ export const useConsultorioAdmin = (consultorioCuit) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { addToast } = useToast();
+  const { confirmDelete } = useConfirmDelete();
 
   const loadData = useCallback(async () => {
     if (!consultorioCuit) {
@@ -75,9 +77,14 @@ export const useConsultorioAdmin = (consultorioCuit) => {
   };
 
   const deleteAsistente = async (cuil, nombreCompleto) => {
-    if (!window.confirm(`¿Confirmas la baja del asistente ${nombreCompleto || cuil}?`)) {
-      return false;
-    }
+    const ok = await confirmDelete({
+      title: '¿Dar de baja asistente definitivamente?',
+      message: `¿Estás seguro de que deseas dar de baja al asistente ${nombreCompleto || cuil}? Perderá el acceso de gestión para esta sede.`,
+      itemName: nombreCompleto || cuil,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
 
     try {
       setIsSubmitting(true);
@@ -127,9 +134,14 @@ export const useConsultorioAdmin = (consultorioCuit) => {
   };
 
   const removeProfesional = async (cuil, nombreCompleto) => {
-    if (!window.confirm(`¿Confirmas desvincular al Dr./Dra. ${nombreCompleto || cuil} de esta sede física?`)) {
-      return false;
-    }
+    const ok = await confirmDelete({
+      title: '¿Desvincular médico de la sede definitivamente?',
+      message: `¿Estás seguro de que deseas desvincular al Dr./Dra. ${nombreCompleto || cuil} de esta sede física? No se podrán agendar nuevos turnos para este profesional en este consultorio.`,
+      itemName: `Dr./Dra. ${nombreCompleto || cuil}`,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
 
     try {
       setIsSubmitting(true);

@@ -45,7 +45,7 @@ export const Input = React.forwardRef(({
           aria-describedby={error ? errorId : helperText ? helperId : undefined}
           className={cn(
             "block w-full rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200",
-            "focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20",
+            "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
             leadingIcon && "pl-10",
             trailingIcon && "pr-10",
             error && "border-rose-300 text-rose-900 focus:border-rose-500 focus:ring-rose-500/20",
@@ -61,17 +61,19 @@ export const Input = React.forwardRef(({
         )}
       </div>
 
-      {error && (
-        <p id={errorId} className="mt-1.5 text-xs text-rose-600 flex items-center gap-1">
-          <span aria-hidden="true">⚠</span> {error}
-        </p>
-      )}
-
-      {helperText && !error && (
-        <p id={helperId} className="mt-1 text-xs text-slate-500">
-          {helperText}
-        </p>
-      )}
+      {/* Espacio fijo reservado para evitar saltos de layout (CLS = 0) */}
+      <div className="min-h-[20px] mt-1 flex items-center">
+        {error ? (
+          <p id={errorId} className="text-[11px] leading-tight text-rose-600 flex items-center gap-1 animate-in fade-in-0 duration-150">
+            <span aria-hidden="true" className="shrink-0 text-xs">⚠</span>
+            <span className="truncate">{error}</span>
+          </p>
+        ) : helperText ? (
+          <p id={helperId} className="text-[11px] leading-tight text-slate-500">
+            {helperText}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 });

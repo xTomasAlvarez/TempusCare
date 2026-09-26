@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { institutionAdminService } from '../services/institutionAdminService';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 
 /**
  * Hook para la gestión de Sedes Físicas y Consultorios Médicos.
  */
 export const useConsultoriosManager = () => {
   const { addToast } = useToast();
+  const { confirmDelete } = useConfirmDelete();
   const [consultorios, setConsultorios] = useState([]);
   const [instituciones, setInstituciones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +83,15 @@ export const useConsultoriosManager = () => {
   };
 
   const handleDeleteConsultorio = async (cuit, nombre) => {
+    const ok = await confirmDelete({
+      title: '¿Dar de baja consultorio definitivamente?',
+      message: `¿Estás seguro de que deseas dar de baja la sede física "${nombre}" (CUIT: ${cuit})? Esta acción desvinculará sus médicos y agendas asociadas.`,
+      itemName: `${nombre} (CUIT: ${cuit})`,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
+
     try {
       await institutionAdminService.deleteConsultorio(cuit);
       addToast({

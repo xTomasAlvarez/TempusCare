@@ -33,5 +33,7 @@ public record CitaResponseDto(
     int? EstudioId = null,
     string? EstudioNombre = null,
     string? DocumentoPedidoMedico = null,
-    int CantidadTurnosCubiertos = 1
+    int CantidadTurnosCubiertos = 1,
+    string? ConsultorioNombre = null,
+    string? EspecialidadNombre = null
 );

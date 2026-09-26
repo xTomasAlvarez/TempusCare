@@ -35,7 +35,7 @@
 
 /* Custom focus ring for accessibility (WCAG) */
 *:focus-visible {
-  outline: 2px solid #0d9488 !important;
+  outline: 2px solid #1e4287 !important;
   outline-offset: 2px !important;
 }
 
@@ -44,4 +44,14 @@
   *:focus-visible {
     outline: 3px solid Highlight !important;
   }
+}
+
+/* Estilos de precisión milimétrica para Leaflet Map Pins */
+.leaflet-div-icon.tempuscare-map-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tempuscare-map-pin:hover > div {
+  transform: translateY(-2px) scale(1.05);
 }

@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { institutionAdminService } from '../services/institutionAdminService';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
+import { coverageParameterizationSchema } from '../../../shared/validation/schemas';
+import {
+  validateWithSchema,
+  parseBackendError,
+  validateStudyCoverageAssignment,
+} from '../../../shared/validation/validateForm';
 
 /**
  * Hook para la Parametrización de Cobertura B2B (Cumplimiento de la RN-02).
@@ -8,6 +15,7 @@ import { useToast } from '../../../shared/components/ui/Toast';
  */
 export const useCoverageParameterization = () => {
   const { addToast } = useToast();
+  const { confirmDelete } = useConfirmDelete();
 
   // Catálogos base
   const [profesionales, setProfesionales] = useState([]);
@@ -22,11 +30,13 @@ export const useCoverageParameterization = () => {
   const [precioParticular, setPrecioParticular] = useState('');
   const [selectedObrasSocialesIds, setSelectedObrasSocialesIds] = useState([]);
 
-  // Estados de carga
+  // Estados de carga y validación
   const [isLoadingCatalogs, setIsLoadingCatalogs] = useState(true);
   const [isLoadingStudies, setIsLoadingStudies] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [conflictWarning, setConflictWarning] = useState(null);
 
   // Carga de catálogos iniciales
   useEffect(() => {
@@ -131,54 +141,68 @@ export const useCoverageParameterization = () => {
     setSelectedObrasSocialesIds([]);
   };
 
+  const clearFieldError = (fieldName) => {
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
   // Guardar parametrización de cobertura (RN-02)
   const saveParameterization = async () => {
-    if (!selectedDoctorCuil) {
+    setFieldErrors({});
+    setError(null);
+
+    // 1. Validación estricta con esquema Zod
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      coverageParameterizationSchema,
+      {
+        profesionalCuil: selectedDoctorCuil,
+        estudioId: selectedEstudioId,
+        duracionTurno,
+        precioParticular: precioParticular === '' ? 0 : precioParticular,
+        obrasSocialesAceptadasIds: selectedObrasSocialesIds,
+      }
+    );
+
+    if (!isValid) {
+      setFieldErrors(validationErrors);
       addToast({
-        title: 'Selección Requerida',
-        description: 'Por favor seleccione un profesional médico.',
+        title: 'Parámetros Inválidos',
+        description: Object.values(validationErrors)[0],
         variant: 'warning',
       });
       return false;
     }
 
-    if (!selectedEstudioId) {
-      addToast({
-        title: 'Selección Requerida',
-        description: 'Por favor seleccione un estudio médico a parametrizar.',
-        variant: 'warning',
-      });
-      return false;
-    }
-
-    const duracion = Number(duracionTurno);
-    if (!duracion || duracion <= 0) {
-      addToast({
-        title: 'Duración Inválida',
-        description: 'La duración del turno debe ser mayor a 0 minutos.',
-        variant: 'warning',
-      });
-      return false;
-    }
+    // 2. Validación preventiva en memoria / deduplicación de cobertura (RN-02)
+    const check = validateStudyCoverageAssignment(
+      sanitizedData.profesionalCuil,
+      sanitizedData.estudioId,
+      sanitizedData.obrasSocialesAceptadasIds,
+      doctorStudies
+    );
 
     try {
       setIsSubmitting(true);
-      setError(null);
 
       const dto = {
-        estudioId: Number(selectedEstudioId),
-        duracionTurno: duracion,
-        precioParticular: Number(precioParticular) || 0,
-        obrasSocialesAceptadasIds: selectedObrasSocialesIds,
+        estudioId: sanitizedData.estudioId,
+        duracionTurno: sanitizedData.duracionTurno,
+        precioParticular: sanitizedData.precioParticular,
+        obrasSocialesAceptadasIds: check.deduplicatedObrasSociales,
       };
 
       await institutionAdminService.assignEstudioProfesional(selectedDoctorCuil, dto);
 
-      const estudioObj = estudios.find((e) => e.id === Number(selectedEstudioId));
+      const estudioObj = estudios.find((e) => e.id === sanitizedData.estudioId);
 
       addToast({
         title: existingMapping ? 'Parametrización Actualizada' : 'Cobertura Parametrizada',
-        description: `Se configuró el estudio "${estudioObj?.nombre || 'Médico'}" con ${selectedObrasSocialesIds.length} obras sociales para el Dr./Dra. ${selectedDoctor?.nombre || ''} ${selectedDoctor?.apellido || ''}.`,
+        description: `Se configuró el estudio "${estudioObj?.nombre || 'Médico'}" con ${check.deduplicatedObrasSociales.length} obras sociales para el Dr./Dra. ${selectedDoctor?.nombre || ''} ${selectedDoctor?.apellido || ''}.`,
         variant: 'success',
       });
 
@@ -189,11 +213,20 @@ export const useCoverageParameterization = () => {
       setSelectedEstudioId('');
       setSelectedObrasSocialesIds([]);
       setPrecioParticular('');
+      setFieldErrors({});
       return true;
     } catch (err) {
+      const parsed = parseBackendError(err, 'No se pudo guardar la parametrización de cobertura.');
+      setError(parsed.message);
+      if (parsed.isDuplicate) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          estudioId: 'Conflicto de duplicidad: Este estudio ya se encuentra registrado con estas coberturas.',
+        }));
+      }
       addToast({
-        title: 'Error al Parametrizar',
-        description: err.message || 'No se pudo guardar la parametrización de cobertura.',
+        title: parsed.isDuplicate ? 'Conflicto de Duplicidad' : 'Error al Parametrizar',
+        description: parsed.message,
         variant: 'error',
       });
       return false;
@@ -204,6 +237,15 @@ export const useCoverageParameterization = () => {
 
   // Desvincular estudio
   const removeDoctorStudy = async (estudioId, estudioNombre) => {
+    const ok = await confirmDelete({
+      title: '¿Desvincular estudio médico definitivamente?',
+      message: `¿Estás seguro de que deseas desvincular el estudio "${estudioNombre}" de este profesional? Se eliminarán también las obras sociales asociadas a este estudio.`,
+      itemName: estudioNombre,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
+
     try {
       await institutionAdminService.deleteEstudioProfesional(selectedDoctorCuil, estudioId);
       addToast({
@@ -246,6 +288,9 @@ export const useCoverageParameterization = () => {
     isLoadingStudies,
     isSubmitting,
     error,
+    fieldErrors,
+    clearFieldError,
+    conflictWarning,
     saveParameterization,
     removeDoctorStudy,
     refreshDoctorStudies: () => fetchDoctorStudies(selectedDoctorCuil),

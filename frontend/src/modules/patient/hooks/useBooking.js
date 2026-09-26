@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { patientService } from '../services/patientService';
 import { useAuth } from '../../../core/context/AuthContext';
+import { parseBackendError } from '../../../shared/validation/validateForm';
 
 export const useBooking = (doctor, onSuccess) => {
   const { user } = useAuth();
@@ -72,7 +73,19 @@ export const useBooking = (doctor, onSuccess) => {
       }
       return true;
     } catch (err) {
-      setSubmitError(err.message || 'No se pudo completar la reserva.');
+      const parsed = parseBackendError(err, 'No se pudo completar la reserva.');
+      let friendlyMsg = parsed.message;
+      if (
+        parsed.isDuplicate ||
+        err.status === 409 ||
+        String(err.message || '').toLowerCase().includes('ocupado') ||
+        String(err.message || '').toLowerCase().includes('reservado') ||
+        String(err.message || '').toLowerCase().includes('concurren')
+      ) {
+        friendlyMsg = 'El horario seleccionado acaba de ser tomado por otro paciente. Se actualizaron los turnos disponibles.';
+        fetchSlots();
+      }
+      setSubmitError(friendlyMsg);
       return false;
     } finally {
       setIsSubmitting(false);

@@ -5,7 +5,7 @@ import { DoctorCard } from '../components/DoctorCard';
 import { InteractiveMapPlaceholder } from '../components/InteractiveMapPlaceholder';
 import { BookingModal } from '../components/BookingModal';
 import { Toast } from '../../../shared/components/ui/Toast';
-import { MapPin, Search, AlertCircle, Sparkles, Map } from 'lucide-react';
+import { MapPin, Stethoscope, AlertCircle, Sparkles, Map } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
 
 export const SearchProfessionalsPage = () => {
@@ -66,7 +66,7 @@ export const SearchProfessionalsPage = () => {
             onClick={() => setShowMobileMap(!showMobileMap)}
             className="w-full sm:w-auto gap-2 text-xs"
           >
-            <Map className="w-4 h-4 text-teal-600" aria-hidden="true" />
+            <Map className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
             <span>{showMobileMap ? 'Ocultar Mapa' : 'Ver en Mapa'}</span>
           </Button>
         </div>
@@ -119,7 +119,7 @@ export const SearchProfessionalsPage = () => {
             </div>
           ) : error ? (
             <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center text-rose-700">
-              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-rose-500" />
+              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-rose-500" strokeWidth={2} />
               <p className="font-semibold text-sm">{error}</p>
               <Button
                 variant="outline"
@@ -134,7 +134,7 @@ export const SearchProfessionalsPage = () => {
             /* Empty State */
             <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center space-y-3">
               <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                <Search className="w-7 h-7" aria-hidden="true" />
+                <Stethoscope className="w-7 h-7" strokeWidth={2} aria-hidden="true" />
               </div>
               <h3 className="text-base font-bold font-heading text-slate-800">
                 No encontramos médicos que coincidan

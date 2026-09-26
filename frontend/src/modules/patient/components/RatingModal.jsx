@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, MessageSquare, HeartHandshake, Clock, Award, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Star, MessageSquare, HeartHandshake, Clock, Stethoscope, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { useSatisfactionSurvey } from '../hooks/useSatisfactionSurvey';
@@ -30,8 +30,8 @@ export const RatingModal = ({
   const StarSelector = ({ category, label, icon: Icon, value }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4" aria-hidden="true" />
+        <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
         </div>
         <span className="text-xs sm:text-sm font-semibold text-slate-800">{label}</span>
       </div>
@@ -53,7 +53,7 @@ export const RatingModal = ({
               aria-label={`${star} estrella${star > 1 ? 's' : ''} de 5`}
               onClick={() => setRating(category, star)}
               tabIndex={0}
-              className="p-1 rounded-lg hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="p-1 rounded-lg hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <Star
                 className={`w-6 h-6 transition-colors ${
@@ -98,7 +98,7 @@ export const RatingModal = ({
         <StarSelector
           category="profesionalismo"
           label="Profesionalismo Médico"
-          icon={Award}
+          icon={Stethoscope}
           value={ratings.profesionalismo}
         />
 
@@ -116,30 +116,32 @@ export const RatingModal = ({
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
             placeholder="Comparte tu experiencia durante la consulta o estudio..."
-            className="w-full p-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all resize-none"
+            className="w-full p-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all resize-none"
           />
         </div>
 
-        {/* Mensaje de Error */}
-        {error && (
-          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+        {/* Botones de acción y Error inline */}
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2.5">
+          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium">
+            {error && (
+              <span className="flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                {error}
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Botones de acción */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={onClose}
-            disabled={isSubmitting}
-            tabIndex={0}
-          >
-            Cancelar
-          </Button>
+          <div className="flex items-center gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={onClose}
+              disabled={isSubmitting}
+              tabIndex={0}
+            >
+              Cancelar
+            </Button>
 
           <Button
             type="button"
@@ -152,17 +154,18 @@ export const RatingModal = ({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} aria-hidden="true" />
                 <span>Enviando...</span>
               </>
             ) : (
               <>
-                <Check className="w-4 h-4" aria-hidden="true" />
+                <Check className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 <span>Enviar Calificación</span>
               </>
             )}
           </Button>
         </div>
+      </div>
       </div>
     </Modal>
   );

@@ -2,9 +2,9 @@ import React from 'react';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
 import {
-  Calendar,
+  CalendarHeart,
   Clock,
-  User,
+  UserRound,
   Search,
   CheckCircle2,
   AlertCircle,
@@ -84,8 +84,8 @@ export const DailyAgendaList = ({
         {/* Información de la Jornada y Sede */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-5 h-5" aria-hidden="true" />
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0">
+              <CalendarHeart className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
             </div>
             <div>
               <h2 className="text-lg font-bold font-heading text-slate-900 leading-snug">
@@ -96,7 +96,7 @@ export const DailyAgendaList = ({
                 {activeConsultorio && (
                   <>
                     <span>•</span>
-                    <span className="font-medium text-teal-700">{activeConsultorio.nombre}</span>
+                    <span className="font-medium text-primary-700">{activeConsultorio.nombre}</span>
                   </>
                 )}
               </div>
@@ -113,7 +113,7 @@ export const DailyAgendaList = ({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Buscar paciente o CUIL..."
-              className="w-full sm:w-56 pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              className="w-full sm:w-56 pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
             />
           </div>
 
@@ -121,7 +121,7 @@ export const DailyAgendaList = ({
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="px-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"
+            className="px-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 font-sans"
             aria-label="Seleccionar fecha de agenda"
           />
 
@@ -157,7 +157,7 @@ export const DailyAgendaList = ({
             className={cn(
               'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
               statusFilter === 'PENDING'
-                ? 'bg-white text-teal-700 shadow-xs'
+                ? 'bg-white text-primary-700 shadow-xs'
                 : 'text-slate-500 hover:text-slate-900'
             )}
           >
@@ -203,8 +203,8 @@ export const DailyAgendaList = ({
         </div>
       ) : appointments.length === 0 ? (
         <div className="bg-white p-12 text-center rounded-2xl border border-slate-200/80">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3">
-            <Stethoscope className="w-7 h-7" aria-hidden="true" />
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mb-3">
+            <Stethoscope className="w-7 h-7" strokeWidth={2} aria-hidden="true" />
           </div>
           <h3 className="text-base font-bold font-heading text-slate-900">
             No hay pacientes programados
@@ -224,15 +224,15 @@ export const DailyAgendaList = ({
                 key={appointment.id}
                 className={cn(
                   'group bg-white p-4 sm:p-5 rounded-2xl border transition-all duration-200',
-                  'border-slate-200/80 hover:border-teal-300 hover:shadow-md',
+                  'border-slate-200/80 hover:border-primary-300 hover:shadow-md',
                   'flex flex-col sm:flex-row sm:items-center justify-between gap-4'
                 )}
               >
                 {/* Horario y Datos del Paciente */}
                 <div className="flex items-start sm:items-center gap-4">
                   {/* Badge de Horario */}
-                  <div className="flex flex-col items-center justify-center w-14 sm:w-16 h-14 rounded-xl bg-slate-50 border border-slate-200/80 group-hover:border-teal-200 group-hover:bg-teal-50/40 transition-colors flex-shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-teal-600 mb-0.5" />
+                  <div className="flex flex-col items-center justify-center w-14 sm:w-16 h-14 rounded-xl bg-slate-50 border border-slate-200/80 group-hover:border-primary-200 group-hover:bg-primary-50/40 transition-colors flex-shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-primary-600 mb-0.5" strokeWidth={2} />
                     <span className="text-xs font-bold font-heading text-slate-900">
                       {formatTime(appointment.horaInicio)}
                     </span>
@@ -244,7 +244,7 @@ export const DailyAgendaList = ({
                   {/* Detalle del Paciente */}
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-bold font-heading text-slate-900 group-hover:text-teal-900 transition-colors">
+                      <h3 className="text-base font-bold font-heading text-slate-900 group-hover:text-primary-900 transition-colors">
                         {appointment.pacienteNombre}
                       </h3>
                       {getStatusBadge(appointment.estado)}
@@ -253,7 +253,7 @@ export const DailyAgendaList = ({
 
                     <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        <UserRound className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                         CUIL: {appointment.pacienteCuil}
                       </span>
                       {appointment.estudioNombre && (
@@ -277,7 +277,7 @@ export const DailyAgendaList = ({
                     className="w-full sm:w-auto gap-1.5"
                     aria-label={`Atender y abrir ficha clínica de ${appointment.pacienteNombre}`}
                   >
-                    <Stethoscope className="w-4 h-4" aria-hidden="true" />
+                    <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                     <span>{isAttended ? 'Ver Ficha Clínica' : 'Atender Paciente'}</span>
                     <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                   </Button>

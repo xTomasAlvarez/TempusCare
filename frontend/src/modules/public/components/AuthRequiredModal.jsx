@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Stethoscope, ShieldCheck, ArrowRight } from 'lucide-react';
+import { LogIn, UserRoundPlus, Stethoscope, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 
@@ -40,23 +40,23 @@ export const AuthRequiredModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Inicia sesión o regístrate para reservar tu turno"
+      title="Por favor, inicia sesión o regístrate para reservar tu turno"
       description="Identifícate como paciente para acceder a la agenda médica en tiempo real"
       maxWidth="max-w-lg"
     >
       <div className="space-y-5 pt-1">
         {/* Tarjeta del Médico Seleccionado */}
         {doctor && (
-          <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-teal-50/60 border border-teal-100/80">
-            <div className="w-11 h-11 rounded-xl bg-teal-600 text-white flex items-center justify-center font-heading font-bold text-base shrink-0 shadow-xs">
+          <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-primary-50/60 border border-primary-100/80">
+            <div className="w-11 h-11 rounded-xl bg-primary-600 text-white flex items-center justify-center font-heading font-bold text-base shrink-0 shadow-xs">
               {doctor.nombre?.[0] || 'D'}{doctor.apellido?.[0] || 'M'}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold font-heading text-slate-900 truncate">
                 {doctorName}
               </p>
-              <p className="text-xs text-teal-800 flex items-center gap-1 mt-0.5">
-                <Stethoscope className="w-3.5 h-3.5" />
+              <p className="text-xs text-primary-800 flex items-center gap-1 mt-0.5">
+                <Stethoscope className="w-3.5 h-3.5" strokeWidth={2} />
                 <span className="truncate">{specialty}</span>
               </p>
             </div>
@@ -65,34 +65,34 @@ export const AuthRequiredModal = ({
 
         {/* Explicación amigable */}
         <div className="flex items-start gap-3 text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
-          <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
+          <ShieldCheck className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" strokeWidth={2} />
           <p className="leading-relaxed">
             Tu reserva quedará vinculada de forma segura a tu historia clínica unificada según la Ley 25.326 de Protección de Datos Médicos.
           </p>
         </div>
 
-        {/* Acciones Principales */}
+        {/* Acciones Principales con botones de redirección */}
         <div className="space-y-2.5 pt-2">
           <Button
             type="button"
             variant="primary"
             size="md"
-            onClick={handleGoToRegister}
+            onClick={handleGoToLogin}
             className="w-full justify-center gap-2 shadow-xs py-2.5 text-sm font-semibold"
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Crear Cuenta de Paciente (Gratis)</span>
+            <LogIn className="w-4 h-4" strokeWidth={2} />
+            <span>Iniciar Sesión</span>
           </Button>
 
           <Button
             type="button"
             variant="outline"
             size="md"
-            onClick={handleGoToLogin}
+            onClick={handleGoToRegister}
             className="w-full justify-center gap-2 border-slate-200 hover:bg-slate-50 py-2.5 text-sm font-semibold text-slate-700"
           >
-            <LogIn className="w-4 h-4 text-teal-600" />
-            <span>Ya tengo cuenta: Iniciar Sesión</span>
+            <UserRoundPlus className="w-4 h-4 text-primary-600" strokeWidth={2} />
+            <span>Registrarse como Paciente</span>
           </Button>
         </div>
 

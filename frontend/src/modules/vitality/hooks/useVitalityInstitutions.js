@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { vitalityService } from '../services/vitalityService';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 
 /**
  * Hook para la gestión integral de Clientes B2B (Instituciones) por parte del Super Administrador.
+ * Soporta Alta, Modificación (Email, Plan, Nombre), Baja y Listado.
  */
 export const useVitalityInstitutions = () => {
   const { addToast } = useToast();
+  const { confirmDelete } = useConfirmDelete();
   const [institutions, setInstitutions] = useState([]);
   const [planMap, setPlanMap] = useState(() => {
-    // Planes por defecto para clientes iniciales
     return {
       '30111222334': 'Enterprise',
       '30555666778': 'Profesional',
@@ -18,6 +20,8 @@ export const useVitalityInstitutions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingInstitution, setEditingInstitution] = useState(null);
   const [error, setError] = useState(null);
 
   const fetchInstitutions = useCallback(async () => {
@@ -42,7 +46,6 @@ export const useVitalityInstitutions = () => {
       setIsSubmitting(true);
       const res = await vitalityService.createInstitution({ nombre, cuit, email, plan });
 
-      // Asociar el plan seleccionado al CUIT como fallback
       if (plan) {
         setPlanMap((prev) => ({ ...prev, [cuit]: plan }));
       }
@@ -68,7 +71,47 @@ export const useVitalityInstitutions = () => {
     }
   };
 
+  const handleUpdateInstitution = async ({ id, nombre, cuit, email, plan }) => {
+    try {
+      setIsSubmitting(true);
+      await vitalityService.updateInstitution({ id, nombre, cuit, email, plan });
+
+      if (plan && cuit) {
+        setPlanMap((prev) => ({ ...prev, [cuit]: plan }));
+      }
+
+      addToast({
+        title: 'Institución Actualizada',
+        description: `Los datos y el plan de "${nombre}" se actualizaron con éxito.`,
+        variant: 'success',
+      });
+
+      setIsEditModalOpen(false);
+      setEditingInstitution(null);
+      await fetchInstitutions();
+      return true;
+    } catch (err) {
+      addToast({
+        title: 'Error al Actualizar',
+        description: err.message || 'No se pudieron guardar los cambios de la institución.',
+        variant: 'error',
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteInstitution = async (id, nombre) => {
+    const ok = await confirmDelete({
+      title: '¿Eliminar institución definitivamente?',
+      message: `¿Estás seguro de que deseas eliminar la institución "${nombre}"? Se desvinculará del sistema Tempus Care junto con todos sus consultorios y profesionales asociados.`,
+      itemName: nombre,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
+
     try {
       await vitalityService.deleteInstitution(id);
       addToast({
@@ -86,6 +129,16 @@ export const useVitalityInstitutions = () => {
       });
       return false;
     }
+  };
+
+  const openEditModal = (institution) => {
+    setEditingInstitution(institution);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingInstitution(null);
   };
 
   // Enriquecer datos con planes de suscripción
@@ -124,8 +177,13 @@ export const useVitalityInstitutions = () => {
     isSubmitting,
     isModalOpen,
     setIsModalOpen,
+    isEditModalOpen,
+    editingInstitution,
+    openEditModal,
+    closeEditModal,
     error,
     createInstitution: handleCreateInstitution,
+    updateInstitution: handleUpdateInstitution,
     deleteInstitution: handleDeleteInstitution,
     refreshInstitutions: fetchInstitutions,
   };

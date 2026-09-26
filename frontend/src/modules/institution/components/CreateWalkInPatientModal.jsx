@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Shield, CheckCircle2, AlertCircle, Loader2, Copy, Check } from 'lucide-react';
+import { UserRoundPlus, Phone, Mail, ShieldPlus, CheckCircle2, AlertCircle, Loader2, Copy, Check } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Input } from '../../../shared/components/ui/Input';
 import { patientService } from '../../patient/services/patientService';
+import { walkInPatientSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 export const CreateWalkInPatientModal = ({
   isOpen,
@@ -20,6 +22,7 @@ export const CreateWalkInPatientModal = ({
     numeroAfiliado: '',
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const [obrasSociales, setObrasSociales] = useState([]);
   const [loadingObrasSociales, setLoadingObrasSociales] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +41,7 @@ export const CreateWalkInPatientModal = ({
         obraSocialId: '',
         numeroAfiliado: '',
       });
+      setFieldErrors({});
       setError(null);
       setCreatedPatient(null);
       setCopied(false);
@@ -65,38 +69,37 @@ export const CreateWalkInPatientModal = ({
       ...prev,
       [name]: value,
     }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
-    const cleanDni = formData.dni.replace(/\D/g, '');
-    if (!cleanDni || cleanDni.length < 7 || cleanDni.length > 9) {
-      setError('El DNI debe tener entre 7 y 9 dígitos numéricos.');
-      return;
-    }
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      walkInPatientSchema,
+      formData
+    );
 
-    if (!formData.nombre.trim() || !formData.apellido.trim()) {
-      setError('Nombre y Apellido son obligatorios.');
-      return;
-    }
-
-    if (!formData.telefono.trim()) {
-      setError('El número de teléfono es obligatorio para contactar al paciente.');
+    if (!isValid) {
+      setFieldErrors(validationErrors);
+      setError(Object.values(validationErrors)[0]);
       return;
     }
 
     try {
       setIsSubmitting(true);
       const payload = {
-        dni: cleanDni,
-        nombre: formData.nombre.trim(),
-        apellido: formData.apellido.trim(),
-        telefono: formData.telefono.trim(),
-        email: formData.email.trim() || null,
-        obraSocialId: formData.obraSocialId ? Number(formData.obraSocialId) : null,
-        numeroAfiliado: formData.numeroAfiliado.trim() || null,
+        dni: sanitizedData.dni,
+        nombre: sanitizedData.nombre,
+        apellido: sanitizedData.apellido,
+        telefono: sanitizedData.telefono,
+        email: sanitizedData.email || null,
+        obraSocialId: sanitizedData.obraSocialId,
+        numeroAfiliado: sanitizedData.numeroAfiliado || null,
       };
 
       const result = await patientService.registerWalkInPatient(payload);
@@ -105,11 +108,17 @@ export const CreateWalkInPatientModal = ({
         onPatientCreated(result);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        'Error al dar de alta al paciente presencial. Verifique los datos e intente nuevamente.'
-      );
+      const parsed = parseBackendError(err, 'Error al dar de alta al paciente presencial.');
+      setError(parsed.message);
+
+      if (parsed.isDuplicate) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          dni: 'Ya existe un paciente con este DNI registrado en el sistema.',
+        }));
+      } else if (parsed.fieldErrors && Object.keys(parsed.fieldErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...parsed.fieldErrors }));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -133,11 +142,11 @@ export const CreateWalkInPatientModal = ({
     >
       {createdPatient ? (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-primary-50 border border-primary-200 text-primary-900 flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-sm">¡Paciente registrado con éxito!</p>
-              <p className="text-xs text-teal-700 mt-1">
+              <p className="text-xs text-primary-700 mt-1">
                 El paciente <strong>{createdPatient.nombre} {createdPatient.apellido}</strong> (DNI: {createdPatient.dni}) ya está activo en el sistema y habilitado para reservar turnos de inmediato.
               </p>
             </div>
@@ -149,7 +158,7 @@ export const CreateWalkInPatientModal = ({
               <button
                 type="button"
                 onClick={handleCopyCredentials}
-                className="flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-800 font-medium cursor-pointer"
+                className="flex items-center gap-1.5 text-xs text-primary-700 hover:text-primary-800 font-medium cursor-pointer"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Copiado' : 'Copiar datos'}
@@ -178,13 +187,6 @@ export const CreateWalkInPatientModal = ({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 text-rose-800 text-xs">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Input
@@ -194,6 +196,7 @@ export const CreateWalkInPatientModal = ({
                 placeholder="Ej. 38123456"
                 value={formData.dni}
                 onChange={handleChange}
+                error={fieldErrors.dni}
                 required
                 maxLength={9}
               />
@@ -206,6 +209,7 @@ export const CreateWalkInPatientModal = ({
                 placeholder="Ej. 11-4567-8901"
                 value={formData.telefono}
                 onChange={handleChange}
+                error={fieldErrors.telefono}
                 required
               />
             </div>
@@ -220,6 +224,7 @@ export const CreateWalkInPatientModal = ({
                 placeholder="Ej. Carlos"
                 value={formData.nombre}
                 onChange={handleChange}
+                error={fieldErrors.nombre}
                 required
               />
             </div>
@@ -231,6 +236,7 @@ export const CreateWalkInPatientModal = ({
                 placeholder="Ej. Gómez"
                 value={formData.apellido}
                 onChange={handleChange}
+                error={fieldErrors.apellido}
                 required
               />
             </div>
@@ -245,13 +251,15 @@ export const CreateWalkInPatientModal = ({
               placeholder="correo@ejemplo.com (Opcional)"
               value={formData.email}
               onChange={handleChange}
+              error={fieldErrors.email}
               helperText="Si se omite, se generará una casilla provisional vinculada a su DNI."
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label htmlFor="walkin-obra-social" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="walkin-obra-social" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <ShieldPlus className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} />
                 Obra Social (Opcional)
               </label>
               <select
@@ -260,7 +268,7 @@ export const CreateWalkInPatientModal = ({
                 value={formData.obraSocialId}
                 onChange={handleChange}
                 disabled={loadingObrasSociales}
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Particular / Sin Cobertura</option>
                 {obrasSociales.map((os) => (
@@ -284,31 +292,44 @@ export const CreateWalkInPatientModal = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="rounded-xl"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-              className="rounded-xl font-semibold gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Registrando...</span>
-                </>
-              ) : (
-                <span>Dar de Alta Paciente</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+            <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+              {error && (
+                <span className="flex items-center gap-1 animate-in fade-in-0">
+                  <span aria-hidden="true">⚠</span> {error}
+                </span>
               )}
-            </Button>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting}
+                className="rounded-xl font-semibold gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Registrando...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserRoundPlus className="w-4 h-4" strokeWidth={2} />
+                    <span>Dar de Alta Paciente</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       )}

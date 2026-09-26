@@ -16,12 +16,23 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Formulario de evolución de la consulta actual
-  const [motivo, setMotivo] = useState(appointment?.motivoObservacion || '');
-  const [detalle, setDetalle] = useState(appointment?.detalleObservacion || '');
+  const [motivo, setMotivoState] = useState(appointment?.motivoObservacion || '');
+  const [detalle, setDetalleState] = useState(appointment?.detalleObservacion || '');
   const [markAsAttended, setMarkAsAttended] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+
+  const setMotivo = (val) => {
+    setMotivoState(val);
+    if (fieldErrors.motivo) setFieldErrors((prev) => ({ ...prev, motivo: '' }));
+  };
+
+  const setDetalle = (val) => {
+    setDetalleState(val);
+    if (fieldErrors.detalle) setFieldErrors((prev) => ({ ...prev, detalle: '' }));
+  };
 
   const pacienteCuil = appointment?.pacienteCuil;
 
@@ -48,8 +59,8 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
 
   useEffect(() => {
     loadPatientData();
-    setMotivo(appointment?.motivoObservacion || '');
-    setDetalle(appointment?.detalleObservacion || '');
+    setMotivoState(appointment?.motivoObservacion || '');
+    setDetalleState(appointment?.detalleObservacion || '');
     setIsSaved(appointment?.estado === 3);
   }, [appointment, loadPatientData]);
 
@@ -58,23 +69,18 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
    * el estado de la cita a Atendida en la misma transacción atómica en backend.
    */
   const saveEvolution = async () => {
+    const errors = {};
     if (!motivo.trim()) {
-      addToast({
-        title: 'Campo Requerido',
-        description: 'Por favor ingrese el motivo o diagnóstico de la consulta.',
-        variant: 'warning',
-      });
-      return false;
+      errors.motivo = 'Por favor ingrese el motivo o diagnóstico de la consulta.';
     }
-
     if (!detalle.trim()) {
-      addToast({
-        title: 'Campo Requerido',
-        description: 'Por favor ingrese el detalle o plan terapéutico de la evolución clínica.',
-        variant: 'warning',
-      });
+      errors.detalle = 'Por favor ingrese el detalle o plan terapéutico de la evolución clínica.';
+    }
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return false;
     }
+    setFieldErrors({});
 
     try {
       setIsSaving(true);
@@ -109,11 +115,6 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
       return true;
     } catch (err) {
       setError(err.message || 'Ocurrió un error al guardar la evolución.');
-      addToast({
-        title: 'Error al Guardar',
-        description: err.message || 'No se pudo guardar la evolución clínica.',
-        variant: 'error',
-      });
       return false;
     } finally {
       setIsSaving(false);
@@ -127,6 +128,7 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
     isSaving,
     isSaved,
     error,
+    fieldErrors,
     motivo,
     setMotivo,
     detalle,

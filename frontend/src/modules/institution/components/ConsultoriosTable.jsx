@@ -3,7 +3,7 @@ import { DataTable } from './DataTable';
 import { CreateConsultorioModal } from './CreateConsultorioModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
-import { Building2, Plus, Trash2, MapPin, Phone, Mail, Stethoscope } from 'lucide-react';
+import { Hospital, Plus, Trash2, MapPin, Phone, Mail, Stethoscope } from 'lucide-react';
 
 /**
  * Tabla de Sedes Físicas y Consultorios Médicos.
@@ -38,8 +38,8 @@ export const ConsultoriosTable = ({
       className: 'min-w-[220px]',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-4 h-4" aria-hidden="true" />
+          <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0">
+            <Hospital className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           </div>
           <div>
             <p className="font-bold font-heading text-slate-900 leading-snug">{row.nombre}</p>
@@ -96,7 +96,7 @@ export const ConsultoriosTable = ({
           <div className="flex flex-wrap gap-1">
             {profs.slice(0, 2).map((nombre, i) => (
               <Badge key={i} variant="default" size="sm">
-                <Stethoscope className="w-2.5 h-2.5 text-teal-600 mr-1" />
+                <Stethoscope className="w-2.5 h-2.5 text-primary-600 mr-1" strokeWidth={2} />
                 {nombre}
               </Badge>
             ))}
@@ -144,7 +144,7 @@ export const ConsultoriosTable = ({
             className="gap-1.5 text-xs font-semibold"
             aria-label="Registrar nueva sede o consultorio"
           >
-            <Plus className="w-4 h-4" aria-hidden="true" />
+            <Hospital className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             <span>+ Nueva Sede</span>
           </Button>
         }

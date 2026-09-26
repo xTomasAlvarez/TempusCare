@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { institutionAdminService } from '../services/institutionAdminService';
 import { useToast } from '../../../shared/components/ui/Toast';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 
 /**
  * Hook para la gestión de Personal Operativo (Asistentes y Secretarios).
  */
 export const useAsistentesManager = () => {
   const { addToast } = useToast();
+  const { confirmDelete } = useConfirmDelete();
   const [asistentes, setAsistentes] = useState([]);
   const [instituciones, setInstituciones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +64,15 @@ export const useAsistentesManager = () => {
   };
 
   const handleDeleteAsistente = async (cuil, nombre) => {
+    const ok = await confirmDelete({
+      title: '¿Dar de baja asistente definitivamente?',
+      message: `¿Estás seguro de que deseas dar de baja al asistente "${nombre}" (CUIL: ${cuil})? Se revocarán sus accesos a la mesa de recepción.`,
+      itemName: `${nombre} (CUIL: ${cuil})`,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
+
     try {
       await institutionAdminService.deleteAsistente(cuil);
       addToast({

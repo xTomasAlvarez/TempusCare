@@ -269,7 +269,7 @@ public class CitaService : ICitaService
 
         var citas = await _db.Citas
             .Include(c => c.Paciente)
-            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional).ThenInclude(p => p!.Especialidades).ThenInclude(e => e.Especialidad)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
             .Include(c => c.Turnos)
             .Include(c => c.Estudio)
@@ -287,7 +287,7 @@ public class CitaService : ICitaService
 
         var query = _db.Citas
             .Include(c => c.Paciente)
-            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional).ThenInclude(p => p!.Especialidades).ThenInclude(e => e.Especialidad)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
             .Include(c => c.Turnos)
             .Include(c => c.Estudio)
@@ -312,7 +312,7 @@ public class CitaService : ICitaService
 
         var cita = await _db.Citas
             .Include(c => c.Paciente)
-            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Profesional).ThenInclude(p => p!.Especialidades).ThenInclude(e => e.Especialidad)
             .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
             .Include(c => c.Turnos)
             .Include(c => c.Estudio)
@@ -336,6 +336,8 @@ public class CitaService : ICitaService
             : null;
 
         int cantidadTurnos = c.Turnos?.Count > 0 ? c.Turnos.Count : 1;
+        string? consultorioNombre = t.Agenda?.Consultorio?.Nombre;
+        string? especialidadNombre = prof.Especialidades?.FirstOrDefault()?.Especialidad?.Nombre ?? (c.Estudio != null ? "Diagnóstico por Imágenes" : "Medicina General");
 
         return new CitaResponseDto(
             c.Id,
@@ -356,7 +358,9 @@ public class CitaService : ICitaService
             c.EstudioId,
             c.Estudio?.Nombre,
             c.DocumentoPedidoMedico,
-            cantidadTurnos
+            cantidadTurnos,
+            consultorioNombre,
+            especialidadNombre
         );
     }
 }

@@ -43,10 +43,10 @@ export const ToastProvider = ({ children }) => {
             )}
           >
             <div className="flex-shrink-0 mt-0.5">
-              {toast.variant === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />}
-              {toast.variant === 'error' && <XCircle className="w-5 h-5 text-rose-600" aria-hidden="true" />}
-              {toast.variant === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" aria-hidden="true" />}
-              {toast.variant === 'info' && <Info className="w-5 h-5 text-teal-400" aria-hidden="true" />}
+              {toast.variant === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2} aria-hidden="true" />}
+              {toast.variant === 'error' && <XCircle className="w-5 h-5 text-rose-600" strokeWidth={2} aria-hidden="true" />}
+              {toast.variant === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2} aria-hidden="true" />}
+              {toast.variant === 'info' && <Info className="w-5 h-5 text-primary-400" strokeWidth={2} aria-hidden="true" />}
             </div>
 
             <div className="flex-1 text-sm">
@@ -63,9 +63,9 @@ export const ToastProvider = ({ children }) => {
               onClick={() => removeToast(toast.id)}
               aria-label="Cerrar notificación"
               tabIndex={0}
-              className="flex-shrink-0 rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex-shrink-0 rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         ))}
@@ -111,10 +111,10 @@ export const Toast = ({
       )}
     >
       <div className="flex-shrink-0 mt-0.5">
-        {finalVariant === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />}
-        {finalVariant === 'error' && <XCircle className="w-5 h-5 text-rose-600" aria-hidden="true" />}
-        {finalVariant === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" aria-hidden="true" />}
-        {finalVariant === 'info' && <Info className="w-5 h-5 text-teal-400" aria-hidden="true" />}
+        {finalVariant === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2} aria-hidden="true" />}
+        {finalVariant === 'error' && <XCircle className="w-5 h-5 text-rose-600" strokeWidth={2} aria-hidden="true" />}
+        {finalVariant === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2} aria-hidden="true" />}
+        {finalVariant === 'info' && <Info className="w-5 h-5 text-primary-400" strokeWidth={2} aria-hidden="true" />}
       </div>
 
       <div className="flex-1 text-sm">
@@ -132,9 +132,9 @@ export const Toast = ({
           onClick={onClose}
           aria-label="Cerrar notificación"
           tabIndex={0}
-          className="flex-shrink-0 rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="flex-shrink-0 rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" strokeWidth={2} />
         </button>
       )}
     </div>

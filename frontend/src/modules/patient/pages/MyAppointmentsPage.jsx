@@ -5,9 +5,11 @@ import { AppointmentCard } from '../components/AppointmentCard';
 import { RatingModal } from '../components/RatingModal';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { Button } from '../../../shared/components/ui/Button';
-import { Calendar, CheckCircle2, Search, Clock, AlertCircle, Sparkles } from 'lucide-react';
+import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
+import { CalendarHeart, CheckCircle2, Stethoscope, Clock, AlertCircle, Sparkles, CalendarDays } from 'lucide-react';
 
 export const MyAppointmentsPage = () => {
+  const { confirmDelete } = useConfirmDelete();
   const {
     appointments,
     futureAppointments,
@@ -26,7 +28,15 @@ export const MyAppointmentsPage = () => {
   const [toastMessage, setToastMessage] = useState(null);
 
   const handleCancelAppointment = async (citaId) => {
-    const ok = window.confirm('¿Estás seguro de que deseas cancelar esta cita? El turno se liberará para otros pacientes.');
+    const cita = appointments.find((a) => a.id === citaId);
+    const doctorName = cita?.profesionalNombre || 'su médico';
+    const ok = await confirmDelete({
+      title: '¿Cancelar turno definitivamente?',
+      message: '¿Estás seguro de que deseas cancelar esta cita? El turno se liberará automáticamente en el sistema para otros pacientes (RN-01).',
+      itemName: `Cita con ${doctorName}`,
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+    });
     if (!ok) return;
 
     const success = await cancelAppointment(citaId);
@@ -79,12 +89,21 @@ export const MyAppointmentsPage = () => {
           </p>
         </div>
 
-        <Link to="/patient/search">
-          <Button variant="primary" size="md" className="gap-2 w-full sm:w-auto shadow-xs">
-            <Search className="w-4 h-4" aria-hidden="true" />
-            <span>Nuevo Turno</span>
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link to="/patient/calendar">
+            <Button variant="outline" size="md" className="gap-2 w-full sm:w-auto shadow-2xs text-xs font-semibold">
+              <CalendarDays className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
+              <span>Ver Calendario</span>
+            </Button>
+          </Link>
+
+          <Link to="/patient/search">
+            <Button variant="primary" size="md" className="gap-2 w-full sm:w-auto shadow-xs text-xs font-semibold">
+              <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
+              <span>Nuevo Turno</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Selector de Pestañas (Tabs) */}
@@ -93,15 +112,15 @@ export const MyAppointmentsPage = () => {
           type="button"
           onClick={() => setActiveTab('future')}
           tabIndex={0}
-          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
             activeTab === 'future'
-              ? 'border-teal-600 text-teal-700'
+              ? 'border-primary-600 text-primary-700'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
-          <Clock className="w-4 h-4" aria-hidden="true" />
+          <Clock className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           <span>Próximas Citas</span>
-          <span className="bg-teal-50 text-teal-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-primary-50 text-primary-700 text-xs px-2 py-0.5 rounded-full font-bold">
             {futureAppointments.length}
           </span>
         </button>
@@ -110,13 +129,13 @@ export const MyAppointmentsPage = () => {
           type="button"
           onClick={() => setActiveTab('history')}
           tabIndex={0}
-          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
             activeTab === 'history'
-              ? 'border-teal-600 text-teal-700'
+              ? 'border-primary-600 text-primary-700'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
-          <Calendar className="w-4 h-4" aria-hidden="true" />
+          <CalendarHeart className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           <span>Historial / Pasadas</span>
           <span className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full font-medium">
             {pastAppointments.length}
@@ -142,14 +161,14 @@ export const MyAppointmentsPage = () => {
           </div>
         ) : error ? (
           <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center text-rose-700">
-            <AlertCircle className="w-7 h-7 mx-auto mb-2 text-rose-500" />
+            <AlertCircle className="w-7 h-7 mx-auto mb-2 text-rose-500" strokeWidth={2} />
             <p className="text-sm font-medium">{error}</p>
           </div>
         ) : currentList.length === 0 ? (
           /* Empty State */
           <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto">
-              <Calendar className="w-7 h-7" aria-hidden="true" />
+            <div className="w-14 h-14 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mx-auto">
+              <CalendarHeart className="w-7 h-7" strokeWidth={2} aria-hidden="true" />
             </div>
             <h3 className="text-base font-bold font-heading text-slate-800">
               {activeTab === 'future'

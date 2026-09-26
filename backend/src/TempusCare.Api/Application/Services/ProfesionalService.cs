@@ -235,7 +235,8 @@ public class ProfesionalService : IProfesionalService
         var query = _db.Profesionales
             .Include(p => p.Direccion)
             .Include(p => p.Especialidades).ThenInclude(e => e.Especialidad)
-            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio)
+            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio).ThenInclude(co => co!.Direccion)
+            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio).ThenInclude(co => co!.Institucion)
             .Include(p => p.ObrasSociales).ThenInclude(o => o.ObraSocial)
             .Include(p => p.Estudios).ThenInclude(pe => pe.Estudio)
             .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas).ThenInclude(cob => cob.ObraSocial)
@@ -245,7 +246,18 @@ public class ProfesionalService : IProfesionalService
         if (!string.IsNullOrWhiteSpace(nombre))
         {
             var busqueda = nombre.Trim().ToLower();
-            query = query.Where(p => p.Nombre.ToLower().Contains(busqueda) || p.Apellido.ToLower().Contains(busqueda));
+            query = query.Where(p =>
+                p.Nombre.ToLower().Contains(busqueda) ||
+                p.Apellido.ToLower().Contains(busqueda) ||
+                (p.Nombre + " " + p.Apellido).ToLower().Contains(busqueda) ||
+                (p.Apellido + " " + p.Nombre).ToLower().Contains(busqueda) ||
+                p.Especialidades.Any(e => e.Especialidad != null && e.Especialidad.Nombre.ToLower().Contains(busqueda)) ||
+                p.Estudios.Any(pe => pe.Estudio != null && pe.Estudio.Nombre.ToLower().Contains(busqueda)) ||
+                p.Consultorios.Any(c => c.Consultorio != null && (
+                    c.Consultorio.Nombre.ToLower().Contains(busqueda) ||
+                    (c.Consultorio.Institucion != null && c.Consultorio.Institucion.Nombre.ToLower().Contains(busqueda))
+                ))
+            );
         }
 
         if (especialidadId.HasValue)
@@ -282,7 +294,8 @@ public class ProfesionalService : IProfesionalService
         var prof = await _db.Profesionales
             .Include(p => p.Direccion)
             .Include(p => p.Especialidades).ThenInclude(e => e.Especialidad)
-            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio)
+            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio).ThenInclude(co => co!.Direccion)
+            .Include(p => p.Consultorios).ThenInclude(c => c.Consultorio).ThenInclude(co => co!.Institucion)
             .Include(p => p.ObrasSociales).ThenInclude(o => o.ObraSocial)
             .Include(p => p.Estudios).ThenInclude(pe => pe.Estudio)
             .Include(p => p.Estudios).ThenInclude(pe => pe.Coberturas).ThenInclude(cob => cob.ObraSocial)
@@ -427,6 +440,23 @@ public class ProfesionalService : IProfesionalService
             pe.Coberturas.Select(c => c.ObraSocial?.Nombre ?? "").Where(s => s != "").ToList()
         )).ToList();
 
+        var consultoriosDetalle = p.Consultorios.Select(c => new ConsultorioUbicacionDto(
+            c.ConsultorioCuit,
+            c.Consultorio?.Nombre ?? "",
+            c.Consultorio?.Institucion?.Nombre,
+            c.Consultorio?.Direccion != null ? $"{c.Consultorio.Direccion.Calle} {c.Consultorio.Direccion.Nro}".Trim() : "",
+            c.Consultorio?.Direccion?.Calle,
+            c.Consultorio?.Direccion?.Nro,
+            c.Consultorio?.Latitud,
+            c.Consultorio?.Longitud
+        )).ToList();
+
+        var instituciones = p.Consultorios
+            .Select(c => c.Consultorio?.Institucion?.Nombre ?? "")
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Distinct()
+            .ToList();
+
         return new ProfesionalResponseDto(
             p.Cuil,
             p.Nombre,
@@ -441,7 +471,9 @@ public class ProfesionalService : IProfesionalService
             p.Especialidades.Select(e => e.Especialidad?.Nombre ?? "").Where(s => s != "").ToList(),
             p.Consultorios.Select(c => c.Consultorio?.Nombre ?? "").Where(s => s != "").ToList(),
             p.ObrasSociales.Select(o => o.ObraSocial?.Nombre ?? "").Where(s => s != "").ToList(),
-            estudiosDto
+            estudiosDto,
+            consultoriosDetalle,
+            instituciones
         );
     }
 }

@@ -9,7 +9,10 @@ public record AltaAgendaDto(
     TimeSpan HoraEntrada,
     TimeSpan HoraSalida,
     int DuracionTurnoMinutos = 30
-);
+)
+{
+    public DateTime Fecha => new DateTime(Anio, Mes, Dia);
+}
 
 public record ModificarAgendaDto(
     int IdAgenda,

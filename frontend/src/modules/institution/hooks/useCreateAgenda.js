@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { receptionService } from '../services/receptionService';
+import { agendaSchema } from '../../../shared/validation/schemas';
+import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 export const useCreateAgenda = (onSuccess) => {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -15,9 +17,18 @@ export const useCreateAgenda = (onSuccess) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+    if (error) setError(null);
   };
 
   // Cálculo dinámico de cantidad aproximada de turnos
@@ -34,33 +45,32 @@ export const useCreateAgenda = (onSuccess) => {
 
   const submitAgenda = async () => {
     setError(null);
+    setFieldErrors({});
 
-    if (!formData.profesionalCuil) {
-      setError('Debes seleccionar un profesional médico.');
-      return false;
-    }
-    if (!formData.cuitConsultorio) {
-      setError('Debes seleccionar un consultorio de atención.');
-      return false;
-    }
-    if (!formData.fecha) {
-      setError('Debes seleccionar una fecha.');
+    const { isValid, errors: validationErrors, data: sanitizedData } = validateWithSchema(
+      agendaSchema,
+      formData
+    );
+
+    if (!isValid) {
+      setFieldErrors(validationErrors);
+      setError(Object.values(validationErrors)[0]);
       return false;
     }
 
-    const [anio, mes, dia] = formData.fecha.split('-').map(Number);
+    const [anio, mes, dia] = sanitizedData.fecha.split('-').map(Number);
 
     setIsSubmitting(true);
     try {
       const res = await receptionService.createAgenda({
-        profesionalCuil: formData.profesionalCuil,
-        cuitConsultorio: formData.cuitConsultorio,
+        profesionalCuil: sanitizedData.profesionalCuil,
+        cuitConsultorio: sanitizedData.cuitConsultorio,
         dia,
         mes,
         anio,
-        horaEntrada: formData.horaEntrada,
-        horaSalida: formData.horaSalida,
-        duracionTurnoMinutos: Number(formData.duracionTurnoMinutos),
+        horaEntrada: sanitizedData.horaEntrada,
+        horaSalida: sanitizedData.horaSalida,
+        duracionTurnoMinutos: Number(sanitizedData.duracionTurnoMinutos),
       });
 
       if (onSuccess) {
@@ -68,7 +78,14 @@ export const useCreateAgenda = (onSuccess) => {
       }
       return true;
     } catch (err) {
-      setError(err.message || 'Error al crear la agenda horaria.');
+      const parsed = parseBackendError(err, 'Error al crear la agenda horaria.');
+      setError(parsed.message);
+      if (parsed.isDuplicate) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          fecha: 'Ya existe una agenda superpuesta para este médico en esta fecha y horario.',
+        }));
+      }
       return false;
     } finally {
       setIsSubmitting(false);
@@ -81,6 +98,7 @@ export const useCreateAgenda = (onSuccess) => {
     estimatedSlots: calculateEstimatedSlots(),
     isSubmitting,
     error,
+    fieldErrors,
     submitAgenda,
   };
 };

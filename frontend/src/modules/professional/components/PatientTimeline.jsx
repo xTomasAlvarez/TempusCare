@@ -1,13 +1,13 @@
 import React from 'react';
 import { Badge } from '../../../shared/components/ui/Badge';
 import {
-  History,
+  FileHeart,
   AlertTriangle,
   Heart,
   Pill,
   ShieldAlert,
   Phone,
-  Calendar,
+  CalendarHeart,
   UserCheck,
   Stethoscope,
   FileCheck2,
@@ -51,8 +51,8 @@ export const PatientTimeline = ({
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
-              <History className="w-4 h-4" aria-hidden="true" />
+            <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center">
+              <FileHeart className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </div>
             <div>
               <h3 className="text-sm font-bold font-heading text-slate-900 leading-snug">
@@ -75,14 +75,14 @@ export const PatientTimeline = ({
         <div className="grid grid-cols-1 gap-2.5">
           {clinicalHistory?.alergias ? (
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900">
-              <ShieldAlert className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <ShieldAlert className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" strokeWidth={2} aria-hidden="true" />
               <div className="text-xs">
                 <span className="font-bold">Alergias:</span> {clinicalHistory.alergias}
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
+              <ShieldAlert className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
               <span>Sin alergias conocidas registradas.</span>
             </div>
           )}
@@ -97,8 +97,8 @@ export const PatientTimeline = ({
           )}
 
           {clinicalHistory?.medicamentos && (
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-900">
-              <Pill className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-primary-50 border border-primary-200 text-primary-900">
+              <Pill className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" strokeWidth={2} aria-hidden="true" />
               <div className="text-xs">
                 <span className="font-bold">Medicación Habitual:</span> {clinicalHistory.medicamentos}
               </div>
@@ -122,14 +122,14 @@ export const PatientTimeline = ({
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-heading">
             Línea de Tiempo Médica
           </h4>
-          <span className="text-[11px] font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full">
             {observaciones.length} Registros
           </span>
         </div>
 
         {observaciones.length === 0 && priorAppointments.length === 0 ? (
           <div className="py-8 text-center text-slate-400 text-xs">
-            <History className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <FileHeart className="w-8 h-8 text-slate-300 mx-auto mb-2" strokeWidth={2} />
             <p className="font-medium text-slate-600">Sin historial médico previo</p>
             <p className="text-[11px] text-slate-400 mt-0.5">
               Esta es la primera consulta registrada para este paciente en el sistema unificado.
@@ -141,9 +141,9 @@ export const PatientTimeline = ({
             {observaciones.map((obs, idx) => (
               <div key={obs.id || idx} className="relative group">
                 {/* Punto en el Timeline */}
-                <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-2 border-white bg-teal-600 shadow-xs flex items-center justify-center text-white" />
+                <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-2 border-white bg-primary-600 shadow-xs flex items-center justify-center text-white" />
 
-                <div className="bg-slate-50 group-hover:bg-teal-50/30 p-3.5 rounded-xl border border-slate-200/80 transition-colors">
+                <div className="bg-slate-50 group-hover:bg-primary-50/30 p-3.5 rounded-xl border border-slate-200/80 transition-colors">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="text-xs font-bold text-slate-900 font-heading">
                       {obs.motivo || 'Evolución Médica'}
@@ -158,7 +158,7 @@ export const PatientTimeline = ({
                   </p>
 
                   <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200/60 text-[11px] text-slate-400">
-                    <Stethoscope className="w-3 h-3 text-teal-600" />
+                    <Stethoscope className="w-3 h-3 text-primary-600" strokeWidth={2} />
                     <span>{obs.profesionalNombre || 'Profesional de la Red'}</span>
                   </div>
                 </div>

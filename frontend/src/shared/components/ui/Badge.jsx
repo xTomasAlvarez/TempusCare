@@ -9,8 +9,12 @@ export const Badge = ({
 }) => {
   const variants = {
     default: 'bg-slate-100 text-slate-700 border-slate-200',
-    primary: 'bg-teal-50 text-teal-700 border-teal-200',
+    primary: 'bg-primary-50 text-primary-700 border-primary-200',
+    secondary: 'bg-secondary-50 text-secondary-700 border-secondary-200',
+    teal: 'bg-secondary-50 text-secondary-700 border-secondary-200',
+    brand: 'bg-primary-50 text-primary-700 border-primary-200',
     success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     warning: 'bg-amber-50 text-amber-700 border-amber-200',
     danger: 'bg-rose-50 text-rose-700 border-rose-200',
     info: 'bg-sky-50 text-sky-700 border-sky-200',

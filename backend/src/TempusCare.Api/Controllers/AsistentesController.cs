@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaAsistenteDto dto)
     {
         var res = await _asistenteService.AltaAsistenteAsync(dto);
@@ -23,6 +25,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpPut("{cuil}")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Modificar(string cuil, [FromBody] ModificarAsistenteDto dto)
     {
         if (cuil != dto.Cuil)
@@ -33,6 +36,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpDelete("{cuil}")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuil)
     {
         await _asistenteService.BajaAsistenteAsync(cuil);
@@ -40,6 +44,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerTodos([FromQuery] string? consultorioCuit)
     {
         if (!string.IsNullOrEmpty(consultorioCuit))
@@ -52,6 +57,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet("consultorio/{cuit}")]
+    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorConsultorio(string cuit)
     {
         var res = await _asistenteService.ObtenerPorConsultorioAsync(cuit);
@@ -59,6 +65,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet("{cuil}")]
+    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorCuil(string cuil)
     {
         var res = await _asistenteService.ObtenerPorCuilAsync(cuil);

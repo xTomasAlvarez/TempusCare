@@ -1,19 +1,14 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HeartPulse, LogOut, User, Building2, Stethoscope, Calendar, Search, LayoutDashboard } from 'lucide-react';
+import { Hospital, Stethoscope, CalendarHeart, BriefcaseMedical, HeartPulse, ShieldPlus, CalendarDays } from 'lucide-react';
 import { Button } from '../../shared/components/ui/Button';
 import { ContextSwitcher } from '../../modules/professional/components/ContextSwitcher';
+import { UserDropdownMenu } from '../../shared/components/ui/UserDropdownMenu';
 
 export const MainLayout = () => {
-  const { user, clearAuthData } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const location = useLocation();
-
-  const handleLogout = () => {
-    clearAuthData();
-    navigate('/login', { replace: true });
-  };
 
   const navLinks = React.useMemo(() => {
     if (!user) return [];
@@ -21,30 +16,31 @@ export const MainLayout = () => {
     switch (user.rol) {
       case 'Paciente':
         return [
-          { label: 'Inicio', path: '/patient/dashboard', icon: LayoutDashboard },
-          { label: 'Buscar Médicos', path: '/patient/search', icon: Search },
-          { label: 'Mis Citas', path: '/patient/appointments', icon: Calendar },
+          { label: 'Inicio', path: '/patient/dashboard', icon: HeartPulse },
+          { label: 'Buscar Médicos', path: '/patient/search', icon: Stethoscope },
+          { label: 'Mis Citas', path: '/patient/appointments', icon: CalendarHeart },
+          { label: 'Calendario', path: '/patient/calendar', icon: CalendarDays },
         ];
       case 'AdminConsultorio':
         return [
-          { label: 'Administración de Sede', path: '/institution/sede-admin', icon: Building2 },
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
+          { label: 'Administración de Sede', path: '/institution/sede-admin', icon: Hospital },
+          { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
         ];
       case 'Institucion':
       case 'AdminInstitucion':
         return [
-          { label: 'Administración B2B', path: '/institution/admin', icon: Building2 },
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
+          { label: 'Sedes y Consultorios', path: '/institution/admin', icon: Hospital },
         ];
       case 'SuperAdmin':
         return [
-          { label: 'Consola Vitality', path: '/vitality/clients', icon: Building2 },
-          { label: 'Administración B2B', path: '/institution/admin', icon: Building2 },
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
+          { label: 'Consola Vitality', path: '/vitality/clients', icon: Hospital },
+          { label: 'Sedes y Consultorios', path: '/institution/admin', icon: Hospital },
+          { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
         ];
       case 'Asistente':
         return [
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: LayoutDashboard },
+          { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
+          { label: 'Estudios y Coberturas', path: '/institution/coberturas', icon: ShieldPlus },
         ];
       case 'Profesional':
         return [
@@ -55,47 +51,36 @@ export const MainLayout = () => {
     }
   }, [user]);
 
-  const getRoleBadge = (rol) => {
-    switch (rol) {
-      case 'Paciente':
-        return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Paciente</span>;
-      case 'Profesional':
-        return <span className="bg-teal-50 text-teal-700 border border-teal-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Médico / Profesional</span>;
-      case 'Asistente':
-        return <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Secretaría / Asistente</span>;
-      case 'AdminConsultorio':
-        return (
-          <span className="bg-cyan-50 text-cyan-800 border border-cyan-200 text-xs px-2.5 py-0.5 rounded-full font-medium">
-            Admin Sede {user?.sedeNombre ? `(${user.sedeNombre})` : ''}
-          </span>
-        );
-      case 'AdminInstitucion':
-        return <span className="bg-blue-50 text-blue-800 border border-blue-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Admin Institución</span>;
-      case 'SuperAdmin':
-        return <span className="bg-purple-50 text-purple-800 border border-purple-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Super Admin Vitality</span>;
-      default:
-        return <span className="bg-slate-100 text-slate-700 border border-slate-200 text-xs px-2.5 py-0.5 rounded-full font-medium">Administrador</span>;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Barra Superior de Navegación Accesible */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6 sm:gap-8">
+            {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
             <Link
               to="/"
               tabIndex={0}
-              aria-label="Ir al panel principal"
-              className="flex items-center gap-2.5 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              aria-label="Ir al inicio de TempusCare"
+              className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
             >
-              <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-xs">
-                <HeartPulse className="w-5 h-5" aria-hidden="true" />
+              <img
+                src={user?.rol === 'SuperAdmin' ? '/vitality.png' : '/tempuscare.png'}
+                alt={user?.rol === 'SuperAdmin' ? 'Vitality Logo' : 'TempusCare Logo'}
+                className="w-10 h-10 object-contain transition-transform group-hover:scale-105"
+              />
+              <div className="flex flex-col">
+                <span className="text-lg sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+                  {user?.rol === 'SuperAdmin' ? (
+                    <>Vitality<span className="text-primary-600">OS</span></>
+                  ) : (
+                    <>Tempus<span className="text-primary-600">Care</span></>
+                  )}
+                </span>
+                <span className="text-sm text-slate-500 font-medium leading-normal hidden sm:block">
+                  Salud Inclusiva
+                </span>
               </div>
-              <span className="text-lg font-bold font-heading tracking-tight text-slate-900">
-                Tempus<span className="text-teal-600">Care</span>
-              </span>
             </Link>
 
             {/* Enlaces de Navegación en Desktop */}
@@ -109,13 +94,13 @@ export const MainLayout = () => {
                       key={item.path}
                       to={item.path}
                       tabIndex={0}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         isActive
-                          ? 'bg-teal-50 text-teal-700 font-bold'
+                          ? 'bg-primary-50 text-primary-700 font-bold'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} aria-hidden="true" />
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-primary-600' : 'text-slate-400'}`} strokeWidth={2} aria-hidden="true" />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -130,23 +115,7 @@ export const MainLayout = () => {
             )}
 
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-sm font-semibold text-slate-800">{user.usuario}</span>
-                  {getRoleBadge(user.rol)}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  aria-label="Cerrar sesión"
-                  className="text-slate-600 hover:text-rose-600 hover:border-rose-200"
-                >
-                  <LogOut className="w-4 h-4" aria-hidden="true" />
-                  <span className="hidden md:inline">Salir</span>
-                </Button>
-              </div>
+              <UserDropdownMenu />
             ) : (
               <Link to="/login">
                 <Button size="sm">Iniciar Sesión</Button>
@@ -175,11 +144,11 @@ export const MainLayout = () => {
                 key={item.path}
                 to={item.path}
                 tabIndex={0}
-                className={`flex flex-col items-center gap-1 p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 ${
-                  isActive ? 'text-teal-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+                className={`flex flex-col items-center gap-1 p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  isActive ? 'text-primary-600 font-bold' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} aria-hidden="true" />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-primary-600' : 'text-slate-400'}`} strokeWidth={2} aria-hidden="true" />
                 <span className="text-[10px] tracking-tight">{item.label}</span>
               </Link>
             );

@@ -20,7 +20,7 @@ export const KanbanColumn = ({
       {/* Cabecera Sutil sin bordes duros */}
       <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-200/60">
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-slate-500" aria-hidden="true" />
+          <Icon className="w-4 h-4 text-slate-500" strokeWidth={2} aria-hidden="true" />
           <h3 className="text-sm font-heading font-semibold text-slate-800 tracking-tight">
             {title}
           </h3>
@@ -50,7 +50,7 @@ export const KanbanColumn = ({
         ) : items.length === 0 ? (
           /* Empty State Premium: Contenedor invisible sin bordes punteados */
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[220px]">
-            <Icon className="w-10 h-10 text-slate-300 mb-2 stroke-[1.5]" aria-hidden="true" />
+            <Icon className="w-10 h-10 text-slate-300 mb-2" strokeWidth={2} aria-hidden="true" />
             <p className="text-sm font-medium text-slate-500 font-sans">
               {emptyMessage}
             </p>

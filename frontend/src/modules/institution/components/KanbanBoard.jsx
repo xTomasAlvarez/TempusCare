@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, Stethoscope, CheckCircle2 } from 'lucide-react';
+import { CalendarHeart, Clock, Stethoscope, ClipboardCheck } from 'lucide-react';
 import { KanbanColumn } from './KanbanColumn';
 
 export const KanbanBoard = ({
@@ -21,7 +21,7 @@ export const KanbanBoard = ({
         <KanbanColumn
           title="Disponibles"
           count={columnDisponibles.length}
-          icon={Calendar}
+          icon={CalendarHeart}
           columnType="disponible"
           items={columnDisponibles}
           isLoading={isLoading}
@@ -61,7 +61,7 @@ export const KanbanBoard = ({
         <KanbanColumn
           title="Finalizados"
           count={columnFinalizados.length}
-          icon={CheckCircle2}
+          icon={ClipboardCheck}
           columnType="finalizado"
           items={columnFinalizados}
           isLoading={isLoading}

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TempusCare.Api.Domain.Entities;
 
 public class Agenda
@@ -12,6 +14,9 @@ public class Agenda
     public int Dia { get; set; }
     public int Mes { get; set; }
     public int Anio { get; set; }
+
+    [NotMapped]
+    public DateTime Fecha => new DateTime(Anio, Mes, Dia);
 
     public TimeSpan HoraEntrada { get; set; }
     public TimeSpan HoraSalida { get; set; }

@@ -8,12 +8,19 @@ import { RegisterPage } from '../../modules/auth/pages/RegisterPage';
 import { PatientDashboardPage } from '../../modules/patient/pages/PatientDashboardPage';
 import { SearchProfessionalsPage } from '../../modules/patient/pages/SearchProfessionalsPage';
 import { MyAppointmentsPage } from '../../modules/patient/pages/MyAppointmentsPage';
+import { MisTurnosCalendario } from '../../modules/patient/pages/MisTurnosCalendario';
 import { ProfessionalDashboardPage } from '../../modules/professional/pages/ProfessionalDashboardPage';
 import { ReceptionDashboardPage } from '../../modules/institution/pages/ReceptionDashboardPage';
 import { AdminDashboardPage } from '../../modules/institution/pages/AdminDashboardPage';
 import { ConsultorioAdminPage } from '../../modules/institution/pages/ConsultorioAdminPage';
+import { CoverageParameterizationPage } from '../../modules/institution/pages/CoverageParameterizationPage';
 import { VitalityLayout } from '../../modules/vitality/layouts/VitalityLayout';
 import { VitalityClientsPage } from '../../modules/vitality/pages/VitalityClientsPage';
+import { VitalitySpecialtiesPage } from '../../modules/vitality/pages/VitalitySpecialtiesPage';
+import { VitalityInsurancePage } from '../../modules/vitality/pages/VitalityInsurancePage';
+import { VitalityMetricsPage } from '../../modules/vitality/pages/VitalityMetricsPage';
+import { VitalitySystemPage } from '../../modules/vitality/pages/VitalitySystemPage';
+import { VitalityAdminsPage } from '../../modules/vitality/pages/VitalityAdminsPage';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -87,6 +94,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: '/patient/calendar',
+        element: (
+          <ProtectedRoute allowedRoles={['Paciente']}>
+            <MisTurnosCalendario />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/patient/mis-turnos-calendario',
+        element: (
+          <ProtectedRoute allowedRoles={['Paciente']}>
+            <MisTurnosCalendario />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/professional/dashboard',
         element: (
           <ProtectedRoute allowedRoles={['Profesional']}>
@@ -97,7 +120,7 @@ export const router = createBrowserRouter([
       {
         path: '/institution/reception',
         element: (
-          <ProtectedRoute allowedRoles={['Asistente', 'AdminConsultorio', 'AdminInstitucion', 'SuperAdmin', 'Institucion']}>
+          <ProtectedRoute allowedRoles={['Asistente', 'AdminConsultorio', 'SuperAdmin']}>
             <ReceptionDashboardPage />
           </ProtectedRoute>
         ),
@@ -105,7 +128,7 @@ export const router = createBrowserRouter([
       {
         path: '/institution/admin',
         element: (
-          <ProtectedRoute allowedRoles={['AdminInstitucion', 'SuperAdmin', 'Institucion']}>
+          <ProtectedRoute allowedRoles={['AdminInstitucion', 'Institucion', 'SuperAdmin']}>
             <AdminDashboardPage />
           </ProtectedRoute>
         ),
@@ -113,8 +136,16 @@ export const router = createBrowserRouter([
       {
         path: '/institution/sede-admin',
         element: (
-          <ProtectedRoute allowedRoles={['AdminConsultorio', 'AdminInstitucion', 'SuperAdmin', 'Institucion']}>
+          <ProtectedRoute allowedRoles={['AdminConsultorio', 'SuperAdmin']}>
             <ConsultorioAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/institution/coberturas',
+        element: (
+          <ProtectedRoute allowedRoles={['Asistente', 'SuperAdmin']}>
+            <CoverageParameterizationPage />
           </ProtectedRoute>
         ),
       },
@@ -130,6 +161,26 @@ export const router = createBrowserRouter([
       {
         path: '/vitality/clients',
         element: <VitalityClientsPage />,
+      },
+      {
+        path: '/vitality/specialties',
+        element: <VitalitySpecialtiesPage />,
+      },
+      {
+        path: '/vitality/insurance',
+        element: <VitalityInsurancePage />,
+      },
+      {
+        path: '/vitality/metrics',
+        element: <VitalityMetricsPage />,
+      },
+      {
+        path: '/vitality/system',
+        element: <VitalitySystemPage />,
+      },
+      {
+        path: '/vitality/admins',
+        element: <VitalityAdminsPage />,
       },
     ],
   },

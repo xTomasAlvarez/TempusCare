@@ -12,6 +12,9 @@ export const AuthProvider = ({ children }) => {
   const setAuthData = useCallback((userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
+    if (jwtToken) {
+      sessionStorage.setItem('tempus_token', jwtToken);
+    }
     if (userData?.consultorioCuit) {
       setActiveConsultorio(userData.consultorioCuit);
     }
@@ -21,6 +24,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     setActiveConsultorio(null);
+    sessionStorage.removeItem('tempus_token');
+    localStorage.removeItem('tempus_token');
   }, []);
 
   /**

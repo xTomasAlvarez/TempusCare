@@ -13,7 +13,9 @@ public record AltaConsultorioDto(
     string Localidad,
     string Provincia,
     string CodPostal,
-    List<string>? ProfesionalesCuils
+    List<string>? ProfesionalesCuils,
+    double? Latitud = null,
+    double? Longitud = null
 );
 
 public record ModificarConsultorioDto(
@@ -29,7 +31,9 @@ public record ModificarConsultorioDto(
     string Localidad,
     string Provincia,
     string CodPostal,
-    List<string>? ProfesionalesCuils
+    List<string>? ProfesionalesCuils,
+    double? Latitud = null,
+    double? Longitud = null
 );
 
 public record ConsultorioResponseDto(
@@ -41,7 +45,23 @@ public record ConsultorioResponseDto(
     string? InstitucionNombre,
     string DireccionCompleta,
     List<string> ProfesionalesNombres,
-    List<ProfesionalVinculadoDto> Profesionales
+    List<ProfesionalVinculadoDto> Profesionales,
+    double? Latitud = null,
+    double? Longitud = null,
+    string? Calle = null,
+    string? Nro = null,
+    string? Localidad = null
+);
+
+public record ConsultorioUbicacionDto(
+    string Cuit,
+    string Nombre,
+    string? InstitucionNombre,
+    string DireccionCompleta,
+    string? Calle,
+    string? Nro,
+    double? Latitud,
+    double? Longitud
 );
 
 public record ProfesionalVinculadoDto(

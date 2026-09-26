@@ -3,7 +3,9 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../core/context/AuthContext';
 import {
   ShieldAlert,
-  Building2,
+  Hospital,
+  Stethoscope,
+  ShieldPlus,
   LogOut,
   Sparkles,
   Server,
@@ -28,7 +30,12 @@ export const VitalityLayout = () => {
   };
 
   const navItems = [
-    { label: 'Clientes B2B', path: '/vitality/clients', icon: Building2 },
+    { label: 'Clientes B2B', path: '/vitality/clients', icon: Hospital },
+    { label: 'Especialidades y Estudios', path: '/vitality/specialties', icon: Stethoscope },
+    { label: 'Obras Sociales', path: '/vitality/insurance', icon: ShieldPlus },
+    { label: 'Métricas', path: '/vitality/metrics', icon: BarChart3 },
+    { label: 'Sistema', path: '/vitality/system', icon: Server },
+    { label: 'Gestión de Admins', path: '/vitality/admins', icon: ShieldAlert },
   ];
 
   return (
@@ -42,23 +49,25 @@ export const VitalityLayout = () => {
               to="/vitality/clients"
               tabIndex={0}
               aria-label="Vitality Consola de Super Administrador"
-              className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-teal-600 flex items-center justify-center text-white shadow-xs">
-                <Sparkles className="w-5 h-5" aria-hidden="true" />
-              </div>
+              <img
+                src="/vitality.png"
+                alt="Vitality Logo"
+                className="w-9 h-9 object-contain"
+              />
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold font-heading tracking-tight text-slate-900">
-                  Vitality<span className="text-indigo-600 font-normal ml-0.5">OS</span>
+                  Vitality<span className="text-primary-600 font-normal ml-0.5">OS</span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-50 border border-primary-200 text-primary-700 px-2 py-0.5 rounded-full">
                   Super Admin
                 </span>
               </div>
             </Link>
 
-            {/* Enlaces de Navegación Minimalistas */}
-            <nav aria-label="Navegación de administración global" className="hidden md:flex items-center gap-1">
+            {/* Enlaces de Navegación Minimalistas (Desktop) */}
+            <nav aria-label="Navegación de administración global" className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
@@ -67,13 +76,13 @@ export const VitalityLayout = () => {
                     key={item.path}
                     to={item.path}
                     tabIndex={0}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-700 font-bold'
+                        ? 'bg-primary-50 text-primary-700 font-bold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} aria-hidden="true" />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-primary-600' : 'text-slate-400'}`} strokeWidth={2} aria-hidden="true" />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -84,10 +93,13 @@ export const VitalityLayout = () => {
           {/* Estado del Sistema y Perfil */}
           <div className="flex items-center gap-4">
             {/* Pill de Estado del SaaS */}
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] text-slate-600 font-medium">
+            <Link
+              to="/vitality/system"
+              className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-[11px] text-slate-600 hover:text-emerald-700 font-medium transition-colors"
+            >
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>SaaS Operativo</span>
-            </div>
+            </Link>
 
             {/* Usuario y Salir */}
             <div className="flex items-center gap-3">
@@ -95,7 +107,7 @@ export const VitalityLayout = () => {
                 <span className="text-xs font-bold text-slate-800 font-heading">
                   {user?.usuario || 'Super Admin'}
                 </span>
-                <span className="text-[10px] text-indigo-700 font-mono">Consola Global</span>
+                <span className="text-[10px] text-primary-700 font-mono">Consola Global</span>
               </div>
 
               <Button
@@ -110,6 +122,28 @@ export const VitalityLayout = () => {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Sub-navegación para pantallas medianas y móviles */}
+        <div className="lg:hidden border-t border-slate-100 bg-slate-50/90 px-4 py-2 overflow-x-auto scrollbar-none flex items-center gap-2">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white font-bold shadow-xs'
+                    : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </header>
 

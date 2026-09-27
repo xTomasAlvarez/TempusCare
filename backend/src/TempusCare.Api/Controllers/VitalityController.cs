@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Domain.Entities;
@@ -8,6 +9,7 @@ namespace TempusCare.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "SuperAdmin")]
 public class VitalityController : ControllerBase
 {
     private readonly TempusCareDbContext _db;

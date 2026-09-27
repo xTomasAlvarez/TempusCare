@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> Alta([FromBody] AltaPerfilPacienteDto dto)
     {
         var res = await _pacienteService.AltaPerfilAsync(dto);
@@ -23,6 +25,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpPost("presencial")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> RegistrarPresencial([FromBody] RegistroPacientePresencialDto dto)
     {
         var res = await _pacienteService.RegistrarPresencialAsync(dto);
@@ -30,6 +33,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpPut("{cuil}")]
+    [Authorize(Roles = "Paciente,SuperAdmin")]
     public async Task<IActionResult> Modificar(string cuil, [FromBody] ModificacionPerfilPacienteDto dto)
     {
         if (cuil != dto.Cuil)
@@ -40,6 +44,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpDelete("{cuil}")]
+    [Authorize(Roles = "Paciente,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuil)
     {
         await _pacienteService.BajaPerfilAsync(cuil);
@@ -47,6 +52,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> ObtenerTodos()
     {
         var res = await _pacienteService.ObtenerTodosAsync();
@@ -54,6 +60,7 @@ public class PacientesController : ControllerBase
     }
 
     [HttpGet("{cuil}")]
+    [Authorize]
     public async Task<IActionResult> ObtenerPerfil(string cuil)
     {
         var res = await _pacienteService.ObtenerPerfilAsync(cuil);

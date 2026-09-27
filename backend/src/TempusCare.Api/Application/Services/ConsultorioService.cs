@@ -87,7 +87,10 @@ public class ConsultorioService : IConsultorioService
         cons.Email = dto.Email;
         cons.Telefono = dto.Telefono;
         cons.NivelAccesibilidad = dto.NivelAccesibilidad;
-        cons.InstitucionId = dto.InstitucionId;
+        if (dto.InstitucionId.HasValue && dto.InstitucionId.Value > 0)
+        {
+            cons.InstitucionId = dto.InstitucionId;
+        }
         if (dto.Latitud.HasValue) cons.Latitud = dto.Latitud;
         if (dto.Longitud.HasValue) cons.Longitud = dto.Longitud;
 
@@ -100,10 +103,22 @@ public class ConsultorioService : IConsultorioService
             cons.Direccion.Provincia = dto.Provincia;
             cons.Direccion.CodPostal = dto.CodPostal;
         }
+        else if (!string.IsNullOrWhiteSpace(dto.Calle))
+        {
+            cons.Direccion = new Direccion
+            {
+                Calle = dto.Calle,
+                Nro = dto.Nro,
+                Depto = dto.Depto,
+                Localidad = dto.Localidad,
+                Provincia = dto.Provincia,
+                CodPostal = dto.CodPostal
+            };
+        }
 
-        cons.Profesionales.Clear();
         if (dto.ProfesionalesCuils != null)
         {
+            cons.Profesionales.Clear();
             foreach (var cuil in dto.ProfesionalesCuils)
             {
                 cons.Profesionales.Add(new ProfesionalConsultorio { ConsultorioCuit = cons.Cuit, ProfesionalCuil = cuil });
@@ -301,7 +316,11 @@ public class ConsultorioService : IConsultorioService
             c.Longitud,
             c.Direccion?.Calle,
             c.Direccion?.Nro,
-            c.Direccion?.Localidad
+            c.Direccion?.Localidad,
+            c.Direccion?.Depto,
+            c.Direccion?.Provincia,
+            c.Direccion?.CodPostal,
+            c.InstitucionId
         );
     }
 }

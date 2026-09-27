@@ -30,7 +30,7 @@ export const VitalityLayout = () => {
   };
 
   const navItems = [
-    { label: 'Clientes B2B', path: '/vitality/clients', icon: Hospital },
+    { label: 'Instituciones', path: '/vitality/clients', icon: Hospital },
     { label: 'Especialidades y Estudios', path: '/vitality/specialties', icon: Stethoscope },
     { label: 'Obras Sociales', path: '/vitality/insurance', icon: ShieldPlus },
     { label: 'Métricas', path: '/vitality/metrics', icon: BarChart3 },
@@ -49,21 +49,13 @@ export const VitalityLayout = () => {
               to="/vitality/clients"
               tabIndex={0}
               aria-label="Vitality Consola de Super Administrador"
-              className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="flex items-center rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <img
                 src="/vitality.png"
                 alt="Vitality Logo"
-                className="w-9 h-9 object-contain"
+                className="h-9 w-auto object-contain"
               />
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold font-heading tracking-tight text-slate-900">
-                  Vitality<span className="text-primary-600 font-normal ml-0.5">OS</span>
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-50 border border-primary-200 text-primary-700 px-2 py-0.5 rounded-full">
-                  Super Admin
-                </span>
-              </div>
             </Link>
 
             {/* Enlaces de Navegación Minimalistas (Desktop) */}
@@ -92,15 +84,6 @@ export const VitalityLayout = () => {
 
           {/* Estado del Sistema y Perfil */}
           <div className="flex items-center gap-4">
-            {/* Pill de Estado del SaaS */}
-            <Link
-              to="/vitality/system"
-              className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-[11px] text-slate-600 hover:text-emerald-700 font-medium transition-colors"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>SaaS Operativo</span>
-            </Link>
-
             {/* Usuario y Salir */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end">
@@ -155,7 +138,7 @@ export const VitalityLayout = () => {
       {/* Pie de Página Minimalista */}
       <footer className="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Vitality Health Tech Platform — Administración B2B Multi-Tenant</span>
+          <span>Vitality Health Tech Platform — Administración de Instituciones</span>
           <span className="font-mono text-[11px]">Tempus Care Core v1.0</span>
         </div>
       </footer>

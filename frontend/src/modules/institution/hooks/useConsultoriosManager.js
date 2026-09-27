@@ -14,6 +14,8 @@ export const useConsultoriosManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingConsultorio, setEditingConsultorio] = useState(null);
   const [error, setError] = useState(null);
 
   const fetchConsultorios = useCallback(async () => {
@@ -36,6 +38,16 @@ export const useConsultoriosManager = () => {
   useEffect(() => {
     fetchConsultorios();
   }, [fetchConsultorios]);
+
+  const openEditModal = (consultorio) => {
+    setEditingConsultorio(consultorio);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditingConsultorio(null);
+    setIsEditModalOpen(false);
+  };
 
   const handleCreateConsultorio = async (dto) => {
     try {
@@ -82,10 +94,36 @@ export const useConsultoriosManager = () => {
     }
   };
 
+  const handleUpdateConsultorio = async (cuit, dto) => {
+    try {
+      setIsSubmitting(true);
+      await institutionAdminService.updateConsultorio(cuit, dto);
+
+      addToast({
+        title: 'Sede Modificada',
+        description: `La sede "${dto.nombre}" ha sido actualizada correctamente.`,
+        variant: 'success',
+      });
+
+      closeEditModal();
+      await fetchConsultorios();
+      return true;
+    } catch (err) {
+      addToast({
+        title: 'Error al Modificar Sede',
+        description: err.message || 'No se pudo actualizar la sede.',
+        variant: 'error',
+      });
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteConsultorio = async (cuit, nombre) => {
     const ok = await confirmDelete({
-      title: '¿Dar de baja consultorio definitivamente?',
-      message: `¿Estás seguro de que deseas dar de baja la sede física "${nombre}" (CUIT: ${cuit})? Esta acción desvinculará sus médicos y agendas asociadas.`,
+      title: '¿Desea eliminar esta sede?',
+      message: `¿Estás seguro de que deseas eliminar la sede física "${nombre}" (CUIT: ${cuit})? Esta acción desvinculará sus médicos y agendas asociadas.`,
       itemName: `${nombre} (CUIT: ${cuit})`,
       confirmText: 'Sí, eliminar definitivamente',
       cancelText: 'Cancelar',
@@ -118,8 +156,14 @@ export const useConsultoriosManager = () => {
     isSubmitting,
     isModalOpen,
     setIsModalOpen,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    editingConsultorio,
+    openEditModal,
+    closeEditModal,
     error,
     createConsultorio: handleCreateConsultorio,
+    updateConsultorio: handleUpdateConsultorio,
     deleteConsultorio: handleDeleteConsultorio,
     refreshConsultorios: fetchConsultorios,
   };

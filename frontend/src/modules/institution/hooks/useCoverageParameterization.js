@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '../../../core/context/AuthContext';
 import { institutionAdminService } from '../services/institutionAdminService';
 import { useToast } from '../../../shared/components/ui/Toast';
 import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
@@ -11,13 +12,17 @@ import {
 
 /**
  * Hook para la Parametrización de Cobertura B2B (Cumplimiento de la RN-02).
- * Vincula Profesional + Estudio específico + Obras Sociales aceptadas.
+ * Exclusivo de Asistente: Vincula Profesional + Estudio específico + Obras Sociales aceptadas.
  */
-export const useCoverageParameterization = () => {
+export const useCoverageParameterization = (customConsultorioCuit = null) => {
+  const { user } = useAuth();
+  const consultorioCuit = customConsultorioCuit || user?.consultorioCuit || '30111222331';
+
   const { addToast } = useToast();
   const { confirmDelete } = useConfirmDelete();
 
-  // Catálogos base
+  // Sede y Catálogos base
+  const [consultorio, setConsultorio] = useState(null);
   const [profesionales, setProfesionales] = useState([]);
   const [estudios, setEstudios] = useState([]);
   const [obrasSociales, setObrasSociales] = useState([]);
@@ -44,19 +49,30 @@ export const useCoverageParameterization = () => {
     const loadCatalogs = async () => {
       try {
         setIsLoadingCatalogs(true);
-        const [profs, ests, obs] = await Promise.all([
-          institutionAdminService.getProfesionales(),
-          institutionAdminService.getEstudios(),
-          institutionAdminService.getObrasSociales(),
+        const [consData, sedeProfs, allProfs, ests, obs] = await Promise.all([
+          consultorioCuit ? institutionAdminService.getConsultorioByCuit(consultorioCuit).catch(() => null) : null,
+          consultorioCuit ? institutionAdminService.getConsultorioProfesionales(consultorioCuit).catch(() => []) : [],
+          institutionAdminService.getProfesionales().catch(() => []),
+          institutionAdminService.getEstudios().catch(() => []),
+          institutionAdminService.getObrasSociales().catch(() => []),
         ]);
 
         if (!isMounted) return;
-        setProfesionales(profs);
+        setConsultorio(consData);
+
+        // Aislamiento Multitenant estricto: Si hay consultorioCuit, solo usar médicos de esa sede
+        const availableProfs = consultorioCuit ? (sedeProfs || []) : allProfs;
+
+        setProfesionales(availableProfs);
         setEstudios(ests);
         setObrasSociales(obs.filter((o) => o.activo !== false));
 
-        if (profs.length > 0 && !selectedDoctorCuil) {
-          setSelectedDoctorCuil(profs[0].cuil);
+        if (availableProfs.length > 0) {
+          if (!selectedDoctorCuil || !availableProfs.some((p) => p.cuil === selectedDoctorCuil)) {
+            setSelectedDoctorCuil(availableProfs[0].cuil);
+          }
+        } else {
+          setSelectedDoctorCuil('');
         }
       } catch (err) {
         setError('Error al cargar catálogos de cobertura médica.');
@@ -69,7 +85,7 @@ export const useCoverageParameterization = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [consultorioCuit]);
 
   // Cargar estudios activos del profesional seleccionado
   const fetchDoctorStudies = useCallback(async (cuil) => {
@@ -105,7 +121,7 @@ export const useCoverageParameterization = () => {
     return doctorStudies.find((pe) => pe.estudioId === Number(selectedEstudioId)) || null;
   }, [doctorStudies, selectedEstudioId]);
 
-  // Al seleccionar o cambiar de estudio, precargar datos si ya existe la combinación
+  // Al seleccionar o cambiar de estudio, precargar datos si ya existe la combinación o usar duración base
   useEffect(() => {
     if (existingMapping) {
       setDuracionTurno(existingMapping.duracionTurno || 30);
@@ -117,12 +133,17 @@ export const useCoverageParameterization = () => {
         .map((os) => os.id);
 
       setSelectedObrasSocialesIds(mappedIds);
+    } else if (selectedEstudioId) {
+      const selectedEst = estudios.find((e) => e.id === Number(selectedEstudioId));
+      setDuracionTurno(selectedEst?.duracion || 30);
+      setPrecioParticular('');
+      setSelectedObrasSocialesIds([]);
     } else {
       setDuracionTurno(30);
       setPrecioParticular('');
       setSelectedObrasSocialesIds([]);
     }
-  }, [existingMapping, obrasSociales]);
+  }, [existingMapping, selectedEstudioId, estudios, obrasSociales]);
 
   // Selección/deselección de obra social individual
   const toggleObraSocial = (id) => {
@@ -291,6 +312,9 @@ export const useCoverageParameterization = () => {
     fieldErrors,
     clearFieldError,
     conflictWarning,
+    consultorio,
+    consultorioCuit,
+    sedeNombre: consultorio?.nombre || user?.sedeNombre || 'Sede Actual',
     saveParameterization,
     removeDoctorStudy,
     refreshDoctorStudies: () => fetchDoctorStudies(selectedDoctorCuil),

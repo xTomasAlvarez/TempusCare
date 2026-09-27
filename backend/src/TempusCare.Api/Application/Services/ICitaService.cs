@@ -9,6 +9,6 @@ public interface ICitaService
     Task<CitaResponseDto> ModificarCitaEstadoAsync(int citaId, EstadoCita estado);
     Task BajaCitaAsync(int citaId);
     Task<List<CitaResponseDto>> ObtenerCitasPacienteAsync(string pacienteCuil);
-    Task<List<CitaResponseDto>> ObtenerCitasProfesionalAsync(string profesionalCuil, DateTime? fecha);
+    Task<List<CitaResponseDto>> ObtenerCitasProfesionalAsync(string profesionalCuil, DateTime? fecha, string? consultorioCuit = null);
     Task<CitaResponseDto> ObtenerPorIdAsync(int citaId);
 }

@@ -167,7 +167,7 @@ export const VitalityClientsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 tracking-tight">
-            Gestión de Clientes B2B
+            Gestión de Instituciones
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Supervisión, planes y configuración de instituciones médicas que operan en Tempus Care.
@@ -189,7 +189,7 @@ export const VitalityClientsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Clientes B2B</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Instituciones</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalClients}</p>
             <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
               <TrendingUp className="w-3 h-3" /> 100% Retención
@@ -223,7 +223,7 @@ export const VitalityClientsPage = () => {
         </div>
       </div>
 
-      {/* Data Table de Clientes B2B */}
+      {/* Data Table de Instituciones */}
       <DataTable
         title="Instituciones Médicas Registradas"
         description="Contratos activos, email de contacto y configuración de sedes contratadas en la plataforma."

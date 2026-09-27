@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class CuestionariosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Paciente,SuperAdmin")]
     public async Task<IActionResult> Completar([FromBody] CompletarCuestionarioDto dto)
     {
         var res = await _cuestionarioService.CompletarCuestionarioAsync(dto);
@@ -23,6 +25,7 @@ public class CuestionariosController : ControllerBase
     }
 
     [HttpGet("cita/{citaId}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerPorCita(int citaId)
     {
         var res = await _cuestionarioService.ObtenerPorCitaIdAsync(citaId);

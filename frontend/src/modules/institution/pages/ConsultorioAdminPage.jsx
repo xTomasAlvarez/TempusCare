@@ -3,7 +3,9 @@ import { useAuth } from '../../../core/context/AuthContext';
 import { useConsultorioAdmin } from '../hooks/useConsultorioAdmin';
 import { DataTable } from '../components/DataTable';
 import { CreateAsistenteModal } from '../components/CreateAsistenteModal';
+import { EditAsistenteModal } from '../components/EditAsistenteModal';
 import { AssignProfesionalModal } from '../components/AssignProfesionalModal';
+import { EditProfesionalModal } from '../components/EditProfesionalModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
 import {
@@ -15,6 +17,7 @@ import {
   MapPin,
   Plus,
   Trash2,
+  Pencil,
   UserCheck,
   UserRoundPlus,
   ShieldCheck,
@@ -35,13 +38,24 @@ export const ConsultorioAdminPage = () => {
     asistentes,
     profesionales,
     allProfesionales,
+    especialidades,
     isLoading,
     isSubmitting,
     createAsistente,
+    updateAsistente,
     deleteAsistente,
     assignProfesional,
     removeProfesional,
     registerDoctor,
+    updateDoctor,
+    editingAsistente,
+    isEditAsistenteModalOpen,
+    openEditAsistenteModal,
+    closeEditAsistenteModal,
+    editingProfesional,
+    isEditProfesionalModalOpen,
+    openEditProfesionalModal,
+    closeEditProfesionalModal,
   } = useConsultorioAdmin(consultorioCuit);
 
   const [activeTab, setActiveTab] = useState('asistentes'); // 'asistentes' | 'profesionales'
@@ -92,12 +106,22 @@ export const ConsultorioAdminPage = () => {
       label: 'Acciones',
       className: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => openEditAsistenteModal(row)}
+            aria-label={`Editar datos del asistente ${row.nombre} ${row.apellido}`}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+            title="Editar datos del asistente"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
           <button
             type="button"
             onClick={() => deleteAsistente(row.cuil, `${row.nombre} ${row.apellido}`)}
             aria-label={`Dar de baja al asistente ${row.nombre} ${row.apellido}`}
             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
+            title="Dar de baja asistente"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -172,13 +196,25 @@ export const ConsultorioAdminPage = () => {
       label: 'Acciones',
       className: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => openEditProfesionalModal(row)}
+            className="text-slate-600 hover:text-primary-700 hover:bg-primary-50"
+            title="Editar datos de cuenta y especialidad"
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1" />
+            Editar
+          </Button>
           <Button
             type="button"
             variant="ghost"
             size="xs"
             onClick={() => removeProfesional(row.cuil, `${row.nombre} ${row.apellido}`)}
             className="text-rose-600 hover:bg-rose-50"
+            title="Desvincular médico de la sede"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1" />
             Desvincular
@@ -381,7 +417,29 @@ export const ConsultorioAdminPage = () => {
         isSubmitting={isSubmitting}
         availableProfesionales={allProfesionales}
         alreadyAssignedCuils={profesionales.map((p) => p.cuil)}
+        especialidades={especialidades}
         sedeNombre={consultorio?.nombre || user?.sedeNombre || 'Sede Actual'}
+      />
+
+      {/* Modal para Modificar Datos de Asistente */}
+      <EditAsistenteModal
+        isOpen={isEditAsistenteModalOpen}
+        onClose={closeEditAsistenteModal}
+        asistente={editingAsistente}
+        onSubmit={updateAsistente}
+        isSubmitting={isSubmitting}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
+      />
+
+      {/* Modal para Modificar Cuenta de Profesional (Solo Cuentas/Especialidad) */}
+      <EditProfesionalModal
+        isOpen={isEditProfesionalModalOpen}
+        onClose={closeEditProfesionalModal}
+        profesional={editingProfesional}
+        especialidades={especialidades}
+        onSubmit={updateDoctor}
+        isSubmitting={isSubmitting}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
     </div>
   );

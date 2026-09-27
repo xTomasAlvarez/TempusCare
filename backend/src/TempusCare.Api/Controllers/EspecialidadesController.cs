@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaEspecialidadDto dto)
     {
         var res = await _especialidadService.AltaEspecialidadAsync(dto);
@@ -23,6 +25,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Modificar(int id, [FromBody] ModificarEspecialidadDto dto)
     {
         if (id != dto.Id)
@@ -33,6 +36,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Eliminar(int id)
     {
         await _especialidadService.EliminarEspecialidadAsync(id);
@@ -40,6 +44,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerTodas()
     {
         var res = await _especialidadService.ObtenerTodasAsync();

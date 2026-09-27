@@ -44,7 +44,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> ObtenerTodos([FromQuery] string? consultorioCuit)
     {
         if (!string.IsNullOrEmpty(consultorioCuit))
@@ -57,7 +57,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet("consultorio/{cuit}")]
-    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
+    [Authorize(Roles = "AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorConsultorio(string cuit)
     {
         var res = await _asistenteService.ObtenerPorConsultorioAsync(cuit);

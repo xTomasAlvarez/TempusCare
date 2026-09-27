@@ -24,18 +24,19 @@ import { VitalityAdminsPage } from '../../modules/vitality/pages/VitalityAdminsP
 import { useAuth } from '../context/AuthContext';
 
 /**
- * Componente Guard para rutas protegidas en memoria
+ * Componente Guard para rutas protegidas en memoria con aislamiento estricto de roles
  */
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, getDashboardRoute } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.rol)) {
-    // Si el rol no coincide con la ruta específica, redirige a su panel correspondiente
-    return <Navigate to="/" replace />;
+    // Si el rol no tiene permiso para esta ruta, redirige estrictamente al panel de su rol
+    const targetRoute = getDashboardRoute ? getDashboardRoute(user?.rol) : '/';
+    return <Navigate to={targetRoute} replace />;
   }
 
   return children;
@@ -120,7 +121,7 @@ export const router = createBrowserRouter([
       {
         path: '/institution/reception',
         element: (
-          <ProtectedRoute allowedRoles={['Asistente', 'AdminConsultorio', 'SuperAdmin']}>
+          <ProtectedRoute allowedRoles={['Asistente']}>
             <ReceptionDashboardPage />
           </ProtectedRoute>
         ),
@@ -128,7 +129,7 @@ export const router = createBrowserRouter([
       {
         path: '/institution/admin',
         element: (
-          <ProtectedRoute allowedRoles={['AdminInstitucion', 'Institucion', 'SuperAdmin']}>
+          <ProtectedRoute allowedRoles={['AdminInstitucion', 'Institucion']}>
             <AdminDashboardPage />
           </ProtectedRoute>
         ),
@@ -136,15 +137,31 @@ export const router = createBrowserRouter([
       {
         path: '/institution/sede-admin',
         element: (
-          <ProtectedRoute allowedRoles={['AdminConsultorio', 'SuperAdmin']}>
+          <ProtectedRoute allowedRoles={['AdminConsultorio']}>
             <ConsultorioAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/institution/configuracion-medica',
+        element: (
+          <ProtectedRoute allowedRoles={['Asistente']}>
+            <CoverageParameterizationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/institution/parametrizacion',
+        element: (
+          <ProtectedRoute allowedRoles={['Asistente']}>
+            <CoverageParameterizationPage />
           </ProtectedRoute>
         ),
       },
       {
         path: '/institution/coberturas',
         element: (
-          <ProtectedRoute allowedRoles={['Asistente', 'SuperAdmin']}>
+          <ProtectedRoute allowedRoles={['Asistente']}>
             <CoverageParameterizationPage />
           </ProtectedRoute>
         ),

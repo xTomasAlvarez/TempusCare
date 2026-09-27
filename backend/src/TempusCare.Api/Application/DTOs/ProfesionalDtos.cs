@@ -1,8 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using TempusCare.Api.Domain.Enums;
 
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaProfesionalDto(
+    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,
@@ -23,6 +25,7 @@ public record AltaProfesionalDto(
 );
 
 public record ModificarProfesionalDto(
+    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,

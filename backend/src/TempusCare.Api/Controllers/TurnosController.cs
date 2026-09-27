@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,13 +17,15 @@ public class TurnosController : ControllerBase
     }
 
     [HttpGet("disponibles")]
-    public async Task<IActionResult> ObtenerDisponibles([FromQuery] string profesionalCuil, [FromQuery] DateTime? fecha)
+    [AllowAnonymous]
+    public async Task<IActionResult> ObtenerDisponibles([FromQuery] string profesionalCuil, [FromQuery] DateTime? fecha, [FromQuery] string? consultorioCuit)
     {
-        var res = await _turnoService.ObtenerTurnosDisponiblesAsync(profesionalCuil, fecha);
+        var res = await _turnoService.ObtenerTurnosDisponiblesAsync(profesionalCuil, fecha, consultorioCuit);
         return Ok(res);
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Asistente,Profesional,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Modificar(int id, [FromBody] ModificarTurnoDto dto)
     {
         if (id != dto.IdTurno)
@@ -33,6 +36,7 @@ public class TurnosController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _turnoService.ObtenerPorIdAsync(id);

@@ -41,7 +41,7 @@ export const AdminDashboardPage = () => {
         </div>
       </div>
 
-      {/* Tabla y Modal de Sedes / Consultorios */}
+      {/* Tabla y Modales de Sedes / Consultorios (Alta y Edición) */}
       <ConsultoriosTable
         consultorios={consultoriosState.consultorios}
         instituciones={consultoriosState.instituciones}
@@ -51,6 +51,11 @@ export const AdminDashboardPage = () => {
         setIsModalOpen={consultoriosState.setIsModalOpen}
         onCreateConsultorio={consultoriosState.createConsultorio}
         onDeleteConsultorio={consultoriosState.deleteConsultorio}
+        onEditConsultorio={consultoriosState.openEditModal}
+        isEditModalOpen={consultoriosState.isEditModalOpen}
+        onCloseEditModal={consultoriosState.closeEditModal}
+        editingConsultorio={consultoriosState.editingConsultorio}
+        onUpdateConsultorio={consultoriosState.updateConsultorio}
       />
     </div>
   );

@@ -292,6 +292,41 @@ export const consultorioSchema = z.object({
 });
 
 /**
+ * 7b. Esquema de Modificación de Sede Física / Consultorio
+ */
+export const updateConsultorioSchema = z.object({
+  cuit: z.string().trim(),
+  nombre: z
+    .string()
+    .trim()
+    .min(3, 'El nombre de la sede debe tener al menos 3 caracteres')
+    .max(100, 'El nombre no puede superar los 100 caracteres'),
+  email: z
+    .string()
+    .trim()
+    .email('Ingresa un correo institucional válido'),
+  telefono: z
+    .string()
+    .trim()
+    .min(6, 'El teléfono de contacto es obligatorio')
+    .regex(REGEX.TELEFONO, 'Formato de teléfono inválido'),
+  nivelAccesibilidad: z.enum(['Total', 'Media', 'Básica', 'Especializada']),
+  calle: z
+    .string()
+    .trim()
+    .min(2, 'La calle es obligatoria'),
+  nro: z
+    .string()
+    .trim()
+    .min(1, 'El número es obligatorio'),
+  depto: z.string().trim().optional().nullable(),
+  localidad: z.string().trim().min(2, 'La localidad es obligatoria'),
+  provincia: z.string().trim().optional().nullable(),
+  codPostal: z.string().trim().optional().nullable(),
+  institucionId: z.union([z.string(), z.number()]).optional().nullable(),
+});
+
+/**
  * 8. Esquema Crítico de Parametrización de Cobertura y Estudios (RN-02)
  */
 export const coverageParameterizationSchema = z.object({

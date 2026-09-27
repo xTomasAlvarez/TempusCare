@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaInstitucionDto dto)
     {
         var res = await _institucionService.AltaInstitucionAsync(dto);
@@ -23,6 +25,7 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Modificar(int id, [FromBody] ModificarInstitucionDto dto)
     {
         if (id != dto.Id)
@@ -33,6 +36,7 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> Baja(int id)
     {
         await _institucionService.BajaInstitucionAsync(id);
@@ -40,6 +44,7 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerTodas()
     {
         var res = await _institucionService.ObtenerTodasAsync();

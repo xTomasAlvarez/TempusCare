@@ -51,6 +51,9 @@ export const CoverageParameterizationForm = () => {
     clearFieldError,
     saveParameterization,
     removeDoctorStudy,
+    consultorio,
+    consultorioCuit,
+    sedeNombre,
   } = useCoverageParameterization();
 
   if (isLoadingCatalogs) {
@@ -71,54 +74,65 @@ export const CoverageParameterizationForm = () => {
     <div className="space-y-6">
       {/* Formulario Principal de Configuración */}
       <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-        {/* Encabezado */}
+        {/* Encabezado con Identificación de la Sede */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
             <h3 className="text-base sm:text-lg font-bold font-heading text-slate-900 flex items-center gap-2">
               <ShieldPlus className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
-              Parametrización de Cobertura y Estudios (RN-02)
+              Configuración de Estudios y Obras Sociales (RN-02)
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Configura los estudios médicos que realiza cada profesional y define qué obras sociales aplican exactamente a esa combinación.
+              Define los estudios que realiza cada médico en esta sede física y qué obras sociales acepta para cada combinación.
             </p>
           </div>
 
-          <Badge variant="primary" size="sm" className="self-start sm:self-auto font-mono">
-            RN-02 Cobertura B2B
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 font-medium">
+              Sede: <strong className="text-slate-900">{sedeNombre || 'Consultorio ' + consultorioCuit}</strong>
+            </span>
+            <Badge variant="primary" size="sm" className="font-mono">
+              RN-02 Cobertura B2B
+            </Badge>
+          </div>
         </div>
 
         {/* Selects Dependientes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* 1. Selección de Profesional */}
+          {/* 1. Selección de Profesional de la Sede */}
           <div>
             <label
               htmlFor="select-profesional"
               className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1.5"
             >
-              1. Seleccionar Profesional Médico <span className="text-rose-500">*</span>
+              1. Seleccionar Médico de la Sede <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <select
-                id="select-profesional"
-                value={selectedDoctorCuil}
-                onChange={(e) => {
-                  setSelectedDoctorCuil(e.target.value);
-                  setSelectedEstudioId('');
-                  clearFieldError('profesionalCuil');
-                }}
-                className={cn(
-                  'w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium text-slate-900',
-                  fieldErrors.profesionalCuil ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                )}
-                disabled={isSubmitting}
-              >
-                {profesionales.map((p) => (
-                  <option key={p.cuil} value={p.cuil}>
-                    Dr./Dra. {p.nombre} {p.apellido} — {p.especialidades?.join(', ') || 'Medicina General'} (CUIL: {p.cuil})
-                  </option>
-                ))}
-              </select>
+              {profesionales.length === 0 ? (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                  No hay médicos vinculados a esta sede. El Administrador de Sede debe dar de alta o vincular profesionales primero.
+                </div>
+              ) : (
+                <select
+                  id="select-profesional"
+                  value={selectedDoctorCuil}
+                  onChange={(e) => {
+                    setSelectedDoctorCuil(e.target.value);
+                    setSelectedEstudioId('');
+                    clearFieldError('profesionalCuil');
+                  }}
+                  className={cn(
+                    'w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs sm:text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium text-slate-900',
+                    fieldErrors.profesionalCuil ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  )}
+                  disabled={isSubmitting}
+                >
+                  {profesionales.map((p) => (
+                    <option key={p.cuil} value={p.cuil}>
+                      Dr./Dra. {p.nombre} {p.apellido} — {p.especialidades?.join(', ') || 'Medicina General'} ({p.matricula ? `Mat. ${p.matricula}` : `CUIL: ${p.cuil}`})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="min-h-[20px] mt-0.5 flex items-center">
               {fieldErrors.profesionalCuil && (
@@ -128,7 +142,7 @@ export const CoverageParameterizationForm = () => {
 
             {selectedDoctor && (
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                <span className="font-semibold text-slate-700">Matrícula: {selectedDoctor.matricula}</span>
+                <span className="font-semibold text-slate-700">Matrícula: {selectedDoctor.matricula || 'S/M'}</span>
                 <span>•</span>
                 <span>{selectedDoctor.especialidades?.length || 0} especialidades</span>
                 <span>•</span>
@@ -163,7 +177,7 @@ export const CoverageParameterizationForm = () => {
                 const isAlreadyAssigned = doctorStudies.some((pe) => pe.estudioId === est.id);
                 return (
                   <option key={est.id} value={est.id}>
-                    {est.nombre} {isAlreadyAssigned ? '(Ya configurado - Modificar)' : ''}
+                    {est.nombre} {est.especialidadNombre ? `(${est.especialidadNombre})` : ''} {isAlreadyAssigned ? '— [Ya configurado - Modificar]' : ''}
                   </option>
                 );
               })}
@@ -175,7 +189,7 @@ export const CoverageParameterizationForm = () => {
             </div>
 
             <p className="text-[11px] text-slate-400">
-              Catálogo de estudios disponibles para la institución.
+              Catálogo de estudios disponibles para la institución médica.
             </p>
           </div>
         </div>

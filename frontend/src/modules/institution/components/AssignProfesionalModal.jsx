@@ -19,19 +19,21 @@ export const AssignProfesionalModal = ({
   isSubmitting,
   availableProfesionales = [],
   alreadyAssignedCuils = [],
+  especialidades = [],
   sedeNombre = '',
 }) => {
   const [mode, setMode] = useState('link'); // 'link' | 'create'
   const [selectedCuil, setSelectedCuil] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Formulario de alta nuevo médico
+  // Formulario de alta nuevo médico (solo cuenta y especialidad)
   const [newDoctor, setNewDoctor] = useState({
     cuil: '',
     nombre: '',
     apellido: '',
     matricula: '',
     telefono: '',
+    especialidadId: '',
     genero: 'Otro',
     fecNac: '1985-06-15',
   });
@@ -79,6 +81,12 @@ export const AssignProfesionalModal = ({
       return;
     }
 
+    if (!newDoctor.especialidadId) {
+      setCreateFieldErrors((p) => ({ ...p, especialidadId: 'Debe seleccionar una especialidad para el profesional.' }));
+      setCreateError('Debe seleccionar una especialidad.');
+      return;
+    }
+
     // Validación preventiva en memoria si el CUIL ya está vinculado
     if (alreadyAssignedCuils.includes(sanitizedData.cuil)) {
       setCreateFieldErrors((p) => ({ ...p, cuil: 'Este profesional ya está vinculado a esta sede.' }));
@@ -100,6 +108,7 @@ export const AssignProfesionalModal = ({
         telefono: sanitizedData.telefono,
         genero: sanitizedData.genero,
         fecNac: sanitizedData.fecNac,
+        especialidadesIds: [Number(newDoctor.especialidadId)],
       });
 
       if (success) {
@@ -109,6 +118,7 @@ export const AssignProfesionalModal = ({
           apellido: '',
           matricula: '',
           telefono: '',
+          especialidadId: '',
           genero: 'Otro',
           fecNac: '1985-06-15',
         });
@@ -316,6 +326,32 @@ export const AssignProfesionalModal = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Especialidad Principal <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={newDoctor.especialidadId}
+                  onChange={(e) => {
+                    setNewDoctor((p) => ({ ...p, especialidadId: e.target.value }));
+                    if (createFieldErrors.especialidadId) setCreateFieldErrors((p) => ({ ...p, especialidadId: '' }));
+                  }}
+                  className={`w-full h-11 px-3.5 rounded-xl border bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    createFieldErrors.especialidadId ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                  }`}
+                  required
+                >
+                  <option value="">Seleccionar especialidad...</option>
+                  {especialidades.map((esp) => (
+                    <option key={esp.id} value={esp.id}>
+                      {esp.nombre}
+                    </option>
+                  ))}
+                </select>
+                {createFieldErrors.especialidadId && (
+                  <p className="text-[11px] text-rose-600 mt-1">{createFieldErrors.especialidadId}</p>
+                )}
+              </div>
+              <div>
                 <Input
                   label="Teléfono"
                   value={newDoctor.telefono}
@@ -327,20 +363,21 @@ export const AssignProfesionalModal = ({
                   placeholder="Ej: 381-4998877"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Género
-                </label>
-                <select
-                  value={newDoctor.genero}
-                  onChange={(e) => setNewDoctor((p) => ({ ...p, genero: e.target.value }))}
-                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                Género
+              </label>
+              <select
+                value={newDoctor.genero}
+                onChange={(e) => setNewDoctor((p) => ({ ...p, genero: e.target.value }))}
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
             </div>
 
             <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">

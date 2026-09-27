@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaAgendaDto(
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del profesional debe ser exactamente una cadena numérica de 11 dígitos.")]
     string ProfesionalCuil,
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT del consultorio debe ser exactamente una cadena numérica de 11 dígitos.")]
     string CuitConsultorio,
     int Dia,
     int Mes,
@@ -37,6 +41,7 @@ public record AgendaResponseDto(
 );
 
 public record AsignarAsistenteAgendaDto(
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del asistente debe ser exactamente una cadena numérica de 11 dígitos.")]
     string AsistenteCuil,
     int AgendaId
 );

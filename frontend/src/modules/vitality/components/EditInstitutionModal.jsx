@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
-import { Hospital, Mail, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Hospital, Mail, Hash, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { updateInstitutionSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 /**
- * Modal para la Modificación de una Institución Médica Cliente en Vitality (B2B).
+ * Modal para la Modificación de una Institución Médica en Vitality.
  * Permite actualizar datos críticos como el Email de contacto y cambiar el Plan de Suscripción asignado.
  */
 export const EditInstitutionModal = ({
@@ -106,51 +106,56 @@ export const EditInstitutionModal = ({
       maxWidth="max-w-xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
-        {/* Razón Social */}
-        <div>
-          <label htmlFor="edit-nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-            Razón Social / Nombre <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Hospital className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
-            <input
-              id="edit-nombre-inst"
-              name="nombre"
-              type="text"
-              value={formData.nombre}
-              onChange={handleChange}
-              placeholder="Ej: Sanatorio Modelo S.A."
-              className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
-                errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
+        {/* Grilla de Campos Principales (Razón Social, CUIT, Correo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Razón Social */}
+          <div className="col-span-1 md:col-span-2">
+            <label htmlFor="edit-nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+              Razón Social / Nombre <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Hospital className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
+              <input
+                id="edit-nombre-inst"
+                name="nombre"
+                type="text"
+                value={formData.nombre}
+                onChange={handleChange}
+                placeholder="Ej: Sanatorio Modelo S.A."
+                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+                  errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                }`}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
+            </div>
           </div>
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-          </div>
-        </div>
 
-        {/* CUIT (No editable) y Correo de Contacto Crítico */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
+          {/* CUIT (No editable) */}
+          <div className="col-span-1">
             <label htmlFor="edit-cuit-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIT Institucional (Identificador)
             </label>
-            <input
-              id="edit-cuit-inst"
-              name="cuit"
-              type="text"
-              value={formData.cuit}
-              readOnly
-              className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
-            />
+            <div className="relative">
+              <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
+              <input
+                id="edit-cuit-inst"
+                name="cuit"
+                type="text"
+                value={formData.cuit}
+                readOnly
+                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
+              />
+            </div>
             <div className="min-h-[20px] mt-0.5 flex items-center">
               <span className="text-[11px] text-slate-400">Identificador fiscal inmutable</span>
             </div>
           </div>
 
-          <div>
+          {/* Correo de Contacto Crítico */}
+          <div className="col-span-1">
             <label htmlFor="edit-email-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Email de Contacto / Admin <span className="text-rose-500">*</span>
             </label>

@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaAdminInstitucionDto(
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL debe ser exactamente una cadena numérica de 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,
@@ -26,11 +29,13 @@ public record AdminInstitucionResponseDto(
 );
 
 public record AltaAdminConsultorioDto(
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL debe ser exactamente una cadena numérica de 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,
     string Telefono,
     DateTime FechaNacimiento,
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT de consultorio debe ser exactamente una cadena numérica de 11 dígitos.")]
     string ConsultorioCuit,
     string NombreUsuario,
     string Contrasena,

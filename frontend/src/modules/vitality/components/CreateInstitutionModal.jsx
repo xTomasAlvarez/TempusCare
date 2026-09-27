@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
-import { Hospital, Mail, CreditCard, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Hospital, Mail, Hash, CreditCard, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 import { institutionSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 /**
- * Modal para el Alta de una Nueva Institución Médica Cliente en Vitality (B2B).
+ * Modal para el Alta de una Nueva Institución Médica en Vitality.
  * Solicita CUIT, razón social, correo electrónico del administrador y plan de suscripción.
  */
 export const CreateInstitutionModal = ({
@@ -95,59 +95,64 @@ export const CreateInstitutionModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Dar de Alta Nueva Institución Médica"
-      description="Registra un nuevo cliente B2B en el ecosistema SaaS de Tempus Care / Vitality."
+      description="Registra una nueva institución médica en Tempus Care."
       maxWidth="max-w-xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
-        {/* Razón Social */}
-        <div>
-          <label htmlFor="nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-            Razón Social / Nombre de la Institución <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Hospital className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
-            <input
-              id="nombre-inst"
-              name="nombre"
-              type="text"
-              value={formData.nombre}
-              onChange={handleChange}
-              placeholder="Ej: Sanatorio Modelo S.A. o Hospital Privado"
-              className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
-                errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
+        {/* Grilla de Campos Principales (Razón Social, CUIT, Correo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Razón Social */}
+          <div className="col-span-1 md:col-span-2">
+            <label htmlFor="nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+              Razón Social / Nombre de la Institución <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Hospital className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
+              <input
+                id="nombre-inst"
+                name="nombre"
+                type="text"
+                value={formData.nombre}
+                onChange={handleChange}
+                placeholder="Ej: Sanatorio Modelo S.A. o Hospital Privado"
+                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+                  errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                }`}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="min-h-[20px] mt-0.5 flex items-center">
+              {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
+            </div>
           </div>
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-          </div>
-        </div>
 
-        {/* CUIT y Correo de Administración */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
+          {/* CUIT */}
+          <div className="col-span-1">
             <label htmlFor="cuit-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIT Institucional <span className="text-rose-500">*</span>
             </label>
-            <input
-              id="cuit-inst"
-              name="cuit"
-              type="text"
-              value={formData.cuit}
-              onChange={handleChange}
-              placeholder="Ej: 30712345678"
-              className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
-                errors.cuit ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
+              <input
+                id="cuit-inst"
+                name="cuit"
+                type="text"
+                value={formData.cuit}
+                onChange={handleChange}
+                placeholder="Ej: 30712345678"
+                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
+                  errors.cuit ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                }`}
+                disabled={isSubmitting}
+              />
+            </div>
             <div className="min-h-[20px] mt-0.5 flex items-center">
               {errors.cuit && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.cuit}</p>}
             </div>
           </div>
 
-          <div>
+          {/* Correo Electrónico Administrador */}
+          <div className="col-span-1">
             <label htmlFor="email-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Correo Electrónico Administrador <span className="text-rose-500">*</span>
             </label>
@@ -175,7 +180,7 @@ export const CreateInstitutionModal = ({
         {/* Plan de Suscripción */}
         <div className="pt-2 border-t border-slate-100">
           <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-2">
-            Plan de Suscripción B2B <span className="text-rose-500">*</span>
+            Plan de Suscripción <span className="text-rose-500">*</span>
           </label>
 
           <div className="space-y-2">

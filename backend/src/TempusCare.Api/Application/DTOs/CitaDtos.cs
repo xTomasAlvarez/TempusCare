@@ -1,9 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 using TempusCare.Api.Domain.Enums;
 
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaCitaDto(
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del paciente debe ser exactamente una cadena numérica de 11 dígitos.")]
     string PacienteCuil,
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del profesional debe ser exactamente una cadena numérica de 11 dígitos.")]
     string ProfesionalCuil,
     int TurnoId,
     TipoCita Tipo,

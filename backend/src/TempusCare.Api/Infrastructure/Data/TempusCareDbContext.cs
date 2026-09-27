@@ -226,12 +226,12 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey<HistoriaClinica>(hc => hc.PacienteCuil)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Historia Clinica 1:N Observaciones
+        // Historia Clinica 1:N Observaciones (Preservación inalterable del historial médico)
         modelBuilder.Entity<HistoriaClinica>()
             .HasMany(hc => hc.Observaciones)
             .WithOne(o => o.HistoriaClinica)
             .HasForeignKey(o => o.HistoriaClinicaId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Profesional 1:N Observaciones
         modelBuilder.Entity<Observacion>()
@@ -244,12 +244,12 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey(o => o.ProfesionalCuil)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Cita 1:0..1 Observacion
+        // Cita 1:0..1 Observacion (Protección de datos médicos Ley 25.326: sin borrado en cascada destructivo)
         modelBuilder.Entity<Observacion>()
             .HasOne(o => o.Cita)
             .WithOne(c => c.Observacion)
             .HasForeignKey<Observacion>(o => o.CitaId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Cita 1:0..1 Cuestionario
         modelBuilder.Entity<Cuestionario>()

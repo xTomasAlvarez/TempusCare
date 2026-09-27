@@ -2,10 +2,13 @@ import { apiClient } from '../../../core/api/apiClient';
 
 export const receptionService = {
   /**
-   * Obtiene todos los profesionales médicos
+   * Obtiene los profesionales médicos (filtrados por consultorio si se especifica)
    */
-  async getProfessionals() {
-    return await apiClient.get('profesionales');
+  async getProfessionals(consultorioCuit = null) {
+    const endpoint = consultorioCuit
+      ? `profesionales?consultorioCuit=${encodeURIComponent(consultorioCuit)}`
+      : 'profesionales';
+    return await apiClient.get(endpoint);
   },
 
   /**
@@ -16,27 +19,33 @@ export const receptionService = {
   },
 
   /**
-   * Obtiene los turnos disponibles para un profesional en una fecha
+   * Obtiene los turnos disponibles para un profesional en una fecha (y consultorio)
    */
-  async getAvailableTurnos(profesionalCuil, fecha) {
+  async getAvailableTurnos(profesionalCuil, fecha, consultorioCuit = null) {
     const params = new URLSearchParams();
     params.append('profesionalCuil', profesionalCuil);
     if (fecha) {
       const dateStr = typeof fecha === 'string' ? fecha : fecha.toISOString().split('T')[0];
       params.append('fecha', dateStr);
     }
+    if (consultorioCuit) {
+      params.append('consultorioCuit', consultorioCuit);
+    }
 
     return await apiClient.get(`turnos/disponibles?${params.toString()}`);
   },
 
   /**
-   * Obtiene todas las citas de un profesional en una fecha
+   * Obtiene todas las citas de un profesional en una fecha (y consultorio)
    */
-  async getAppointmentsByDoctorAndDate(profesionalCuil, fecha) {
+  async getAppointmentsByDoctorAndDate(profesionalCuil, fecha, consultorioCuit = null) {
     const params = new URLSearchParams();
     if (fecha) {
       const dateStr = typeof fecha === 'string' ? fecha : fecha.toISOString().split('T')[0];
       params.append('fecha', dateStr);
+    }
+    if (consultorioCuit) {
+      params.append('consultorioCuit', consultorioCuit);
     }
 
     return await apiClient.get(`citas/profesional/${profesionalCuil}?${params.toString()}`);

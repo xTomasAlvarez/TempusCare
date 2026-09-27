@@ -45,6 +45,10 @@ export const institutionAdminService = {
     return await apiClient.post('asistentes', dto);
   },
 
+  async updateAsistente(cuil, dto) {
+    return await apiClient.put(`asistentes/${encodeURIComponent(cuil)}`, dto);
+  },
+
   async deleteAsistente(cuil) {
     await apiClient.delete(`asistentes/${cuil}`);
     return true;
@@ -69,6 +73,10 @@ export const institutionAdminService = {
 
   async registerDoctor(dto) {
     return await apiClient.post('profesionales', dto);
+  },
+
+  async updateDoctor(cuil, dto) {
+    return await apiClient.put(`profesionales/${encodeURIComponent(cuil)}`, dto);
   },
 
   async createAdminConsultorio(dto) {

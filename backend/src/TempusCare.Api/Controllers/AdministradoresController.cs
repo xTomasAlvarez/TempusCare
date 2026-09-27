@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpPost("institucion")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> AltaAdminInstitucion([FromBody] AltaAdminInstitucionDto dto)
     {
         var res = await _administradorService.AltaAdminInstitucionAsync(dto);
@@ -23,6 +25,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpGet("institucion")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> ObtenerAdminsInstitucion([FromQuery] int? institucionId)
     {
         var res = await _administradorService.ObtenerAdminsInstitucionAsync(institucionId);
@@ -30,6 +33,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpGet("institucion/{cuil}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> ObtenerAdminInstitucionPorCuil(string cuil)
     {
         var res = await _administradorService.ObtenerAdminInstitucionPorCuilAsync(cuil);
@@ -37,6 +41,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpPost("consultorio")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> AltaAdminConsultorio([FromBody] AltaAdminConsultorioDto dto)
     {
         var res = await _administradorService.AltaAdminConsultorioAsync(dto);

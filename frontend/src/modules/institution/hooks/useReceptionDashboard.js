@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../../core/context/AuthContext';
 import { receptionService } from '../services/receptionService';
 
 export const useReceptionDashboard = () => {
+  const { user } = useAuth();
+  const consultorioCuit = user?.consultorioCuit || null;
+
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
   const [doctors, setDoctors] = useState([]);
@@ -16,13 +20,13 @@ export const useReceptionDashboard = () => {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Carga inicial de doctores y consultorios
+  // Carga inicial de doctores y consultorios (aislados por sede si el usuario pertenece a una)
   useEffect(() => {
     let isMounted = true;
     async function initCatalogs() {
       try {
         const [docs, cons] = await Promise.all([
-          receptionService.getProfessionals().catch(() => []),
+          receptionService.getProfessionals(consultorioCuit).catch(() => []),
           receptionService.getConsultorios().catch(() => []),
         ]);
 
@@ -42,9 +46,9 @@ export const useReceptionDashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [consultorioCuit]);
 
-  // Carga de turnos y citas para el doctor y fecha seleccionados
+  // Carga de turnos y citas para el doctor, fecha y consultorio seleccionados
   const fetchDashboardData = useCallback(async () => {
     if (!selectedDoctorCuil) return;
 
@@ -53,8 +57,8 @@ export const useReceptionDashboard = () => {
 
     try {
       const [turnosData, citasData] = await Promise.all([
-        receptionService.getAvailableTurnos(selectedDoctorCuil, selectedDate).catch(() => []),
-        receptionService.getAppointmentsByDoctorAndDate(selectedDoctorCuil, selectedDate).catch(() => []),
+        receptionService.getAvailableTurnos(selectedDoctorCuil, selectedDate, consultorioCuit).catch(() => []),
+        receptionService.getAppointmentsByDoctorAndDate(selectedDoctorCuil, selectedDate, consultorioCuit).catch(() => []),
       ]);
 
       // Filtrar turnos disponibles para que no incluyan los que ya tienen cita agendada
@@ -68,7 +72,7 @@ export const useReceptionDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDoctorCuil, selectedDate]);
+  }, [selectedDoctorCuil, selectedDate, consultorioCuit]);
 
   useEffect(() => {
     fetchDashboardData();

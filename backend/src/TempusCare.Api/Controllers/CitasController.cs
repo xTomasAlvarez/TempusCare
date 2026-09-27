@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class CitasController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Paciente,Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaCitaDto dto)
     {
         var res = await _citaService.AltaCitaAsync(dto);
@@ -23,6 +25,7 @@ public class CitasController : ControllerBase
     }
 
     [HttpPut("{id}/estado")]
+    [Authorize(Roles = "Asistente,Profesional,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> ModificarEstado(int id, [FromBody] ModificarCitaEstadoDto dto)
     {
         if (id != dto.CitaId)
@@ -33,6 +36,7 @@ public class CitasController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Paciente,Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Baja(int id)
     {
         await _citaService.BajaCitaAsync(id);
@@ -40,6 +44,7 @@ public class CitasController : ControllerBase
     }
 
     [HttpGet("paciente/{cuil}")]
+    [Authorize(Roles = "Paciente,Asistente,SuperAdmin")]
     public async Task<IActionResult> ObtenerCitasPaciente(string cuil)
     {
         var res = await _citaService.ObtenerCitasPacienteAsync(cuil);
@@ -47,13 +52,15 @@ public class CitasController : ControllerBase
     }
 
     [HttpGet("profesional/{cuil}")]
-    public async Task<IActionResult> ObtenerCitasProfesional(string cuil, [FromQuery] DateTime? fecha)
+    [Authorize(Roles = "Profesional,Asistente,AdminConsultorio,SuperAdmin")]
+    public async Task<IActionResult> ObtenerCitasProfesional(string cuil, [FromQuery] DateTime? fecha, [FromQuery] string? consultorioCuit)
     {
-        var res = await _citaService.ObtenerCitasProfesionalAsync(cuil, fecha);
+        var res = await _citaService.ObtenerCitasProfesionalAsync(cuil, fecha, consultorioCuit);
         return Ok(res);
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _citaService.ObtenerPorIdAsync(id);

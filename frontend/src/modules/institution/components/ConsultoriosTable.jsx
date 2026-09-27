@@ -1,9 +1,10 @@
 import React from 'react';
 import { DataTable } from './DataTable';
 import { CreateConsultorioModal } from './CreateConsultorioModal';
+import { EditConsultorioModal } from './EditConsultorioModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
-import { Hospital, Plus, Trash2, MapPin, Phone, Mail, Stethoscope } from 'lucide-react';
+import { Hospital, Plus, Pencil, Trash2, MapPin, Phone, Mail, Stethoscope } from 'lucide-react';
 
 /**
  * Tabla de Sedes Físicas y Consultorios Médicos.
@@ -17,6 +18,11 @@ export const ConsultoriosTable = ({
   setIsModalOpen,
   onCreateConsultorio,
   onDeleteConsultorio,
+  onEditConsultorio,
+  isEditModalOpen,
+  onCloseEditModal,
+  editingConsultorio,
+  onUpdateConsultorio,
 }) => {
   const getAccessibilityBadge = (nivel) => {
     switch (nivel?.toLowerCase()) {
@@ -112,14 +118,24 @@ export const ConsultoriosTable = ({
       label: 'Acciones',
       className: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => onEditConsultorio?.(row)}
+            aria-label={`Editar consultorio ${row.nombre}`}
+            title="Editar Sede"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <Pencil className="w-4 h-4" strokeWidth={2} />
+          </button>
           <button
             type="button"
             onClick={() => onDeleteConsultorio(row.cuit, row.nombre)}
             aria-label={`Eliminar consultorio ${row.nombre}`}
+            title="Eliminar Sede"
             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" strokeWidth={2} />
           </button>
         </div>
       ),
@@ -154,6 +170,15 @@ export const ConsultoriosTable = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={onCreateConsultorio}
+        isSubmitting={isSubmitting}
+        instituciones={instituciones}
+      />
+
+      <EditConsultorioModal
+        isOpen={isEditModalOpen}
+        onClose={onCloseEditModal}
+        consultorio={editingConsultorio}
+        onSubmit={onUpdateConsultorio}
         isSubmitting={isSubmitting}
         instituciones={instituciones}
       />

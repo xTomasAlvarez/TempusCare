@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -16,6 +17,7 @@ public class AgendasController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaAgendaDto dto)
     {
         var res = await _agendaService.AltaAgendaAsync(dto);
@@ -23,6 +25,7 @@ public class AgendasController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Modificar(int id, [FromBody] ModificarAgendaDto dto)
     {
         if (id != dto.IdAgenda)
@@ -33,6 +36,7 @@ public class AgendasController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,SuperAdmin")]
     public async Task<IActionResult> Eliminar(int id)
     {
         await _agendaService.EliminarAgendaAsync(id);
@@ -40,6 +44,7 @@ public class AgendasController : ControllerBase
     }
 
     [HttpGet("profesional/{cuil}")]
+    [Authorize]
     public async Task<IActionResult> ObtenerPorProfesional(string cuil)
     {
         var res = await _agendaService.ObtenerAgendasPorProfesionalAsync(cuil);

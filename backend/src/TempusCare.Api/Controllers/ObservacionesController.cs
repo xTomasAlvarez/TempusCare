@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Services;
@@ -6,6 +7,7 @@ namespace TempusCare.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Profesional,SuperAdmin")]
 public class ObservacionesController : ControllerBase
 {
     private readonly IObservacionService _observacionService;

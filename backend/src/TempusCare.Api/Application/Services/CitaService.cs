@@ -281,9 +281,9 @@ public class CitaService : ICitaService
         return citas.Select(c => MapCitaDto(c, c.Turno!, c.Paciente!, c.Turno!.Agenda!.Profesional!)).ToList();
     }
 
-    public async Task<List<CitaResponseDto>> ObtenerCitasProfesionalAsync(string profesionalCuil, DateTime? fecha)
+    public async Task<List<CitaResponseDto>> ObtenerCitasProfesionalAsync(string profesionalCuil, DateTime? fecha, string? consultorioCuit = null)
     {
-        _logger.LogInformation("Obteniendo citas para profesional CUIL {Cuil} en fecha {Fecha}", profesionalCuil, fecha);
+        _logger.LogInformation("Obteniendo citas para profesional CUIL {Cuil} en fecha {Fecha} y consultorio {Cons}", profesionalCuil, fecha, consultorioCuit);
 
         var query = _db.Citas
             .Include(c => c.Paciente)
@@ -300,6 +300,11 @@ public class CitaService : ICitaService
         {
             var dt = fecha.Value.Date;
             query = query.Where(c => c.Fecha.Date == dt);
+        }
+
+        if (!string.IsNullOrEmpty(consultorioCuit))
+        {
+            query = query.Where(c => c.Turno!.Agenda!.ConsultorioCuit == consultorioCuit);
         }
 
         var citas = await query.ToListAsync();

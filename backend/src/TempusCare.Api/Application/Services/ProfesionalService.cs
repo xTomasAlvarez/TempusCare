@@ -184,23 +184,23 @@ public class ProfesionalService : IProfesionalService
         }
 
         // Actualizar asociaciones
-        prof.Especialidades.Clear();
         if (dto.EspecialidadesIds != null)
         {
+            prof.Especialidades.Clear();
             foreach (var id in dto.EspecialidadesIds)
                 prof.Especialidades.Add(new ProfesionalEspecialidad { ProfesionalCuil = prof.Cuil, EspecialidadId = id });
         }
 
-        prof.Consultorios.Clear();
         if (dto.ConsultoriosCuits != null)
         {
+            prof.Consultorios.Clear();
             foreach (var cuit in dto.ConsultoriosCuits)
                 prof.Consultorios.Add(new ProfesionalConsultorio { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cuit });
         }
 
-        prof.ObrasSociales.Clear();
         if (dto.ObrasSocialesIds != null)
         {
+            prof.ObrasSociales.Clear();
             foreach (var id in dto.ObrasSocialesIds)
                 prof.ObrasSociales.Add(new ProfesionalObraSocial { ProfesionalCuil = prof.Cuil, ObraSocialId = id });
         }

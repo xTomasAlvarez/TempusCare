@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaPerfilPacienteDto(
+    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del paciente debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,
@@ -17,6 +20,7 @@ public record AltaPerfilPacienteDto(
 );
 
 public record ModificacionPerfilPacienteDto(
+    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del paciente debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,

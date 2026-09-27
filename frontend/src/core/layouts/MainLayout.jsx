@@ -24,7 +24,6 @@ export const MainLayout = () => {
       case 'AdminConsultorio':
         return [
           { label: 'Administración de Sede', path: '/institution/sede-admin', icon: Hospital },
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
         ];
       case 'Institucion':
       case 'AdminInstitucion':
@@ -34,13 +33,11 @@ export const MainLayout = () => {
       case 'SuperAdmin':
         return [
           { label: 'Consola Vitality', path: '/vitality/clients', icon: Hospital },
-          { label: 'Sedes y Consultorios', path: '/institution/admin', icon: Hospital },
-          { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
         ];
       case 'Asistente':
         return [
           { label: 'Mesa de Recepción', path: '/institution/reception', icon: BriefcaseMedical },
-          { label: 'Estudios y Coberturas', path: '/institution/coberturas', icon: ShieldPlus },
+          { label: 'Configuración Médica', path: '/institution/configuracion-medica', icon: ShieldPlus },
         ];
       case 'Profesional':
         return [

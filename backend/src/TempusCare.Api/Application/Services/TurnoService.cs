@@ -17,9 +17,9 @@ public class TurnoService : ITurnoService
         _logger = logger;
     }
 
-    public async Task<List<TurnoResponseDto>> ObtenerTurnosDisponiblesAsync(string profesionalCuil, DateTime? fecha)
+    public async Task<List<TurnoResponseDto>> ObtenerTurnosDisponiblesAsync(string profesionalCuil, DateTime? fecha, string? consultorioCuit = null)
     {
-        _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha}", profesionalCuil, fecha);
+        _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha} y consultorio {Cons}", profesionalCuil, fecha, consultorioCuit);
 
         var query = _db.Turnos
             .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
@@ -32,6 +32,11 @@ public class TurnoService : ITurnoService
         {
             var dateOnly = fecha.Value.Date;
             query = query.Where(t => t.Fecha.Date == dateOnly);
+        }
+
+        if (!string.IsNullOrEmpty(consultorioCuit))
+        {
+            query = query.Where(t => t.Agenda!.ConsultorioCuit == consultorioCuit);
         }
 
         var lista = await query.ToListAsync();

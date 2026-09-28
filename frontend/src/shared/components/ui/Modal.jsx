@@ -53,7 +53,7 @@ export const Modal = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center p-3 sm:p-6 overflow-y-auto bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -66,7 +66,7 @@ export const Modal = ({
         aria-describedby={description ? 'modal-description' : undefined}
         tabIndex={-1}
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-6 sm:p-8 outline-none transition-all duration-300 animate-in zoom-in-95',
+          'relative w-full my-auto bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-5 sm:p-6 outline-none transition-all duration-300 animate-in zoom-in-95 max-h-[calc(100vh-2rem)] flex flex-col',
           maxWidth,
           className
         )}
@@ -76,21 +76,21 @@ export const Modal = ({
           type="button"
           onClick={onClose}
           aria-label="Cerrar ventana modal"
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 z-10"
         >
           <X className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
         </button>
 
         {/* Encabezado */}
         {(title || description) && (
-          <div className="mb-5 pr-8">
+          <div className="mb-3.5 pr-8 flex-shrink-0">
             {title && (
               <h2 id="modal-title" className="text-xl sm:text-2xl font-bold font-heading tracking-tight text-slate-900">
                 {title}
               </h2>
             )}
             {description && (
-              <p id="modal-description" className="text-sm text-slate-500 mt-1">
+              <p id="modal-description" className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 {description}
               </p>
             )}
@@ -98,7 +98,7 @@ export const Modal = ({
         )}
 
         {/* Contenido */}
-        <div className="text-slate-800">{children}</div>
+        <div className="text-slate-800 overflow-y-auto flex-1 min-h-0 pr-1 -mr-1">{children}</div>
       </div>
     </div>,
     document.body

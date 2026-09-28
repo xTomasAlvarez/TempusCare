@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
-import { Stethoscope, CheckCircle2, Hospital } from 'lucide-react';
+import { Input } from '../../../shared/components/ui/Input';
+import { CheckCircle2, Hospital, Mail, AlertCircle } from 'lucide-react';
 
 /**
- * Modal para modificar los datos de cuenta y especialidad de un Profesional.
- * Regla de negocio crítica: Solo gestiona datos de cuenta e identidad profesional
- * (Nombre, Apellido, CUIL, Matrícula, Teléfono, Especialidad).
- * Excluye expresamente la configuración de obras sociales o estudios.
+ * Modal para modificar los datos de un Médico / Profesional en la sede.
+ * Regla de negocio estricta:
+ * Pide Nombre, Apellido, CUIL, Email y Especialidad.
+ * NO incluye estudios ni obras sociales.
  */
 export const EditProfesionalModal = ({
   isOpen,
@@ -21,32 +22,20 @@ export const EditProfesionalModal = ({
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    matricula: '',
-    telefono: '',
+    email: '',
     especialidadId: '',
-    genero: 'Otro',
-    fecNac: '1985-06-15',
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState(null);
 
   useEffect(() => {
     if (profesional) {
-      let fecNacFormatted = '1985-06-15';
-      if (profesional.fechaNacimiento) {
-        try {
-          fecNacFormatted = new Date(profesional.fechaNacimiento).toISOString().split('T')[0];
-        } catch {
-          fecNacFormatted = '1985-06-15';
-        }
-      }
-
-      // Encontrar id de la especialidad actual si viene por nombre
       let currentEspId = '';
       if (profesional.especialidades?.length > 0 && especialidades?.length > 0) {
         const firstEspName = profesional.especialidades[0];
         const match = especialidades.find(
-          (e) => e.nombre?.toLowerCase() === firstEspName?.toLowerCase() || e.id === firstEspName
+          (e) => e.nombre?.toLowerCase() === firstEspName?.toLowerCase() || String(e.id) === String(firstEspName)
         );
         if (match) currentEspId = String(match.id);
       }
@@ -54,13 +43,11 @@ export const EditProfesionalModal = ({
       setFormData({
         nombre: profesional.nombre || '',
         apellido: profesional.apellido || '',
-        matricula: profesional.matricula || '',
-        telefono: profesional.telefono || '',
+        email: profesional.email || '',
         especialidadId: currentEspId,
-        genero: profesional.genero || 'Otro',
-        fecNac: fecNacFormatted,
       });
       setErrors({});
+      setServerError(null);
     }
   }, [profesional, especialidades]);
 
@@ -75,11 +62,16 @@ export const EditProfesionalModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!profesional) return;
+    setServerError(null);
 
     const newErrors = {};
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
     if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio.';
-    if (!formData.matricula.trim()) newErrors.matricula = 'La matrícula es obligatoria.';
+    if (!formData.email.trim()) {
+      newErrors.email = 'El correo electrónico es obligatorio.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'Ingresa un correo electrónico válido.';
+    }
     if (!formData.especialidadId) newErrors.especialidadId = 'Debe seleccionar una especialidad.';
 
     if (Object.keys(newErrors).length > 0) {
@@ -87,20 +79,27 @@ export const EditProfesionalModal = ({
       return;
     }
 
-    const payload = {
-      cuil: profesional.cuil,
-      nombre: formData.nombre.trim(),
-      apellido: formData.apellido.trim(),
-      matricula: formData.matricula.trim(),
-      telefono: formData.telefono.trim(),
-      genero: formData.genero,
-      fecNac: new Date(formData.fecNac).toISOString(),
-      especialidadesIds: [Number(formData.especialidadId)],
-    };
+    try {
+      const payload = {
+        cuil: profesional.cuil,
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        email: formData.email.trim(),
+        matricula: profesional.matricula || `MP-${profesional.cuil.slice(-6)}`,
+        telefono: profesional.telefono || '381-0000000',
+        genero: profesional.genero || 'Otro',
+        fecNac: profesional.fechaNacimiento
+          ? new Date(profesional.fechaNacimiento).toISOString()
+          : new Date('1985-06-15').toISOString(),
+        especialidadesIds: [Number(formData.especialidadId)],
+      };
 
-    const success = await onSubmit(profesional.cuil, payload);
-    if (success) {
-      onClose();
+      const success = await onSubmit(profesional.cuil, payload);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      setServerError(err.message || 'Error al modificar los datos del profesional.');
     }
   };
 
@@ -108,152 +107,111 @@ export const EditProfesionalModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Modificar Cuenta de Profesional"
-      description={`Actualiza la cuenta del médico asignado a "${sedeNombre}".`}
-      maxWidth="max-w-xl"
+      title="Editar Médico"
+      description={`Modifica los datos del médico asignado a "${sedeNombre || 'la sede'}".`}
+      maxWidth="max-w-lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
-        {/* Identificación (CUIL) y Matrícula */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm" noValidate>
+        {/* Banner de Sede Física */}
+        <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
+          <Hospital className="w-4 h-4 text-primary-600 shrink-0" />
+          <span>
+            Sede asignada: <strong className="text-slate-900">{sedeNombre || 'Sede Actual'}</strong>
+          </span>
+        </div>
+
+        {/* Alerta de Error */}
+        {serverError && (
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{serverError}</span>
+          </div>
+        )}
+
+        {/* 1. Nombre y Apellido */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="Nombre"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            placeholder="Ej: Laura"
+            error={errors.nombre}
+            required
+            disabled={isSubmitting}
+          />
+
+          <Input
+            label="Apellido"
+            name="apellido"
+            value={formData.apellido}
+            onChange={handleChange}
+            placeholder="Ej: González"
+            error={errors.apellido}
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+
+        {/* 2. CUIL (inmutable) y Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              CUIL / CUIT (Cuenta)
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              CUIL
             </label>
             <input
               type="text"
               value={profesional?.cuil || ''}
               disabled
-              className="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono text-slate-500 cursor-not-allowed select-none"
+              className="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-xl font-mono text-xs sm:text-sm text-slate-500 cursor-not-allowed select-none"
             />
-            <p className="text-[10px] text-slate-400 mt-1">Identificador de cuenta inmutable.</p>
           </div>
 
-          <div>
-            <label htmlFor="edit-prof-matricula" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Matrícula Profesional <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-prof-matricula"
-              name="matricula"
-              type="text"
-              value={formData.matricula}
-              onChange={handleChange}
-              placeholder="Ej: MP-9842"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
-                errors.matricula ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.matricula && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.matricula}</p>
-              )}
-            </div>
-          </div>
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="medico@hospital.com"
+            error={errors.email}
+            required
+            disabled={isSubmitting}
+            leadingIcon={<Mail className="w-4 h-4 text-primary-600" />}
+          />
         </div>
 
-        {/* Nombre y Apellido */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-          <div>
-            <label htmlFor="edit-prof-nombre" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Nombre <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-prof-nombre"
-              name="nombre"
-              type="text"
-              value={formData.nombre}
-              onChange={handleChange}
-              placeholder="Ej: Esteban"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.nombre && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="edit-prof-apellido" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Apellido <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-prof-apellido"
-              name="apellido"
-              type="text"
-              value={formData.apellido}
-              onChange={handleChange}
-              placeholder="Ej: Rossi"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.apellido ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.apellido && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.apellido}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Especialidad y Teléfono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-          <div>
-            <label htmlFor="edit-prof-especialidad" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Especialidad <span className="text-rose-500">*</span>
-            </label>
+        {/* 3. Especialidad */}
+        <div>
+          <label htmlFor="edit-prof-especialidad" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+            Especialidad <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative rounded-xl shadow-xs">
             <select
               id="edit-prof-especialidad"
               name="especialidadId"
               value={formData.especialidadId}
               onChange={handleChange}
-              className={`w-full h-10 px-3.5 bg-slate-50 border rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.especialidadId ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+              className={`w-full h-10 px-3 rounded-xl border bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all ${
+                errors.especialidadId ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200/80'
               }`}
               disabled={isSubmitting}
             >
-              <option value="">Seleccionar especialidad...</option>
+              <option value="">-- Seleccionar especialidad --</option>
               {especialidades.map((esp) => (
                 <option key={esp.id} value={esp.id}>
                   {esp.nombre}
                 </option>
               ))}
             </select>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.especialidadId && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.especialidadId}</p>
-              )}
-            </div>
           </div>
-
-          <div>
-            <label htmlFor="edit-prof-telefono" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Teléfono de Contacto
-            </label>
-            <input
-              id="edit-prof-telefono"
-              name="telefono"
-              type="text"
-              value={formData.telefono}
-              onChange={handleChange}
-              placeholder="Ej: 381-4998877"
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        {/* Indicador de Sede Física */}
-        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center gap-2.5">
-          <Hospital className="w-4 h-4 text-slate-500 flex-shrink-0" />
-          <div className="text-xs">
-            <span className="font-semibold text-slate-800">Sede asignada: </span>
-            <span className="text-slate-600">{sedeNombre || 'Sede Actual'}</span>
+          <div className="min-h-[18px] mt-0.5 flex items-center">
+            {errors.especialidadId && (
+              <p className="text-[11px] text-rose-600 flex items-center gap-1 animate-in fade-in-0">
+                <span aria-hidden="true">⚠</span>
+                <span>{errors.especialidadId}</span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -274,7 +232,7 @@ export const EditProfesionalModal = ({
             variant="primary"
             size="sm"
             isLoading={isSubmitting}
-            className="gap-1.5"
+            className="gap-1.5 shadow-xs"
           >
             <CheckCircle2 className="w-4 h-4" strokeWidth={2} />
             <span>Guardar Cambios</span>

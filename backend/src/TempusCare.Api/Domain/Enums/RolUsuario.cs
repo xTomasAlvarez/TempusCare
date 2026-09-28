@@ -6,6 +6,7 @@ public enum RolUsuario
     Profesional = 2,
     Asistente = 3,
     AdminConsultorio = 4,
+    AdminSede = 4,
     AdminInstitucion = 5,
     SuperAdmin = 6,
     Institucion = 7

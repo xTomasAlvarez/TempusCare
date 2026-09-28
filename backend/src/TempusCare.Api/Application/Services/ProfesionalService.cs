@@ -33,7 +33,7 @@ public class ProfesionalService : IProfesionalService
         {
             NombreUsuario = dto.Cuil,
             Contrasena = "Tempus123!",
-            Mail = $"{dto.Cuil}@tempuscare.com",
+            Mail = !string.IsNullOrWhiteSpace(dto.Email) ? dto.Email.Trim() : $"{dto.Cuil}@tempuscare.com",
             Rol = RolUsuario.Profesional
         };
         _db.Usuarios.Add(usuario);
@@ -139,6 +139,7 @@ public class ProfesionalService : IProfesionalService
         _logger.LogInformation("Modificando profesional CUIL {Cuil}", dto.Cuil);
 
         var prof = await _db.Profesionales
+            .Include(p => p.Usuario)
             .Include(p => p.Direccion)
             .Include(p => p.Especialidades)
             .Include(p => p.Consultorios)
@@ -149,6 +150,11 @@ public class ProfesionalService : IProfesionalService
         {
             _logger.LogWarning("Profesional no encontrado para modificación con CUIL {Cuil}", dto.Cuil);
             throw new ProfesionalNotFoundException(dto.Cuil);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Email) && prof.Usuario != null)
+        {
+            prof.Usuario.Mail = dto.Email.Trim();
         }
 
         prof.Nombre = dto.Nombre;
@@ -473,7 +479,8 @@ public class ProfesionalService : IProfesionalService
             p.ObrasSociales.Select(o => o.ObraSocial?.Nombre ?? "").Where(s => s != "").ToList(),
             estudiosDto,
             consultoriosDetalle,
-            instituciones
+            instituciones,
+            p.Usuario?.Mail
         );
     }
 }

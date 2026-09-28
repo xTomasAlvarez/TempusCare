@@ -246,40 +246,40 @@ export const EditPatientProfileModal = ({
       description="Actualiza tus datos personales y gestiona tu cobertura médica"
       maxWidth="max-w-xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-3 font-sans text-sm" noValidate>
         {/* Identificador / CUIL (Solo Lectura) */}
-        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 flex items-center justify-between">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-primary-100/80 text-primary-700 flex items-center justify-center font-bold text-sm">
-              <User className="w-5 h-5 text-primary-600" />
+            <div className="w-8 h-8 rounded-lg bg-primary-100/80 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
+              <User className="w-4 h-4 text-primary-600" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">CUIL / DNI del Paciente</p>
-              <p className="text-sm font-mono font-bold text-slate-900">{cuilDisplay}</p>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">CUIL / DNI del Paciente</p>
+              <p className="text-xs sm:text-sm font-mono font-bold text-slate-900">{cuilDisplay}</p>
             </div>
           </div>
-          <span className="text-[11px] text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+          <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md font-medium">
             Identificador Oficial
           </span>
         </div>
 
         {/* Alerta de Éxito o Error */}
         {successMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="font-semibold">{successMessage}</span>
           </div>
         )}
 
         {submitError && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{submitError}</span>
           </div>
         )}
 
         {/* 1. Datos Personales Principales */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
           <Input
             label="Nombre"
             name="nombre"
@@ -288,6 +288,7 @@ export const EditPatientProfileModal = ({
             error={errors.nombre}
             required
             placeholder="Ej. Martín"
+            className="py-1.5 text-sm"
           />
 
           <Input
@@ -298,10 +299,12 @@ export const EditPatientProfileModal = ({
             error={errors.apellido}
             required
             placeholder="Ej. Gómez"
+            className="py-1.5 text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Fila compacta de Teléfono, Fecha de Nacimiento y Género */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-start">
           <Input
             label="Teléfono de Contacto"
             name="telefono"
@@ -311,6 +314,19 @@ export const EditPatientProfileModal = ({
             required
             placeholder="Ej. 381 4123456"
             leadingIcon={<Phone className="w-4 h-4 text-primary-600" />}
+            className="py-1.5 text-sm"
+          />
+
+          <Input
+            label="Fecha de Nacimiento"
+            type="date"
+            name="fecNac"
+            value={formData.fecNac}
+            onChange={handleChange}
+            error={errors.fecNac}
+            required
+            leadingIcon={<Calendar className="w-4 h-4 text-primary-600" />}
+            className="py-1.5 text-sm"
           />
 
           <div>
@@ -322,7 +338,7 @@ export const EditPatientProfileModal = ({
               name="genero"
               value={formData.genero}
               onChange={handleChange}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200/80 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full h-[38px] px-3 rounded-xl border border-slate-200/80 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
             >
               <option value="Masculino">Masculino</option>
               <option value="Femenino">Femenino</option>
@@ -331,24 +347,11 @@ export const EditPatientProfileModal = ({
           </div>
         </div>
 
-        <div>
-          <Input
-            label="Fecha de Nacimiento"
-            type="date"
-            name="fecNac"
-            value={formData.fecNac}
-            onChange={handleChange}
-            error={errors.fecNac}
-            required
-            leadingIcon={<Calendar className="w-4 h-4 text-primary-600" />}
-          />
-        </div>
-
         {/* 2. Cobertura Médica / Obra Social */}
-        <div className="border-t border-slate-200/80 pt-4 space-y-3">
+        <div className="border-t border-slate-200/80 pt-2.5 space-y-2">
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <ShieldPlus className="w-4 h-4 text-primary-600" strokeWidth={2} />
+              <ShieldPlus className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} />
               Obra Social o Prepaga
             </label>
             <span className="text-[11px] text-slate-400">
@@ -357,9 +360,9 @@ export const EditPatientProfileModal = ({
           </div>
 
           {/* Lista de Obras Sociales seleccionadas */}
-          <div className="flex flex-wrap gap-2 min-h-8">
+          <div className="flex flex-wrap gap-1.5 min-h-7 items-center">
             {selectedObrasSocialesIds.length === 0 ? (
-              <span className="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium">
                 Atención Particular (Sin Obra Social asociada)
               </span>
             ) : (
@@ -368,9 +371,9 @@ export const EditPatientProfileModal = ({
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 text-xs font-semibold shadow-2xs"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 text-xs font-semibold shadow-2xs"
                   >
-                    <ShieldPlus className="w-3.5 h-3.5 text-primary-600" />
+                    <ShieldPlus className="w-3 h-3 text-primary-600" />
                     <span>{os?.nombre || `Obra Social #${id}`}</span>
                     <button
                       type="button"
@@ -379,7 +382,7 @@ export const EditPatientProfileModal = ({
                       title="Quitar obra social"
                       aria-label={`Quitar ${os?.nombre || id}`}
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                     </button>
                   </span>
                 );
@@ -394,7 +397,7 @@ export const EditPatientProfileModal = ({
               defaultValue=""
               onChange={handleAddObraSocial}
               disabled={isLoadingCatalogs}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200/80 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-200/80 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
             >
               <option value="" disabled>
                 {isLoadingCatalogs ? 'Cargando obras sociales...' : '+ Agregar o cambiar Obra Social / Prepaga...'}
@@ -407,14 +410,14 @@ export const EditPatientProfileModal = ({
                   </option>
                 ))}
             </select>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[10px] text-slate-400 mt-1">
               Selecciona una obra social de la lista para añadirla. Puedes removerlas con la cruz si cambiaste de cobertura.
             </p>
           </div>
         </div>
 
         {/* 3. Domicilio (Opcional desplegable) */}
-        <div className="border-t border-slate-200/80 pt-3">
+        <div className="border-t border-slate-200/80 pt-2.5">
           <button
             type="button"
             onClick={() => setShowAddressSection(!showAddressSection)}
@@ -425,7 +428,7 @@ export const EditPatientProfileModal = ({
           </button>
 
           {showAddressSection && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3 p-3 bg-slate-50/60 rounded-xl border border-slate-200/60 animate-in fade-in-50 duration-200">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 p-2.5 bg-slate-50/60 rounded-xl border border-slate-200/60 animate-in fade-in-50 duration-200 items-start">
               <div className="col-span-2">
                 <Input
                   label="Calle"
@@ -433,6 +436,7 @@ export const EditPatientProfileModal = ({
                   value={formData.calle}
                   onChange={handleChange}
                   placeholder="Ej. Av. Aconquija"
+                  className="py-1.5 text-xs"
                 />
               </div>
               <Input
@@ -441,6 +445,7 @@ export const EditPatientProfileModal = ({
                 value={formData.nro}
                 onChange={handleChange}
                 placeholder="Ej. 1450"
+                className="py-1.5 text-xs"
               />
               <Input
                 label="Depto / Piso"
@@ -448,31 +453,38 @@ export const EditPatientProfileModal = ({
                 value={formData.depto}
                 onChange={handleChange}
                 placeholder="Ej. 3B"
+                className="py-1.5 text-xs"
               />
-              <Input
-                label="Localidad"
-                name="localidad"
-                value={formData.localidad}
-                onChange={handleChange}
-                placeholder="Ej. Yerba Buena"
-              />
-              <Input
-                label="Código Postal"
-                name="codPostal"
-                value={formData.codPostal}
-                onChange={handleChange}
-                placeholder="Ej. 4107"
-              />
+              <div className="col-span-2">
+                <Input
+                  label="Localidad"
+                  name="localidad"
+                  value={formData.localidad}
+                  onChange={handleChange}
+                  placeholder="Ej. Yerba Buena"
+                  className="py-1.5 text-xs"
+                />
+              </div>
+              <div className="col-span-2">
+                <Input
+                  label="Código Postal"
+                  name="codPostal"
+                  value={formData.codPostal}
+                  onChange={handleChange}
+                  placeholder="Ej. 4107"
+                  className="py-1.5 text-xs"
+                />
+              </div>
             </div>
           )}
         </div>
 
         {/* Botones de Acción */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200/80">
+        <div className="flex items-center justify-end gap-2.5 pt-2.5 border-t border-slate-200/80">
           <Button
             type="button"
             variant="outline"
-            size="md"
+            size="sm"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -482,18 +494,18 @@ export const EditPatientProfileModal = ({
           <Button
             type="submit"
             variant="primary"
-            size="md"
+            size="sm"
             disabled={isSubmitting}
-            className="gap-2 shadow-xs"
+            className="gap-1.5 shadow-xs"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Guardando...</span>
               </>
             ) : (
               <>
-                <Save className="w-4 h-4 text-white" />
+                <Save className="w-3.5 h-3.5 text-white" />
                 <span>Guardar Cambios</span>
               </>
             )}

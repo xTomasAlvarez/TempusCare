@@ -21,7 +21,8 @@ public record AltaProfesionalDto(
     List<int>? EspecialidadesIds,
     List<string>? ConsultoriosCuits,
     List<int>? ObrasSocialesIds,
-    List<AsignarEstudioProfesionalDto>? Estudios
+    List<AsignarEstudioProfesionalDto>? Estudios,
+    string? Email = null
 );
 
 public record ModificarProfesionalDto(
@@ -41,7 +42,8 @@ public record ModificarProfesionalDto(
     string? CodPostal,
     List<int>? EspecialidadesIds,
     List<string>? ConsultoriosCuits,
-    List<int>? ObrasSocialesIds
+    List<int>? ObrasSocialesIds,
+    string? Email = null
 );
 
 public record AsignarEstudioProfesionalDto(
@@ -77,5 +79,6 @@ public record ProfesionalResponseDto(
     List<string> ObrasSociales,
     List<ProfesionalEstudioResponseDto> Estudios,
     List<ConsultorioUbicacionDto>? ConsultoriosDetalle = null,
-    List<string>? Instituciones = null
+    List<string>? Instituciones = null,
+    string? Email = null
 );

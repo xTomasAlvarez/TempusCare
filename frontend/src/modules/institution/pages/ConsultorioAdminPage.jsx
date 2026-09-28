@@ -16,20 +16,16 @@ import {
   Phone,
   Mail,
   MapPin,
-  Plus,
   Trash2,
   Pencil,
-  UserCheck,
   UserRoundPlus,
-  ShieldCheck,
   Link2,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 
 /**
- * Panel de Administración de Sede Física (Admin de Consultorio).
- * Rol intermedio: Gestiona exclusivamente los asistentes de recepción de su sede
- * y realiza el ABM completo (solo cuentas e identidad) de médicos y asistentes.
+ * Panel de Administración de Sede (Administrador de Sede).
+ * ABM completo de Médicos y Asistentes restringido a este rol y sede.
  */
 export const ConsultorioAdminPage = () => {
   const { user } = useAuth();
@@ -61,84 +57,16 @@ export const ConsultorioAdminPage = () => {
     closeEditProfesionalModal,
   } = useConsultorioAdmin(consultorioCuit);
 
-  const [activeTab, setActiveTab] = useState('asistentes'); // 'asistentes' | 'profesionales'
+  const [activeTab, setActiveTab] = useState('medicos'); // 'medicos' | 'asistentes'
   const [isAsistenteModalOpen, setIsAsistenteModalOpen] = useState(false);
   const [isProfesionalModalOpen, setIsProfesionalModalOpen] = useState(false);
   const [isCreateProfesionalModalOpen, setIsCreateProfesionalModalOpen] = useState(false);
 
-  // Columnas para la tabla de Asistentes
-  const asistenteColumns = [
+  // Columnas para la tabla de Médicos
+  const medicoColumns = [
     {
       key: 'nombre',
-      label: 'Personal de Recepción',
-      className: 'min-w-[220px]',
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0 font-bold font-heading">
-            {row.nombre?.[0]}{row.apellido?.[0]}
-          </div>
-          <div>
-            <p className="font-bold font-heading text-slate-900 leading-snug">
-              {row.nombre} {row.apellido}
-            </p>
-            <p className="text-[11px] font-mono text-slate-400 mt-0.5">CUIL: {row.cuil}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'telefono',
-      label: 'Teléfono',
-      render: (row) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
-          <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-          <span>{row.telefono || 'Sin teléfono'}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'sede',
-      label: 'Sede Asignada',
-      render: (row) => (
-        <Badge variant="primary" size="sm">
-          {row.consultorioNombre || consultorio?.nombre || 'Sede Actual'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'acciones',
-      label: 'Acciones',
-      className: 'text-right',
-      render: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={() => openEditAsistenteModal(row)}
-            aria-label={`Editar datos del asistente ${row.nombre} ${row.apellido}`}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-700 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
-            title="Editar datos del asistente"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => deleteAsistente(row.cuil, `${row.nombre} ${row.apellido}`)}
-            aria-label={`Dar de baja al asistente ${row.nombre} ${row.apellido}`}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
-            title="Dar de baja asistente"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  // Columnas para la tabla de Profesionales Vinculados
-  const profesionalColumns = [
-    {
-      key: 'nombre',
-      label: 'Médico / Especialista',
+      label: 'Médico',
       className: 'min-w-[220px]',
       render: (row) => (
         <div className="flex items-center gap-3">
@@ -150,22 +78,32 @@ export const ConsultorioAdminPage = () => {
               Dr./Dra. {row.nombre} {row.apellido}
             </p>
             <p className="text-[11px] font-mono text-slate-400 mt-0.5">
-              {row.matricula ? `Matrícula: ${row.matricula}` : `CUIL: ${row.cuil}`}
+              CUIL: {row.cuil}
             </p>
           </div>
         </div>
       ),
     },
     {
+      key: 'email',
+      label: 'Email',
+      render: (row) => (
+        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+          <span>{row.email || 'Sin registrar'}</span>
+        </div>
+      ),
+    },
+    {
       key: 'especialidades',
-      label: 'Especialidades',
+      label: 'Especialidad',
       render: (row) => (
         <div className="flex flex-wrap gap-1">
           {row.especialidades?.length > 0 ? (
             row.especialidades.map((esp, i) => (
               <span
                 key={i}
-                className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700"
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-primary-50 text-primary-700 border border-primary-200/50"
               >
                 {esp}
               </span>
@@ -177,18 +115,8 @@ export const ConsultorioAdminPage = () => {
       ),
     },
     {
-      key: 'telefono',
-      label: 'Contacto',
-      render: (row) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
-          <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-          <span>{row.telefono || 'Sin registrar'}</span>
-        </div>
-      ),
-    },
-    {
       key: 'estado',
-      label: 'Estado en Sede',
+      label: 'Estado',
       render: () => (
         <Badge variant="emerald" size="sm">
           Activo
@@ -207,7 +135,7 @@ export const ConsultorioAdminPage = () => {
             size="xs"
             onClick={() => openEditProfesionalModal(row)}
             className="text-slate-600 hover:text-primary-700 hover:bg-primary-50"
-            title="Editar datos de cuenta y especialidad"
+            title="Editar médico"
           >
             <Pencil className="w-3.5 h-3.5 mr-1" />
             Editar
@@ -216,23 +144,84 @@ export const ConsultorioAdminPage = () => {
             type="button"
             variant="ghost"
             size="xs"
-            onClick={() => removeProfesional(row.cuil, `${row.nombre} ${row.apellido}`)}
-            className="text-amber-700 hover:text-amber-800 hover:bg-amber-50"
-            title="Desvincular médico de la sede actual"
+            onClick={() => deleteDoctor(row.cuil, `Dr./Dra. ${row.nombre} ${row.apellido}`)}
+            className="text-rose-600 hover:bg-rose-50"
+            title="Eliminar médico"
           >
-            <Link2 className="w-3.5 h-3.5 mr-1" />
-            Desvincular
+            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            Eliminar
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  // Columnas para la tabla de Asistentes
+  const asistenteColumns = [
+    {
+      key: 'nombre',
+      label: 'Asistente',
+      className: 'min-w-[220px]',
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center flex-shrink-0 font-bold font-heading">
+            {row.nombre?.[0]}{row.apellido?.[0]}
+          </div>
+          <div>
+            <p className="font-bold font-heading text-slate-900 leading-snug">
+              {row.nombre} {row.apellido}
+            </p>
+            <p className="text-[11px] font-mono text-slate-400 mt-0.5">DNI/CUIL: {row.cuil}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (row) => (
+        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+          <span>{row.email || 'Sin registrar'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'sede',
+      label: 'Sede Asignada',
+      render: (row) => (
+        <Badge variant="primary" size="sm">
+          {row.consultorioNombre || consultorio?.nombre || 'Sede Actual'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'acciones',
+      label: 'Acciones',
+      className: 'text-right',
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => openEditAsistenteModal(row)}
+            className="text-slate-600 hover:text-primary-700 hover:bg-primary-50"
+            title="Editar asistente"
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1" />
+            Editar
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="xs"
-            onClick={() => deleteDoctor(row.cuil, `${row.nombre} ${row.apellido}`)}
+            onClick={() => deleteAsistente(row.cuil, `${row.nombre} ${row.apellido}`)}
             className="text-rose-600 hover:bg-rose-50"
-            title="Dar de baja definitiva al profesional médico"
+            title="Eliminar asistente"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1" />
-            Dar de baja
+            Eliminar
           </Button>
         </div>
       ),
@@ -254,11 +243,11 @@ export const ConsultorioAdminPage = () => {
                   {consultorio?.nombre || user?.sedeNombre || 'Sede Física'}
                 </h1>
                 <Badge variant="primary" size="sm">
-                  Administración de Sede
+                  Administrador de Sede
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Panel operativo local. Administra los asistentes de recepción y el cuerpo profesional de este consultorio.
+                Panel operativo local. Administra el cuerpo de médicos y los asistentes de recepción de esta sede.
               </p>
 
               {/* Metadatos de la Sede */}
@@ -297,13 +286,36 @@ export const ConsultorioAdminPage = () => {
         </div>
       </div>
 
-      {/* Selector de Pestañas */}
+      {/* Selector de Pestañas: Gestión de Médicos y Gestión de Asistentes */}
       <div className="border-b border-slate-200/80">
         <nav
           role="tablist"
           aria-label="Gestión de Sede"
           className="flex flex-wrap gap-2 -mb-px"
         >
+          <button
+            role="tab"
+            aria-selected={activeTab === 'medicos'}
+            onClick={() => setActiveTab('medicos')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
+              activeTab === 'medicos'
+                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+            )}
+          >
+            <Stethoscope className={cn('w-4 h-4', activeTab === 'medicos' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
+            <span>Gestión de Médicos</span>
+            <span
+              className={cn(
+                'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5',
+                activeTab === 'medicos' ? 'bg-primary-100 text-primary-800' : 'bg-slate-200/70 text-slate-600'
+              )}
+            >
+              {profesionales.length}
+            </span>
+          </button>
+
           <button
             role="tab"
             aria-selected={activeTab === 'asistentes'}
@@ -316,7 +328,7 @@ export const ConsultorioAdminPage = () => {
             )}
           >
             <Users className={cn('w-4 h-4', activeTab === 'asistentes' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
-            <span>Asistentes de Recepción</span>
+            <span>Gestión de Asistentes</span>
             <span
               className={cn(
                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5',
@@ -326,65 +338,18 @@ export const ConsultorioAdminPage = () => {
               {asistentes.length}
             </span>
           </button>
-
-          <button
-            role="tab"
-            aria-selected={activeTab === 'profesionales'}
-            onClick={() => setActiveTab('profesionales')}
-            className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
-              activeTab === 'profesionales'
-                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
-            )}
-          >
-            <Stethoscope className={cn('w-4 h-4', activeTab === 'profesionales' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
-            <span>Profesionales Vinculados</span>
-            <span
-              className={cn(
-                'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5',
-                activeTab === 'profesionales' ? 'bg-primary-100 text-primary-800' : 'bg-slate-200/70 text-slate-600'
-              )}
-            >
-              {profesionales.length}
-            </span>
-          </button>
         </nav>
       </div>
 
-      {/* Contenido Pestaña 1: Asistentes de Recepción */}
-      {activeTab === 'asistentes' && (
+      {/* Contenido Pestaña 1: Gestión de Médicos */}
+      {activeTab === 'medicos' && (
         <DataTable
-          title="Asistentes de Recepción de la Sede"
-          subtitle="Secretarios y personal operativo habilitados para operar la Mesa Diaria en este consultorio."
-          data={asistentes}
-          columns={asistenteColumns}
-          isLoading={isLoading}
-          searchPlaceholder="Buscar por nombre, apellido o CUIL..."
-          filterKey="nombre"
-          actionButton={
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setIsAsistenteModalOpen(true)}
-            >
-              <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
-              Dar de alta Asistente
-            </Button>
-          }
-        />
-      )}
-
-      {/* Contenido Pestaña 2: Profesionales Vinculados */}
-      {activeTab === 'profesionales' && (
-        <DataTable
-          title="Médicos y Especialistas en Sede"
-          subtitle="Cuerpo médico vinculado a este consultorio para la apertura de agendas y atención de pacientes."
+          title="Gestión de Médicos"
+          subtitle="Listado y administración de médicos registrados para la atención en esta sede."
           data={profesionales}
-          columns={profesionalColumns}
+          columns={medicoColumns}
           isLoading={isLoading}
-          searchPlaceholder="Buscar por nombre, matrícula o especialidad..."
+          searchPlaceholder="Buscar por nombre, apellido, especialidad o CUIL..."
           filterKey="nombre"
           actionButton={
             <div className="flex flex-wrap items-center gap-2">
@@ -395,7 +360,7 @@ export const ConsultorioAdminPage = () => {
                 onClick={() => setIsProfesionalModalOpen(true)}
               >
                 <Link2 className="w-4 h-4 mr-1.5" strokeWidth={2} />
-                Vincular Médico
+                Vincular Existente
               </Button>
               <Button
                 type="button"
@@ -404,14 +369,63 @@ export const ConsultorioAdminPage = () => {
                 onClick={() => setIsCreateProfesionalModalOpen(true)}
               >
                 <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
-                Dar de alta Médico
+                Nuevo Médico
               </Button>
             </div>
           }
         />
       )}
 
-      {/* Modal de Creación de Asistente (restringido a esta sede) */}
+      {/* Contenido Pestaña 2: Gestión de Asistentes */}
+      {activeTab === 'asistentes' && (
+        <DataTable
+          title="Gestión de Asistentes"
+          subtitle="Listado y administración de asistentes de recepción para esta sede."
+          data={asistentes}
+          columns={asistenteColumns}
+          isLoading={isLoading}
+          searchPlaceholder="Buscar por nombre, apellido o DNI/CUIL..."
+          filterKey="nombre"
+          actionButton={
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => setIsAsistenteModalOpen(true)}
+            >
+              <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
+              Nuevo Asistente
+            </Button>
+          }
+        />
+      )}
+
+      {/* Modal de Creación de Médico */}
+      <CreateProfesionalModal
+        isOpen={isCreateProfesionalModalOpen}
+        onClose={() => setIsCreateProfesionalModalOpen(false)}
+        onSubmit={async (dto) => {
+          const success = await registerDoctor(dto);
+          if (success) setIsCreateProfesionalModalOpen(false);
+          return success;
+        }}
+        isSubmitting={isSubmitting}
+        especialidades={especialidades}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
+      />
+
+      {/* Modal de Edición de Médico */}
+      <EditProfesionalModal
+        isOpen={isEditProfesionalModalOpen}
+        onClose={closeEditProfesionalModal}
+        profesional={editingProfesional}
+        especialidades={especialidades}
+        onSubmit={updateDoctor}
+        isSubmitting={isSubmitting}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
+      />
+
+      {/* Modal de Creación de Asistente */}
       <CreateAsistenteModal
         isOpen={isAsistenteModalOpen}
         onClose={() => setIsAsistenteModalOpen(false)}
@@ -426,7 +440,17 @@ export const ConsultorioAdminPage = () => {
         sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
 
-      {/* Modal para Vincular Profesional Existente a la Sede */}
+      {/* Modal de Edición de Asistente */}
+      <EditAsistenteModal
+        isOpen={isEditAsistenteModalOpen}
+        onClose={closeEditAsistenteModal}
+        asistente={editingAsistente}
+        onSubmit={updateAsistente}
+        isSubmitting={isSubmitting}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
+      />
+
+      {/* Modal de Vinculación de Profesional Existente */}
       <AssignProfesionalModal
         isOpen={isProfesionalModalOpen}
         onClose={() => setIsProfesionalModalOpen(false)}
@@ -445,41 +469,6 @@ export const ConsultorioAdminPage = () => {
         alreadyAssignedCuils={profesionales.map((p) => p.cuil)}
         especialidades={especialidades}
         sedeNombre={consultorio?.nombre || user?.sedeNombre || 'Sede Actual'}
-      />
-
-      {/* Modal para Dar de Alta Nuevo Médico en Sede (Solo cuenta y especialidad) */}
-      <CreateProfesionalModal
-        isOpen={isCreateProfesionalModalOpen}
-        onClose={() => setIsCreateProfesionalModalOpen(false)}
-        onSubmit={async (dto) => {
-          const success = await registerDoctor(dto);
-          if (success) setIsCreateProfesionalModalOpen(false);
-          return success;
-        }}
-        isSubmitting={isSubmitting}
-        especialidades={especialidades}
-        sedeNombre={consultorio?.nombre || user?.sedeNombre}
-      />
-
-      {/* Modal para Modificar Datos de Asistente */}
-      <EditAsistenteModal
-        isOpen={isEditAsistenteModalOpen}
-        onClose={closeEditAsistenteModal}
-        asistente={editingAsistente}
-        onSubmit={updateAsistente}
-        isSubmitting={isSubmitting}
-        sedeNombre={consultorio?.nombre || user?.sedeNombre}
-      />
-
-      {/* Modal para Modificar Cuenta de Profesional (Solo Cuentas/Especialidad) */}
-      <EditProfesionalModal
-        isOpen={isEditProfesionalModalOpen}
-        onClose={closeEditProfesionalModal}
-        profesional={editingProfesional}
-        especialidades={especialidades}
-        onSubmit={updateDoctor}
-        isSubmitting={isSubmitting}
-        sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
     </div>
   );

@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Input } from '../../../shared/components/ui/Input';
-import { Stethoscope, Hospital, AlertCircle, Award, Phone, Calendar, UserPlus } from 'lucide-react';
+import { Stethoscope, Hospital, AlertCircle, Mail, UserPlus } from 'lucide-react';
 import { profesionalSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
 
 /**
  * Modal para el Alta completa de un nuevo Médico / Profesional en la sede.
- * Regla RBAC: El Administrador de Sede solo gestiona cuentas e identidad profesional
- * (Nombre, Apellido, CUIL, Matrícula, Especialidad, Contacto), sin parametrizaciones médicas.
+ * Regla de negocio estricta:
+ * Pide Nombre, Apellido, CUIL, Email y Especialidad.
+ * NO incluir selección de estudios u obras sociales (delegado al asistente).
  */
 export const CreateProfesionalModal = ({
   isOpen,
@@ -20,14 +21,11 @@ export const CreateProfesionalModal = ({
   sedeNombre = '',
 }) => {
   const [formData, setFormData] = useState({
-    cuil: '',
     nombre: '',
     apellido: '',
-    matricula: '',
-    telefono: '',
+    cuil: '',
+    email: '',
     especialidadId: '',
-    genero: 'Otro',
-    fecNac: '1985-06-15',
   });
 
   const [errors, setErrors] = useState({});
@@ -63,9 +61,18 @@ export const CreateProfesionalModal = ({
     }
 
     try {
+      const cuilClean = sanitizedData.cuil;
+      const matriculaGen = `MP-${cuilClean.length >= 6 ? cuilClean.slice(-6) : Math.floor(100000 + Math.random() * 900000)}`;
+
       const payload = {
-        ...formData,
-        ...sanitizedData,
+        cuil: cuilClean,
+        nombre: sanitizedData.nombre,
+        apellido: sanitizedData.apellido,
+        email: sanitizedData.email,
+        matricula: matriculaGen,
+        telefono: '381-0000000',
+        genero: 'Otro',
+        fecNac: new Date('1985-06-15').toISOString(),
         especialidadId: Number(formData.especialidadId),
         especialidadesIds: [Number(formData.especialidadId)],
       };
@@ -73,14 +80,11 @@ export const CreateProfesionalModal = ({
       const success = await onSubmit(payload);
       if (success) {
         setFormData({
-          cuil: '',
           nombre: '',
           apellido: '',
-          matricula: '',
-          telefono: '',
+          cuil: '',
+          email: '',
           especialidadId: '',
-          genero: 'Otro',
-          fecNac: '1985-06-15',
         });
         setErrors({});
         onClose();
@@ -98,8 +102,8 @@ export const CreateProfesionalModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Dar de Alta Médico"
-      description="Registra la cuenta e identidad profesional del médico para habilitarlo en la sede."
+      title="Nuevo Médico"
+      description="Registra un nuevo profesional médico para la sede."
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm" noValidate>
@@ -121,7 +125,7 @@ export const CreateProfesionalModal = ({
           </div>
         )}
 
-        {/* 1. Datos Personales */}
+        {/* 1. Nombre y Apellido */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="Nombre"
@@ -146,14 +150,14 @@ export const CreateProfesionalModal = ({
           />
         </div>
 
-        {/* 2. Identificación Profesional */}
+        {/* 2. CUIL y Email */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
-            label="CUIL / CUIT"
+            label="CUIL"
             name="cuil"
             value={formData.cuil}
             onChange={handleChange}
-            placeholder="11 dígitos (ej: 20334445556)"
+            placeholder="11 dígitos (sin guiones)"
             error={errors.cuil}
             required
             disabled={isSubmitting}
@@ -161,22 +165,23 @@ export const CreateProfesionalModal = ({
           />
 
           <Input
-            label="Matrícula Profesional"
-            name="matricula"
-            value={formData.matricula}
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
             onChange={handleChange}
-            placeholder="Ej: MP-4521"
-            error={errors.matricula}
+            placeholder="medico@hospital.com"
+            error={errors.email}
             required
             disabled={isSubmitting}
-            leadingIcon={<Award className="w-4 h-4 text-primary-600" />}
+            leadingIcon={<Mail className="w-4 h-4 text-primary-600" />}
           />
         </div>
 
-        {/* 3. Especialidad Médica Principal */}
+        {/* 3. Especialidad Médica */}
         <div>
           <label htmlFor="prof-especialidad" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-            Especialidad Médica Principal <span className="text-rose-500">*</span>
+            Especialidad <span className="text-rose-500">*</span>
           </label>
           <div className="relative rounded-xl shadow-xs">
             <select
@@ -207,54 +212,6 @@ export const CreateProfesionalModal = ({
           </div>
         </div>
 
-        {/* 4. Teléfono y Género */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            label="Teléfono de Contacto"
-            name="telefono"
-            value={formData.telefono}
-            onChange={handleChange}
-            placeholder="Ej: 381 4112233"
-            error={errors.telefono}
-            required
-            disabled={isSubmitting}
-            leadingIcon={<Phone className="w-4 h-4 text-primary-600" />}
-          />
-
-          <div>
-            <label htmlFor="prof-genero" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-              Género
-            </label>
-            <select
-              id="prof-genero"
-              name="genero"
-              value={formData.genero}
-              onChange={handleChange}
-              className="w-full h-10 px-3 rounded-xl border border-slate-200/80 bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-              disabled={isSubmitting}
-            >
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Otro">Otro / Prefiero no decir</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 5. Fecha de Nacimiento */}
-        <div>
-          <Input
-            label="Fecha de Nacimiento"
-            type="date"
-            name="fecNac"
-            value={formData.fecNac}
-            onChange={handleChange}
-            error={errors.fecNac}
-            required
-            disabled={isSubmitting}
-            leadingIcon={<Calendar className="w-4 h-4 text-primary-600" />}
-          />
-        </div>
-
         {/* Botones de Acción */}
         <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
           <Button
@@ -275,7 +232,7 @@ export const CreateProfesionalModal = ({
             className="gap-1.5 shadow-xs"
           >
             <UserPlus className="w-4 h-4" strokeWidth={2} />
-            <span>Dar de Alta Médico</span>
+            <span>Guardar Médico</span>
           </Button>
         </div>
       </form>

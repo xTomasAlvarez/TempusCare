@@ -41,6 +41,7 @@ public class TempusTokenAuthHandler : AuthenticationHandler<AuthenticationScheme
         string rol = "Paciente";
         string userId = "1";
         string username = "Usuario";
+        string? consultorioCuit = null;
 
         // Formato estándar JWT emitido por AuthService o formato legacy "JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}"
         if (token.Contains('.'))
@@ -64,6 +65,8 @@ public class TempusTokenAuthHandler : AuthenticationHandler<AuthenticationScheme
                         rol = rolProp.GetString() ?? rol;
                     if (doc.RootElement.TryGetProperty("unique_name", out var nameProp))
                         username = nameProp.GetString() ?? username;
+                    if (doc.RootElement.TryGetProperty("consultorioCuit", out var cuitProp))
+                        consultorioCuit = cuitProp.GetString();
                 }
                 catch
                 {
@@ -93,6 +96,21 @@ public class TempusTokenAuthHandler : AuthenticationHandler<AuthenticationScheme
             new Claim(ClaimTypes.Role, rol),
             new Claim("Rol", rol)
         };
+
+        if (rol.Equals("AdminConsultorio", StringComparison.OrdinalIgnoreCase) ||
+            rol.Equals("AdminSede", StringComparison.OrdinalIgnoreCase) ||
+            rol == "4")
+        {
+            if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "AdminSede"))
+                claims.Add(new Claim(ClaimTypes.Role, "AdminSede"));
+            if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "AdminConsultorio"))
+                claims.Add(new Claim(ClaimTypes.Role, "AdminConsultorio"));
+        }
+
+        if (!string.IsNullOrEmpty(consultorioCuit))
+        {
+            claims.Add(new Claim("ConsultorioCuit", consultorioCuit));
+        }
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);

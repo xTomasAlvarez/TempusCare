@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Input } from '../../../shared/components/ui/Input';
-import { UserCheck, ShieldCheck, MapPin } from 'lucide-react';
+import { CheckCircle2, Hospital, Mail, AlertCircle } from 'lucide-react';
 
 /**
- * Modal para modificar los datos del Asistente / Secretario de la sede.
- * El CUIL y la sede asignada son inmutables por regla de seguridad.
+ * Modal para modificar los datos de un Asistente en la sede.
+ * Regla de negocio estricta:
+ * Pide Nombre, Apellido, DNI y Email.
  */
 export const EditAsistenteModal = ({
   isOpen,
@@ -19,44 +20,21 @@ export const EditAsistenteModal = ({
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    telefono: '',
-    fecNac: '1995-05-15',
-    genero: 'F',
-    calle: '',
-    nro: '',
-    depto: '',
-    localidad: 'San Miguel de Tucumán',
-    provincia: 'Tucumán',
-    codPostal: '4000',
+    email: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState(null);
 
   useEffect(() => {
     if (asistente) {
-      let fecNacFormatted = '1995-05-15';
-      if (asistente.fechaNacimiento) {
-        try {
-          fecNacFormatted = new Date(asistente.fechaNacimiento).toISOString().split('T')[0];
-        } catch {
-          fecNacFormatted = '1995-05-15';
-        }
-      }
-
       setFormData({
         nombre: asistente.nombre || '',
         apellido: asistente.apellido || '',
-        telefono: asistente.telefono || '',
-        fecNac: fecNacFormatted,
-        genero: asistente.genero || 'F',
-        calle: asistente.calle || '',
-        nro: asistente.nro || '',
-        depto: asistente.depto || '',
-        localidad: asistente.localidad || 'San Miguel de Tucumán',
-        provincia: asistente.provincia || 'Tucumán',
-        codPostal: asistente.codPostal || '4000',
+        email: asistente.email || '',
       });
       setErrors({});
+      setServerError(null);
     }
   }, [asistente]);
 
@@ -71,38 +49,44 @@ export const EditAsistenteModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!asistente) return;
+    setServerError(null);
 
     const newErrors = {};
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
     if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio.';
-    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
+    if (!formData.email.trim()) {
+      newErrors.email = 'El correo electrónico es obligatorio.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'Ingresa un correo electrónico válido.';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const payload = {
-      cuil: asistente.cuil,
-      nombre: formData.nombre.trim(),
-      apellido: formData.apellido.trim(),
-      fecNac: new Date(formData.fecNac).toISOString(),
-      telefono: formData.telefono.trim(),
-      genero: formData.genero,
-      calle: formData.calle?.trim() || null,
-      nro: formData.nro?.trim() || null,
-      depto: formData.depto?.trim() || null,
-      localidad: formData.localidad?.trim() || 'San Miguel de Tucumán',
-      provincia: formData.provincia?.trim() || 'Tucumán',
-      codPostal: formData.codPostal?.trim() || '4000',
-      institucionId: asistente.institucionId || null,
-      consultorioCuit: asistente.consultorioCuit || null,
-      adminConsultorioCuil: asistente.adminConsultorioCuil || null,
-    };
+    try {
+      const payload = {
+        cuil: asistente.cuil,
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        email: formData.email.trim(),
+        fecNac: asistente.fechaNacimiento
+          ? new Date(asistente.fechaNacimiento).toISOString()
+          : new Date('1995-05-15').toISOString(),
+        telefono: asistente.telefono || '381-0000000',
+        genero: asistente.genero || 'Otro',
+        institucionId: asistente.institucionId || null,
+        consultorioCuit: asistente.consultorioCuit || null,
+        adminConsultorioCuil: asistente.adminConsultorioCuil || null,
+      };
 
-    const success = await onSubmit(asistente.cuil, payload);
-    if (success) {
-      onClose();
+      const success = await onSubmit(asistente.cuil, payload);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      setServerError(err.message || 'Error al modificar los datos del asistente.');
     }
   };
 
@@ -110,180 +94,78 @@ export const EditAsistenteModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Modificar Datos del Asistente"
-      description={`Actualiza la información personal y de contacto del asistente en "${sedeNombre}".`}
-      maxWidth="max-w-2xl"
+      title="Editar Asistente"
+      description={`Modifica los datos del asistente operativo asignado a "${sedeNombre || 'la sede'}".`}
+      maxWidth="max-w-lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
-        {/* Identificación (CUIL de sólo lectura) y Nombre */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm" noValidate>
+        {/* Banner de Sede Física */}
+        <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
+          <Hospital className="w-4 h-4 text-primary-600 shrink-0" />
+          <span>
+            Sede asignada: <strong className="text-slate-900">{sedeNombre || 'Sede Actual'}</strong>
+          </span>
+        </div>
+
+        {/* Alerta de Error */}
+        {serverError && (
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{serverError}</span>
+          </div>
+        )}
+
+        {/* 1. Nombre y Apellido */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="Nombre"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            placeholder="Ej: Luciana"
+            error={errors.nombre}
+            required
+            disabled={isSubmitting}
+          />
+
+          <Input
+            label="Apellido"
+            name="apellido"
+            value={formData.apellido}
+            onChange={handleChange}
+            placeholder="Ej: Herrera"
+            error={errors.apellido}
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+
+        {/* 2. DNI (inmutable) y Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              CUIL (Identificador)
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              DNI
             </label>
             <input
               type="text"
               value={asistente?.cuil || ''}
               disabled
-              className="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono text-slate-500 cursor-not-allowed select-none"
-            />
-            <p className="text-[10px] text-slate-400 mt-1">Identificador inmutable.</p>
-          </div>
-
-          <div>
-            <label htmlFor="edit-asis-nombre" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Nombre <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-asis-nombre"
-              name="nombre"
-              type="text"
-              value={formData.nombre}
-              onChange={handleChange}
-              placeholder="Ej: Luciana"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.nombre && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="edit-asis-apellido" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Apellido <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-asis-apellido"
-              name="apellido"
-              type="text"
-              value={formData.apellido}
-              onChange={handleChange}
-              placeholder="Ej: Herrera"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.apellido ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.apellido && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.apellido}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Datos demográficos */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-          <div>
-            <label htmlFor="edit-asis-telefono" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Teléfono Celular <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="edit-asis-telefono"
-              name="telefono"
-              type="text"
-              value={formData.telefono}
-              onChange={handleChange}
-              placeholder="Ej: 381-5123456"
-              className={`w-full px-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
-                errors.telefono ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
-              }`}
-              disabled={isSubmitting}
-            />
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.telefono && (
-                <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.telefono}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="edit-asis-fecNac" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Fecha de Nacimiento
-            </label>
-            <input
-              id="edit-asis-fecNac"
-              name="fecNac"
-              type="date"
-              value={formData.fecNac}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
+              className="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-xl font-mono text-xs sm:text-sm text-slate-500 cursor-not-allowed select-none"
             />
           </div>
 
-          <div>
-            <label htmlFor="edit-asis-genero" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Género
-            </label>
-            <select
-              id="edit-asis-genero"
-              name="genero"
-              value={formData.genero}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
-            >
-              <option value="F">Femenino</option>
-              <option value="M">Masculino</option>
-              <option value="Otro">Otro / Prefiero no decir</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Domicilio */}
-        <div className="pt-2 border-t border-slate-100">
-          <p className="text-xs font-bold font-heading text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-slate-400" />
-            <span>Domicilio</span>
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
-            <input
-              name="calle"
-              type="text"
-              value={formData.calle}
-              onChange={handleChange}
-              placeholder="Calle"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
-            />
-            <input
-              name="nro"
-              type="text"
-              value={formData.nro}
-              onChange={handleChange}
-              placeholder="Número"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
-            />
-            <input
-              name="localidad"
-              type="text"
-              value={formData.localidad}
-              onChange={handleChange}
-              placeholder="Localidad"
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        {/* Sede Asignada (Read-only) */}
-        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-          <p className="text-[11px] font-bold font-heading text-slate-600 uppercase tracking-wider">
-            Sede Física Asignada
-          </p>
-          <p className="text-sm font-semibold text-slate-800 mt-0.5">
-            {sedeNombre || asistente?.consultorioNombre || 'Sede Actual'}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            La reasignación de sede sólo puede realizarse desde la administración central.
-          </p>
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="asistente@hospital.com"
+            error={errors.email}
+            required
+            disabled={isSubmitting}
+            leadingIcon={<Mail className="w-4 h-4 text-primary-600" />}
+          />
         </div>
 
         {/* Acciones */}
@@ -303,9 +185,9 @@ export const EditAsistenteModal = ({
             variant="primary"
             size="sm"
             isLoading={isSubmitting}
-            className="gap-1.5"
+            className="gap-1.5 shadow-xs"
           >
-            <UserCheck className="w-4 h-4" strokeWidth={2} />
+            <CheckCircle2 className="w-4 h-4" strokeWidth={2} />
             <span>Guardar Cambios</span>
           </Button>
         </div>

@@ -15,10 +15,14 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   body {
     font-family: var(--font-sans);
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* Títulos, Encabezados, Modales y Métricas según Design.md (Sección 4) */

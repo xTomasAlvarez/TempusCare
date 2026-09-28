@@ -32,7 +32,7 @@ public class AsistenteService : IAsistenteService
         {
             NombreUsuario = dto.Cuil,
             Contrasena = "Asistente123!",
-            Mail = $"{dto.Cuil}@asistente.com",
+            Mail = !string.IsNullOrWhiteSpace(dto.Email) ? dto.Email.Trim() : $"{dto.Cuil}@asistente.com",
             Rol = RolUsuario.Asistente
         };
         _db.Usuarios.Add(usuario);
@@ -94,6 +94,7 @@ public class AsistenteService : IAsistenteService
         _logger.LogInformation("Modificando asistente CUIL {Cuil}", dto.Cuil);
 
         var asistente = await _db.Asistentes
+            .Include(a => a.Usuario)
             .Include(a => a.Direccion)
             .FirstOrDefaultAsync(a => a.Cuil == dto.Cuil);
 
@@ -107,6 +108,11 @@ public class AsistenteService : IAsistenteService
         {
             _logger.LogWarning("Institución ID {Id} no encontrada al modificar asistente", dto.InstitucionId.Value);
             throw new InstitucionNotFoundException(dto.InstitucionId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Email) && asistente.Usuario != null)
+        {
+            asistente.Usuario.Mail = dto.Email.Trim();
         }
 
         asistente.Nombre = dto.Nombre;
@@ -302,7 +308,8 @@ public class AsistenteService : IAsistenteService
             a.Institucion?.Nombre,
             a.ConsultorioCuit,
             a.Consultorio?.Nombre,
-            a.AdminConsultorioCuil
+            a.AdminConsultorioCuil,
+            a.Usuario?.Mail
         );
     }
 }

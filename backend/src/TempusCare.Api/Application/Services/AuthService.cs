@@ -250,7 +250,7 @@ public class AuthService : IAuthService
             _ => null
         };
 
-        string token = GenerarJwt(usuario.Id, usuario.NombreUsuario, usuario.Rol, nombre, apellido, nombreCompleto);
+        string token = GenerarJwt(usuario.Id, usuario.NombreUsuario, usuario.Rol, nombre, apellido, nombreCompleto, consultorioCuit);
         _logger.LogInformation("Inicio de sesión exitoso para usuario ID {UsuarioId}, Rol: {Rol}", usuario.Id, usuario.Rol);
 
         List<string>? obrasSocialesList = usuario.Rol switch
@@ -279,7 +279,7 @@ public class AuthService : IAuthService
         );
     }
 
-    private static string GenerarJwt(int userId, string username, RolUsuario rol, string? nombre, string? apellido, string? nombreCompleto)
+    private static string GenerarJwt(int userId, string username, RolUsuario rol, string? nombre, string? apellido, string? nombreCompleto, string? consultorioCuit = null)
     {
         var headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
         var header = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(headerJson))
@@ -296,6 +296,7 @@ public class AuthService : IAuthService
             { "given_name", nombre },
             { "family_name", apellido },
             { "name", nombreCompleto ?? $"{nombre} {apellido}".Trim() },
+            { "consultorioCuit", consultorioCuit },
             { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
             { "exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds() }
         };

@@ -26,21 +26,23 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto my-auto">
       <Card className="border-slate-200/80 shadow-md">
-        {/* Cabecera espaciosa y jerárquica con dimensiones optimizadas */}
-        <CardHeader className="text-center p-6 pb-2.5 sm:p-8 sm:pb-3">
-          <div className="w-11 h-11 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-2 shadow-xs">
-            <LogIn className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
+        {/* Cabecera compacta y jerárquica con dimensiones optimizadas */}
+        <CardHeader className="text-center p-4 pb-1 sm:p-5 sm:pb-2">
+          <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1.5 shadow-xs">
+            <LogIn className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>
-          <CardTitle className="text-2xl font-bold font-heading text-slate-900">Iniciar Sesión</CardTitle>
-          <CardDescription className="text-xs sm:text-sm text-slate-500 mt-1">
+          <CardTitle className="text-xl sm:text-2xl font-bold font-heading text-slate-900 leading-tight">
+            Iniciar Sesión
+          </CardTitle>
+          <CardDescription className="text-xs text-slate-500 mt-0.5">
             Ingresa tus credenciales para acceder a la plataforma.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-6 sm:px-8 py-0">
-          <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+        <CardContent className="px-5 sm:px-6 py-0">
+          <form onSubmit={handleSubmit} noValidate className="space-y-2.5">
             <Input
               id="usuario"
               name="usuario"
@@ -53,7 +55,7 @@ export const LoginPage = () => {
               error={errors.usuario}
               leadingIcon={<Mail className="w-4 h-4 text-primary-600" strokeWidth={2} />}
               autoComplete="username"
-              className="py-2.5 text-sm"
+              className="py-1.5 text-sm"
             />
 
             <Input
@@ -68,7 +70,7 @@ export const LoginPage = () => {
               error={errors.contra}
               leadingIcon={<Lock className="w-4 h-4 text-primary-600" strokeWidth={2} />}
               autoComplete="current-password"
-              className="py-2.5 text-sm"
+              className="py-1.5 text-sm"
               trailingIcon={
                 <button
                   type="button"
@@ -82,15 +84,15 @@ export const LoginPage = () => {
               }
             />
 
-            {/* Espacio fijo reservado para mensaje de error inline (sin saltos de layout) */}
-            <div className="min-h-[20px] flex items-center">
-              {errors.general && (
+            {/* Mensaje de error general si existe */}
+            {errors.general && (
+              <div className="py-0.5">
                 <p className="text-xs text-rose-600 flex items-center gap-1.5 font-medium animate-in fade-in-0">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{errors.general}</span>
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="pt-0.5">
               <Button
@@ -98,7 +100,7 @@ export const LoginPage = () => {
                 variant="primary"
                 size="md"
                 isLoading={isSubmitting}
-                className="w-full text-sm font-semibold shadow-xs py-2.5 gap-2"
+                className="w-full text-sm font-semibold shadow-xs py-2 gap-2"
               >
                 <LogIn className="w-4 h-4" strokeWidth={2} />
                 <span>Acceder a la plataforma</span>
@@ -106,22 +108,22 @@ export const LoginPage = () => {
             </div>
           </form>
 
-          {/* Accesos rápidos de desarrollo en grilla amplia de 2 columnas */}
-          <div className="mt-4 pt-3.5 border-t border-slate-100">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+          {/* Accesos rápidos de desarrollo en grilla compacta de 2 columnas */}
+          <div className="mt-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
                 <span>Accesos rápidos de prueba:</span>
               </span>
               <span className="text-[11px] text-slate-400 font-normal">1-clic</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {testProfiles.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => fillQuickTest(p.user, p.pass)}
-                  className="px-3 py-2 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-all flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-all flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
                   title={`${p.label} - ${p.user}`}
                 >
                   <div className="min-w-0 pr-1">
@@ -141,7 +143,7 @@ export const LoginPage = () => {
           </div>
         </CardContent>
 
-        <CardFooter className="flex-col gap-2 justify-center border-t border-slate-100 p-6 pt-3.5 sm:p-8 sm:pt-4 bg-slate-50/40 rounded-b-2xl mt-4">
+        <CardFooter className="flex-col gap-1 justify-center border-t border-slate-100 p-3 sm:p-3.5 bg-slate-50/40 rounded-b-2xl mt-2.5">
           <p className="text-xs text-slate-600 text-center">
             ¿No tienes cuenta de paciente?{' '}
             <Link to="/register" className="text-primary-700 font-semibold hover:underline">

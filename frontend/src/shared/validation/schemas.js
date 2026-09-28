@@ -144,23 +144,32 @@ export const profesionalSchema = z.object({
     .min(2, 'El apellido debe tener al menos 2 caracteres')
     .max(50, 'El apellido no puede superar los 50 caracteres')
     .regex(REGEX.SOLO_LETRAS, 'El apellido solo debe contener letras'),
+  email: z
+    .string()
+    .trim()
+    .email('Ingresa un correo electrónico válido'),
+  especialidadId: z
+    .union([z.string(), z.number()])
+    .optional()
+    .nullable(),
   matricula: z
     .string()
     .trim()
-    .min(3, 'La matrícula profesional debe tener al menos 3 caracteres')
-    .max(30, 'La matrícula no puede superar los 30 caracteres'),
+    .optional()
+    .default(''),
   telefono: z
     .string()
     .trim()
-    .min(6, 'El teléfono de contacto es obligatorio')
-    .regex(REGEX.TELEFONO, 'Ingresa un formato de teléfono válido'),
+    .optional()
+    .default(''),
   genero: z
-    .enum(['M', 'F', 'Otro'], {
-      errorMap: () => ({ message: 'Selecciona una opción de género válida' }),
-    }),
+    .string()
+    .optional()
+    .default('Otro'),
   fecNac: z
     .string()
-    .min(1, 'La fecha de nacimiento es obligatoria'),
+    .optional()
+    .default('1985-06-15'),
 });
 
 /**
@@ -171,8 +180,8 @@ export const asistenteSchema = z.object({
     .string()
     .trim()
     .transform((val) => val.replace(/\D/g, ''))
-    .refine((val) => REGEX.CUIT_CUIL.test(val), {
-      message: 'El CUIL debe contener exactamente 11 dígitos numéricos',
+    .refine((val) => val.length >= 7 && val.length <= 11, {
+      message: 'El DNI o CUIL debe contener entre 7 y 11 dígitos numéricos',
     }),
   nombre: z
     .string()
@@ -184,13 +193,17 @@ export const asistenteSchema = z.object({
     .trim()
     .min(2, 'El apellido es obligatorio (al menos 2 caracteres)')
     .regex(REGEX.SOLO_LETRAS, 'El apellido solo debe contener letras'),
+  email: z
+    .string()
+    .trim()
+    .email('Ingresa un correo electrónico válido'),
   telefono: z
     .string()
     .trim()
-    .min(6, 'El teléfono es obligatorio')
-    .regex(REGEX.TELEFONO, 'Ingresa un número de teléfono válido'),
-  genero: z.enum(['M', 'F', 'Otro']),
-  fecNac: z.string().min(1, 'La fecha de nacimiento es obligatoria'),
+    .optional()
+    .default(''),
+  genero: z.string().optional().default('Otro'),
+  fecNac: z.string().optional().default('1995-05-15'),
   institucionId: z.union([z.string(), z.number()]).optional().nullable(),
   consultorioCuit: z.string().optional().nullable(),
   adminConsultorioCuil: z.string().optional().nullable(),

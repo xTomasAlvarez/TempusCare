@@ -79,6 +79,11 @@ export const institutionAdminService = {
     return await apiClient.put(`profesionales/${encodeURIComponent(cuil)}`, dto);
   },
 
+  async deleteDoctor(cuil) {
+    await apiClient.delete(`profesionales/${encodeURIComponent(cuil)}`);
+    return true;
+  },
+
   async createAdminConsultorio(dto) {
     return await apiClient.post('administradores/consultorio', dto);
   },

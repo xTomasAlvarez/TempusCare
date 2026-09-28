@@ -59,10 +59,10 @@ public class AuthService : IAuthService
             _logger.LogInformation("Perfil de paciente generado automáticamente para usuario ID {UsuarioId} con CUIL {Cuil}", usuario.Id, cuil);
         }
 
-        string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
+        string token = GenerarJwt(usuario.Id, usuario.NombreUsuario, usuario.Rol, dto.Usuario, null, dto.Usuario);
         _logger.LogInformation("Usuario registrado con éxito. ID: {UsuarioId}", usuario.Id);
 
-        return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, cuil, mockToken);
+        return new UsuarioAutenticadoDto(usuario.Id, usuario.NombreUsuario, usuario.Mail, usuario.Rol, cuil, token);
     }
 
     public async Task<UsuarioAutenticadoDto> RegistrarPacienteAsync(RegistrarPacienteDto dto)
@@ -129,10 +129,10 @@ public class AuthService : IAuthService
 
         await _db.SaveChangesAsync();
 
-        string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
+        string nombreCompleto = $"{paciente.Nombre} {paciente.Apellido}".Trim();
+        string token = GenerarJwt(usuario.Id, usuario.NombreUsuario, usuario.Rol, paciente.Nombre, paciente.Apellido, nombreCompleto);
         _logger.LogInformation("Paciente registrado con éxito. Usuario ID: {UsuarioId}, CUIL: {Cuil}", usuario.Id, paciente.Cuil);
 
-        string nombreCompleto = $"{paciente.Nombre} {paciente.Apellido}".Trim();
         var obrasSociales = new List<string>();
         if (dto.ObraSocialId.HasValue)
         {
@@ -146,7 +146,7 @@ public class AuthService : IAuthService
             usuario.Mail,
             usuario.Rol,
             paciente.Cuil,
-            mockToken,
+            token,
             null,
             null,
             null,
@@ -219,9 +219,6 @@ public class AuthService : IAuthService
             _ => null
         };
 
-        string mockToken = $"JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}";
-        _logger.LogInformation("Inicio de sesión exitoso para usuario ID {UsuarioId}, Rol: {Rol}", usuario.Id, usuario.Rol);
-
         string? nombreCompleto = usuario.Rol switch
         {
             RolUsuario.Paciente => usuario.Paciente != null ? $"{usuario.Paciente.Nombre} {usuario.Paciente.Apellido}".Trim() : null,
@@ -253,6 +250,9 @@ public class AuthService : IAuthService
             _ => null
         };
 
+        string token = GenerarJwt(usuario.Id, usuario.NombreUsuario, usuario.Rol, nombre, apellido, nombreCompleto);
+        _logger.LogInformation("Inicio de sesión exitoso para usuario ID {UsuarioId}, Rol: {Rol}", usuario.Id, usuario.Rol);
+
         List<string>? obrasSocialesList = usuario.Rol switch
         {
             RolUsuario.Paciente => usuario.Paciente?.ObrasSociales?
@@ -268,7 +268,7 @@ public class AuthService : IAuthService
             usuario.Mail,
             usuario.Rol,
             cuil,
-            mockToken,
+            token,
             consultorioCuit,
             institucionId,
             sedeNombre,
@@ -277,5 +277,35 @@ public class AuthService : IAuthService
             apellido,
             obrasSocialesList
         );
+    }
+
+    private static string GenerarJwt(int userId, string username, RolUsuario rol, string? nombre, string? apellido, string? nombreCompleto)
+    {
+        var headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
+        var header = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(headerJson))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        var payloadObj = new Dictionary<string, object?>
+        {
+            { "sub", userId.ToString() },
+            { "unique_name", username },
+            { "rol", rol.ToString() },
+            { "nombre", nombre },
+            { "apellido", apellido },
+            { "nombreCompleto", nombreCompleto ?? $"{nombre} {apellido}".Trim() },
+            { "given_name", nombre },
+            { "family_name", apellido },
+            { "name", nombreCompleto ?? $"{nombre} {apellido}".Trim() },
+            { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+            { "exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds() }
+        };
+        var payloadJson = System.Text.Json.JsonSerializer.Serialize(payloadObj);
+        var payload = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(payloadJson))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        var signature = "JWT-TOKEN-" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("tempuscare-sig"))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        return $"{header}.{payload}.{signature}";
     }
 }

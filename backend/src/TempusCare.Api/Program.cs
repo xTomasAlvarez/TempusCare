@@ -31,6 +31,7 @@ builder.Services.AddScoped<IAdministradorService, AdministradorService>();
 builder.Services.AddScoped<IHistoriaClinicaService, HistoriaClinicaService>();
 builder.Services.AddScoped<ICuestionarioService, CuestionarioService>();
 builder.Services.AddScoped<IObservacionService, ObservacionService>();
+builder.Services.AddScoped<IVitalityService, VitalityService>();
 
 // Configuración de Autenticación basada en Bearer Tokens y Control de Acceso RBAC
 builder.Services.AddAuthentication("Bearer")

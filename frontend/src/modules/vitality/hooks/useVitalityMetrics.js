@@ -38,8 +38,7 @@ export const useVitalityMetrics = () => {
           volumenMensual: data.volumenMensual ?? data.VolumenMensual ?? [],
         });
       }
-    } catch (err) {
-      console.error('Error al cargar métricas de Vitality:', err);
+    } catch {
       setError('No se pudieron obtener las métricas globales del sistema.');
     } finally {
       setIsLoading(false);

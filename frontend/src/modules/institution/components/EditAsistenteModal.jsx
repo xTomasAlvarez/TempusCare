@@ -116,7 +116,7 @@ export const EditAsistenteModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
         {/* Identificación (CUIL de sólo lectura) y Nombre */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
           <div>
             <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIL (Identificador)
@@ -178,7 +178,7 @@ export const EditAsistenteModal = ({
         </div>
 
         {/* Datos demográficos */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
           <div>
             <label htmlFor="edit-asis-telefono" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Teléfono Celular <span className="text-rose-500">*</span>
@@ -242,7 +242,7 @@ export const EditAsistenteModal = ({
             <MapPin className="w-3.5 h-3.5 text-slate-400" />
             <span>Domicilio</span>
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
             <input
               name="calle"
               type="text"

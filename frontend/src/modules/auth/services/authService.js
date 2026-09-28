@@ -24,6 +24,10 @@ export const authService = {
       consultorioCuit: data.consultorioCuit || null,
       institucionId: data.institucionId || null,
       sedeNombre: data.sedeNombre || null,
+      nombreCompleto: data.nombreCompleto || null,
+      nombre: data.nombre || null,
+      apellido: data.apellido || null,
+      obrasSociales: data.obrasSociales || [],
     };
   },
 
@@ -59,6 +63,10 @@ export const authService = {
       rol: data.rol,
       cuil: data.cuil,
       token: data.token,
+      nombreCompleto: data.nombreCompleto || `${nombre.trim()} ${apellido.trim()}`.trim(),
+      nombre: data.nombre || nombre.trim(),
+      apellido: data.apellido || apellido.trim(),
+      obrasSociales: data.obrasSociales || [],
     };
   },
 };

@@ -112,7 +112,7 @@ export const CreateAsistenteModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
         {/* Identificación Personal */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
           <div>
             <label htmlFor="cuil-asis" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIL <span className="text-rose-500">*</span>
@@ -187,7 +187,7 @@ export const CreateAsistenteModal = ({
         </div>
 
         {/* Datos demográficos */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
           <div>
             <label htmlFor="telefono-asis" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Teléfono Celular <span className="text-rose-500">*</span>
@@ -284,7 +284,7 @@ export const CreateAsistenteModal = ({
           <p className="text-xs font-bold font-heading text-slate-700 uppercase tracking-wider mb-2">
             Domicilio (Opcional)
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
             <input
               name="calle"
               type="text"

@@ -87,8 +87,14 @@ public class ObservacionService : IObservacionService
                     _db.Observaciones.Add(observacion);
                 }
 
-                // RF-MED-06 & RN-04: Al guardar la evolución clínica, actualizar la Cita a Atendida y los turnos asociados a Atendido
+                // RF-MED-06 & RN-04: Al guardar la evolución clínica, actualizar atómicamente la Cita a Atendida y los turnos asociados a Atendido
                 cita.Estado = EstadoCita.Atendida;
+
+                if (cita.Turno != null)
+                {
+                    cita.Turno.Estado = EstadoTurno.Atendido;
+                    cita.Turno.RowVersion = Guid.NewGuid();
+                }
 
                 var turnosAsociados = await _db.Turnos
                     .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
@@ -110,6 +116,45 @@ public class ObservacionService : IObservacionService
                     Detalle = dto.Detalle
                 };
                 _db.Observaciones.Add(observacion);
+
+                // Si no se proporcionó CitaId directo pero sí HistoriaClinicaId, buscar si hay cita activa/pendiente para transicionar
+                if (dto.HistoriaClinicaId.HasValue && dto.HistoriaClinicaId.Value > 0 && !string.IsNullOrEmpty(dto.ProfesionalCuil))
+                {
+                    var hc = await _db.HistoriasClinicas.FirstOrDefaultAsync(h => h.Id == dto.HistoriaClinicaId.Value);
+                    if (hc != null)
+                    {
+                        var citaPendiente = await _db.Citas
+                            .Include(c => c.Turno).ThenInclude(t => t!.Agenda)
+                            .Where(c => c.PacienteCuil == hc.PacienteCuil &&
+                                        c.Turno != null && c.Turno.Agenda != null &&
+                                        c.Turno.Agenda.ProfesionalCuil == dto.ProfesionalCuil &&
+                                        (c.Estado == EstadoCita.Solicitada || c.Estado == EstadoCita.Confirmada || c.Estado == EstadoCita.EnSalaDeEspera || c.Estado == EstadoCita.EnAtencion))
+                            .OrderByDescending(c => c.Fecha)
+                            .FirstOrDefaultAsync();
+
+                        if (citaPendiente != null)
+                        {
+                            citaPendiente.Estado = EstadoCita.Atendida;
+                            observacion.CitaId = citaPendiente.Id;
+
+                            if (citaPendiente.Turno != null)
+                            {
+                                citaPendiente.Turno.Estado = EstadoTurno.Atendido;
+                                citaPendiente.Turno.RowVersion = Guid.NewGuid();
+                            }
+
+                            var turnosDeCita = await _db.Turnos
+                                .Where(t => t.CitaId == citaPendiente.Id || t.Id == citaPendiente.TurnoId)
+                                .ToListAsync();
+
+                            foreach (var t in turnosDeCita)
+                            {
+                                t.Estado = EstadoTurno.Atendido;
+                                t.RowVersion = Guid.NewGuid();
+                            }
+                        }
+                    }
+                }
             }
 
             await _db.SaveChangesAsync();

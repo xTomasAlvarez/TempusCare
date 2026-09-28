@@ -270,6 +270,38 @@ export const useConsultorioAdmin = (consultorioCuit) => {
     }
   };
 
+  const deleteDoctor = async (cuil, nombreCompleto) => {
+    const ok = await confirmDelete({
+      title: '¿Dar de baja médico definitivamente?',
+      message: `¿Estás seguro de que deseas dar de baja la cuenta del Dr./Dra. ${nombreCompleto || cuil}? Se eliminará permanentemente del cuerpo médico del sistema.`,
+      itemName: `Dr./Dra. ${nombreCompleto || cuil}`,
+      confirmText: 'Sí, dar de baja definitivamente',
+      cancelText: 'Cancelar',
+    });
+    if (!ok) return false;
+
+    try {
+      setIsSubmitting(true);
+      await institutionAdminService.deleteDoctor(cuil);
+      addToast({
+        title: 'Médico Dado de Baja',
+        description: `Se dio de baja la cuenta del Dr./Dra. ${nombreCompleto || cuil} correctamente.`,
+        variant: 'success',
+      });
+      await loadData();
+      return true;
+    } catch (err) {
+      addToast({
+        title: 'Error al dar de baja',
+        description: err.message || 'No se pudo dar de baja la cuenta del profesional.',
+        variant: 'error',
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const openEditProfesionalModal = (prof) => {
     setEditingProfesional(prof);
     setIsEditProfesionalModalOpen(true);
@@ -295,6 +327,7 @@ export const useConsultorioAdmin = (consultorioCuit) => {
     removeProfesional,
     registerDoctor,
     updateDoctor,
+    deleteDoctor,
     editingAsistente,
     isEditAsistenteModalOpen,
     openEditAsistenteModal,

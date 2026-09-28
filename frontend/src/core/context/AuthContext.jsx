@@ -28,6 +28,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('tempus_token');
   }, []);
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prev) => (prev ? { ...prev, ...updatedFields } : prev));
+  }, []);
+
   /**
    * Determina la ruta del panel principal según el rol asignado
    */
@@ -60,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     setIsLoading,
     setAuthData,
+    updateUser,
     clearAuthData,
     getDashboardRoute,
   };

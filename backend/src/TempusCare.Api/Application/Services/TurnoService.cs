@@ -30,8 +30,9 @@ public class TurnoService : ITurnoService
 
         if (fecha.HasValue)
         {
-            var dateOnly = fecha.Value.Date;
-            query = query.Where(t => t.Fecha.Date == dateOnly);
+            var startOfDay = fecha.Value.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            query = query.Where(t => t.Fecha >= startOfDay && t.Fecha < endOfDay);
         }
 
         if (!string.IsNullOrEmpty(consultorioCuit))

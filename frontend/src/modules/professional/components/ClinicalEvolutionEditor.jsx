@@ -67,7 +67,7 @@ Se mantienen indicaciones previas y se programa control en 30 días.`;
   };
 
   return (
-    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+    <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
       {/* Encabezado del Editor */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
@@ -178,18 +178,12 @@ Se mantienen indicaciones previas y se programa control en 30 días.`;
 
         {/* Opciones de Cierre de Consulta */}
         <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100">
-          <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs text-slate-700">
-            <input
-              type="checkbox"
-              checked={markAsAttended}
-              onChange={(e) => setMarkAsAttended(e.target.checked)}
-              className="w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500"
-              disabled={isSaving}
-            />
+          <div className="flex items-center gap-2 text-xs text-slate-700 bg-emerald-50/70 px-3 py-1.5 rounded-xl border border-emerald-200/80">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              Marcar cita como <strong>Atendida</strong> y finalizar jornada de consulta
+              Al guardar, la cita se actualiza atómicamente a <strong>Atendido</strong>.
             </span>
-          </label>
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium">

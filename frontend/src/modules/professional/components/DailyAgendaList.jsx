@@ -42,23 +42,38 @@ export const DailyAgendaList = ({
     return timeStr;
   };
 
+  const isCitaAtendida = (estado) =>
+    estado === 3 || estado === 'Atendida' || estado === 'Atendido';
+
   const getStatusBadge = (estado) => {
+    if (isCitaAtendida(estado)) {
+      return (
+        <Badge variant="success" className="gap-1 bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs font-semibold">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Atendido</span>
+        </Badge>
+      );
+    }
+
     switch (estado) {
-      case 1: // Solicitada
+      case 1:
+      case 'Solicitada':
         return <Badge variant="warning">Solicitada</Badge>;
-      case 2: // Confirmada
+      case 2:
+      case 'Confirmada':
         return <Badge variant="primary">Confirmada</Badge>;
-      case 3: // Atendida
-        return (
-          <Badge variant="success" className="gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            Atendida
-          </Badge>
-        );
-      case 4: // Ausente
+      case 4:
+      case 'Ausente':
         return <Badge variant="default">Ausente</Badge>;
-      case 5: // Cancelada
+      case 5:
+      case 'Cancelada':
         return <Badge variant="danger">Cancelada</Badge>;
+      case 6:
+      case 'EnSalaDeEspera':
+        return <Badge variant="info">En Sala de Espera</Badge>;
+      case 7:
+      case 'EnAtencion':
+        return <Badge variant="primary">En Atención</Badge>;
       default:
         return <Badge variant="default">Pendiente</Badge>;
     }
@@ -218,21 +233,34 @@ export const DailyAgendaList = ({
       ) : (
         <div className="space-y-3">
           {appointments.map((appointment) => {
-            const isAttended = appointment.estado === 3;
+            const isAttended = isCitaAtendida(appointment.estado);
             return (
               <div
                 key={appointment.id}
                 className={cn(
-                  'group bg-white p-4 sm:p-5 rounded-2xl border transition-all duration-200',
-                  'border-slate-200/80 hover:border-primary-300 hover:shadow-md',
-                  'flex flex-col sm:flex-row sm:items-center justify-between gap-4'
+                  'group p-4 sm:p-5 rounded-2xl border transition-all duration-200',
+                  'flex flex-col sm:flex-row sm:items-center justify-between gap-4',
+                  isAttended
+                    ? 'bg-slate-50/70 border-slate-200/90 hover:border-emerald-300 hover:bg-slate-50/90'
+                    : 'bg-white border-slate-200/80 hover:border-primary-300 hover:shadow-md'
                 )}
               >
                 {/* Horario y Datos del Paciente */}
                 <div className="flex items-start sm:items-center gap-4">
                   {/* Badge de Horario */}
-                  <div className="flex flex-col items-center justify-center w-14 sm:w-16 h-14 rounded-xl bg-slate-50 border border-slate-200/80 group-hover:border-primary-200 group-hover:bg-primary-50/40 transition-colors flex-shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-primary-600 mb-0.5" strokeWidth={2} />
+                  <div
+                    className={cn(
+                      'flex flex-col items-center justify-center w-14 sm:w-16 h-14 rounded-xl border transition-colors flex-shrink-0',
+                      isAttended
+                        ? 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900 group-hover:bg-emerald-50'
+                        : 'bg-slate-50 border-slate-200/80 group-hover:border-primary-200 group-hover:bg-primary-50/40'
+                    )}
+                  >
+                    {isAttended ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mb-0.5" strokeWidth={2} />
+                    ) : (
+                      <Clock className="w-3.5 h-3.5 text-primary-600 mb-0.5" strokeWidth={2} />
+                    )}
                     <span className="text-xs font-bold font-heading text-slate-900">
                       {formatTime(appointment.horaInicio)}
                     </span>
@@ -274,11 +302,23 @@ export const DailyAgendaList = ({
                     onClick={() => onSelectPatient(appointment)}
                     variant={isAttended ? 'outline' : 'primary'}
                     size="sm"
-                    className="w-full sm:w-auto gap-1.5"
-                    aria-label={`Atender y abrir ficha clínica de ${appointment.pacienteNombre}`}
+                    className={cn(
+                      'w-full sm:w-auto gap-1.5',
+                      isAttended && 'border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    )}
+                    aria-label={`${isAttended ? 'Ver ficha y evolución clínica' : 'Atender paciente'} de ${appointment.pacienteNombre}`}
                   >
-                    <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-                    <span>{isAttended ? 'Ver Ficha Clínica' : 'Atender Paciente'}</span>
+                    {isAttended ? (
+                      <>
+                        <FileText className="w-4 h-4 text-emerald-600" strokeWidth={2} aria-hidden="true" />
+                        <span>Ver Ficha / Evolución</span>
+                      </>
+                    ) : (
+                      <>
+                        <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
+                        <span>Atender Paciente</span>
+                      </>
+                    )}
                     <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </div>

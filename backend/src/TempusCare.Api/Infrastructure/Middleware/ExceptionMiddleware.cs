@@ -28,12 +28,16 @@ public class ExceptionMiddleware
             var statusCode = e switch
             {
                 Application.Exceptions.EntityNotFoundException => HttpStatusCode.NotFound,
-                Application.Exceptions.ArgumentOutOfRangeException => HttpStatusCode.BadRequest,
-                Application.Exceptions.NotAuthenticatedException => HttpStatusCode.BadRequest,
-                Application.Exceptions.NoContentException => HttpStatusCode.BadRequest,
-                Application.Exceptions.ValidationException => HttpStatusCode.BadRequest,
+                KeyNotFoundException => HttpStatusCode.NotFound,
+                Application.Exceptions.NotAuthenticatedException => HttpStatusCode.Unauthorized,
+                UnauthorizedAccessException => HttpStatusCode.Forbidden,
                 Application.Exceptions.ConflictException => HttpStatusCode.Conflict,
                 Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => HttpStatusCode.Conflict,
+                Application.Exceptions.ValidationException => HttpStatusCode.BadRequest,
+                Application.Exceptions.ArgumentOutOfRangeException => HttpStatusCode.BadRequest,
+                ArgumentException => HttpStatusCode.BadRequest,
+                InvalidOperationException => HttpStatusCode.BadRequest,
+                Application.Exceptions.NoContentException => HttpStatusCode.BadRequest,
                 _ => HttpStatusCode.InternalServerError
             };
 
@@ -41,11 +45,14 @@ public class ExceptionMiddleware
             {
                 Application.Exceptions.NotFoundException => "08",
                 Application.Exceptions.EntityNotFoundException => "01",
+                KeyNotFoundException => "01",
                 Application.Exceptions.ValidationException => "02",
                 Application.Exceptions.ConflictException => "03",
                 Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => "03",
                 Application.Exceptions.ArgumentOutOfRangeException => "04",
+                ArgumentException => "04",
                 Application.Exceptions.NoContentException => "05",
+                UnauthorizedAccessException => "06",
                 Application.Exceptions.NotAuthenticatedException => "07",
                 System.ApplicationException => "99",
                 _ => "00"
@@ -72,6 +79,7 @@ public class ExceptionMiddleware
                 var p when p.Contains("cuestionario") => "cuestionario",
                 var p when p.Contains("observacion") => "observacion",
                 var p when p.Contains("asistente") => "asistente",
+                var p when p.Contains("vitality") => "vitality",
                 _ => "app"
             };
 
@@ -86,8 +94,11 @@ public class ExceptionMiddleware
             {
                 status = (int)statusCode,
                 title = statusCode.ToString(),
+                message = detailMessage,
                 detail = detailMessage,
-                code = internalErrorCode
+                code = internalErrorCode,
+                timestamp = DateTime.UtcNow,
+                path = context.Request.Path.Value
             };
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));

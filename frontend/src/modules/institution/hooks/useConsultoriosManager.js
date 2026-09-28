@@ -68,8 +68,8 @@ export const useConsultoriosManager = () => {
             contrasena: `Admin.${adminConsultorio.cuil}!`,
             mail: adminConsultorio.mail || `${adminConsultorio.cuil}@adminconsultorio.com`,
           });
-        } catch (adminErr) {
-          console.warn('Consultorio creado pero falló creación de admin:', adminErr);
+        } catch {
+          // Si falla la creación opcional del admin, el consultorio ya fue creado exitosamente
         }
       }
 

@@ -48,7 +48,27 @@ export const useDailyAgenda = (initialDate = new Date()) => {
     fetchDailyAppointments();
   }, [fetchDailyAppointments]);
 
-  // Filtrado de citas según búsqueda y estado
+  // Helper para verificar si una cita está atendida
+  const isAttendedStatus = (estado) =>
+    estado === 3 || estado === 'Atendida' || estado === 'Atendido';
+
+  // Helper para verificar si una cita está pendiente de atención
+  const isPendingStatus = (estado) =>
+    estado === 1 ||
+    estado === 2 ||
+    estado === 6 ||
+    estado === 7 ||
+    estado === 'Solicitada' ||
+    estado === 'Confirmada' ||
+    estado === 'EnSalaDeEspera' ||
+    estado === 'EnAtencion' ||
+    estado === 'Pendiente';
+
+  // Helper para verificar si una cita fue cancelada
+  const isCancelledStatus = (estado) =>
+    estado === 5 || estado === 'Cancelada';
+
+  // Filtrado de citas según búsqueda y estado (cuando statusFilter === 'ALL', incluye TODAS las citas: Pendientes, Confirmadas y Atendidas)
   const filteredAppointments = useMemo(() => {
     return appointments.filter((cita) => {
       const matchesSearch =
@@ -58,9 +78,9 @@ export const useDailyAgenda = (initialDate = new Date()) => {
 
       const matchesStatus =
         statusFilter === 'ALL' ||
-        (statusFilter === 'PENDING' && (cita.estado === 1 || cita.estado === 2)) ||
-        (statusFilter === 'ATTENDED' && cita.estado === 3) ||
-        (statusFilter === 'CANCELLED' && cita.estado === 5);
+        (statusFilter === 'PENDING' && isPendingStatus(cita.estado)) ||
+        (statusFilter === 'ATTENDED' && isAttendedStatus(cita.estado)) ||
+        (statusFilter === 'CANCELLED' && isCancelledStatus(cita.estado));
 
       return matchesSearch && matchesStatus;
     });
@@ -69,8 +89,8 @@ export const useDailyAgenda = (initialDate = new Date()) => {
   // Métricas rápidas
   const stats = useMemo(() => {
     const total = appointments.length;
-    const attended = appointments.filter((c) => c.estado === 3).length;
-    const pending = appointments.filter((c) => c.estado === 1 || c.estado === 2).length;
+    const attended = appointments.filter((c) => isAttendedStatus(c.estado)).length;
+    const pending = appointments.filter((c) => isPendingStatus(c.estado)).length;
     return { total, attended, pending };
   }, [appointments]);
 

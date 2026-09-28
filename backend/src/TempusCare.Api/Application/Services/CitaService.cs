@@ -62,6 +62,16 @@ public class CitaService : ICitaService
                 throw new ConflictException("RN-02: El horario seleccionado ya no está disponible.");
             }
 
+            // RN-HorarioReal: Si el turno es para el día de hoy, no permitir horarios que ya hayan pasado.
+            var hoy = DateTime.Today;
+            var horaActual = DateTime.Now.TimeOfDay;
+            if (turno.Fecha.Date == hoy && turno.HoraInicio <= horaActual)
+            {
+                _logger.LogWarning("Intento de reserva en horario transcurrido ID {TurnoId} - Fecha: {Fecha:yyyy-MM-dd}, Hora: {HoraInicio}",
+                    turno.Id, turno.Fecha.Date, turno.HoraInicio);
+                throw new ValidationException("No es posible reservar un turno en un horario que ya ha transcurrido.");
+            }
+
             // RN-04: Cobertura de Obra Social o Particular
             CoberturaCita coberturaFinal = CoberturaCita.Particular;
             if (dto.ObraSocialId.HasValue)
@@ -298,8 +308,9 @@ public class CitaService : ICitaService
 
         if (fecha.HasValue)
         {
-            var dt = fecha.Value.Date;
-            query = query.Where(c => c.Fecha.Date == dt);
+            var startOfDay = fecha.Value.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            query = query.Where(c => c.Fecha >= startOfDay && c.Fecha < endOfDay);
         }
 
         if (!string.IsNullOrEmpty(consultorioCuit))

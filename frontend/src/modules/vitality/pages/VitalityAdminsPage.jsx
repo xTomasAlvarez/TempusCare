@@ -211,7 +211,7 @@ export const VitalityAdminsPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-amber-600" />
+                  <Clock className="w-5 h-5 text-primary-600" />
                   Solicitudes Pendientes de Consenso
                 </CardTitle>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -457,7 +457,7 @@ export const VitalityAdminsPage = () => {
         <Card className="border-slate-200/90 shadow-xs">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="text-lg flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <ShieldCheck className="w-5 h-5 text-primary-600" />
               Historial de Auditoría de Consenso
             </CardTitle>
             <p className="text-xs text-slate-500 mt-0.5">

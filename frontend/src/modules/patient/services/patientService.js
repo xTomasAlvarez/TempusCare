@@ -136,5 +136,12 @@ export const patientService = {
   async getPatientProfile(pacienteCuil) {
     return await apiClient.get(`pacientes/${pacienteCuil}`);
   },
+
+  /**
+   * Modifica los datos personales y obras sociales del paciente
+   */
+  async updatePatientProfile(pacienteCuil, data) {
+    return await apiClient.put(`pacientes/${pacienteCuil}`, data);
+  },
 };
 

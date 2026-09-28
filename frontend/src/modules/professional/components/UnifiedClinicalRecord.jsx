@@ -4,7 +4,7 @@ import { PatientTimeline } from './PatientTimeline';
 import { ClinicalEvolutionEditor } from './ClinicalEvolutionEditor';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
-import { ArrowLeft, UserRound, Clock, CalendarHeart, AlertCircle } from 'lucide-react';
+import { ArrowLeft, UserRound, Clock, CalendarHeart, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 /**
  * Ficha Clínica Unificada (Atención Médica):
@@ -43,6 +43,12 @@ export const UnifiedClinicalRecord = ({
     return timeStr;
   };
 
+  const isAttended =
+    appointment.estado === 3 ||
+    appointment.estado === 'Atendida' ||
+    appointment.estado === 'Atendido' ||
+    isSaved;
+
   return (
     <div className="space-y-6">
       {/* Barra de Navegación y Encabezado del Paciente */}
@@ -66,8 +72,11 @@ export const UnifiedClinicalRecord = ({
               <h2 className="text-xl font-bold font-heading text-slate-900">
                 {appointment.pacienteNombre}
               </h2>
-              {appointment.estado === 3 ? (
-                <Badge variant="success">Consulta Atendida</Badge>
+              {isAttended ? (
+                <Badge variant="success" className="gap-1 bg-emerald-50 text-emerald-800 border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Consulta Atendida</span>
+                </Badge>
               ) : (
                 <Badge variant="primary">En Atención</Badge>
               )}

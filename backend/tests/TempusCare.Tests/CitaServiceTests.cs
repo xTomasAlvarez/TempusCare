@@ -129,4 +129,31 @@ public class CitaServiceTests
         var modificado = await citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.Atendida);
         Assert.Equal(EstadoCita.Atendida, modificado.Estado);
     }
+
+    [Fact]
+    public async Task AltaCita_TurnoDeHoyConHorarioPasado_LanzaValidationException()
+    {
+        var db = GetInMemoryDbContext(nameof(AltaCita_TurnoDeHoyConHorarioPasado_LanzaValidationException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20111222998", Nombre = "Esteban", Apellido = "Quito" };
+        var cons = new Consultorio { Cuit = "30111222998", Nombre = "Consultorio Central" };
+        var pac = new Paciente { Cuil = "27111222998", Nombre = "Clara", Apellido = "Soria" };
+        var horaPasada = DateTime.Now.TimeOfDay > TimeSpan.FromMinutes(5)
+            ? DateTime.Now.TimeOfDay.Subtract(TimeSpan.FromMinutes(5))
+            : TimeSpan.Zero;
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = DateTime.Today.Day, Mes = DateTime.Today.Month, Anio = DateTime.Today.Year, HoraEntrada = TimeSpan.Zero, HoraSalida = new TimeSpan(23, 59, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = DateTime.Today, HoraInicio = horaPasada, HoraFin = horaPasada.Add(TimeSpan.FromMinutes(30)), Estado = EstadoTurno.Disponible };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+        db.Agendas.Add(agenda);
+        db.Turnos.Add(turno);
+        await db.SaveChangesAsync();
+
+        var dto = new AltaCitaDto(pac.Cuil, prof.Cuil, turno.Id, TipoCita.Consulta, null, null);
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => citaService.AltaCitaAsync(dto));
+        Assert.Contains("transcurrido", ex.Message);
+    }
 }

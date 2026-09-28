@@ -7,7 +7,33 @@ export const useBooking = (doctor, onSuccess) => {
   const { user } = useAuth();
 
   // Fecha en formato local YYYY-MM-DD
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const isSlotPast = (slot, dateStr = selectedDate) => {
+    if (!slot?.horaInicio) return false;
+    const todayStr = getTodayStr();
+    if (dateStr < todayStr) return true;
+    if (dateStr > todayStr) return false;
+
+    // Si es hoy, verificar si la hora del slot ya pasó
+    const parts = String(slot.horaInicio).split(':');
+    if (parts.length >= 2) {
+      const slotHour = parseInt(parts[0], 10);
+      const slotMinute = parseInt(parts[1], 10);
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      return slotHour < currentHour || (slotHour === currentHour && slotMinute <= currentMinute);
+    }
+    return false;
+  };
 
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -47,6 +73,11 @@ export const useBooking = (doctor, onSuccess) => {
   const confirmBooking = async () => {
     if (!selectedSlot) {
       setSubmitError('Por favor selecciona un horario disponible.');
+      return false;
+    }
+
+    if (isSlotPast(selectedSlot, selectedDate)) {
+      setSubmitError('No es posible reservar un turno en un horario que ya ha transcurrido.');
       return false;
     }
 
@@ -110,5 +141,7 @@ export const useBooking = (doctor, onSuccess) => {
     submitError,
     confirmBooking,
     refreshSlots: fetchSlots,
+    isSlotPast,
+    getTodayStr,
   };
 };

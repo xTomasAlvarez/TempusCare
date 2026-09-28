@@ -25,23 +25,102 @@ const KNOWN_REAL_NAMES = {
 };
 
 /**
- * Obtiene el nombre real representativo del usuario autenticado
+ * Decodifica de forma segura el payload de un token JWT
  */
-export const getDisplayName = (user) => {
-  if (!user) return 'Usuario';
-  if (user.nombreCompleto && user.nombreCompleto !== user.usuario) {
-    return user.nombreCompleto;
+export const decodeJwtPayload = (token) => {
+  if (!token || typeof token !== 'string') return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
   }
+};
+
+const isNumericId = (val) => {
+  if (!val || typeof val !== 'string') return false;
+  return /^\d{7,11}$/.test(val.trim());
+};
+
+/**
+ * Obtiene el nombre real y apellido del usuario autenticado desde el contexto o el token JWT.
+ * Elimina estrictamente cualquier fallback a DNI o números de documento.
+ */
+export const getDisplayName = (user, token) => {
+  if (!user) return 'Usuario';
+
+  // 1. Extraer nombre y apellido directamente desde el contexto de usuario
+  if (user.nombre && user.apellido) {
+    const combined = `${user.nombre} ${user.apellido}`.trim();
+    if (combined && !isNumericId(combined)) return combined;
+  }
+
+  if (user.nombreCompleto && !isNumericId(user.nombreCompleto)) {
+    return user.nombreCompleto.trim();
+  }
+
+  if (user.nombre && !isNumericId(user.nombre)) {
+    return user.nombre.trim();
+  }
+
+  // 2. Extraer nombre y apellido desde el payload del token JWT
+  const effectiveToken = token || user.token;
+  if (effectiveToken) {
+    const payload = decodeJwtPayload(effectiveToken);
+    if (payload) {
+      const jwtNombre = payload.nombre || payload.given_name;
+      const jwtApellido = payload.apellido || payload.family_name;
+      if (jwtNombre && jwtApellido) {
+        const full = `${jwtNombre} ${jwtApellido}`.trim();
+        if (full && !isNumericId(full)) return full;
+      }
+      if (payload.nombreCompleto && !isNumericId(payload.nombreCompleto)) {
+        return payload.nombreCompleto.trim();
+      }
+      if (payload.name && !isNumericId(payload.name)) {
+        return payload.name.trim();
+      }
+      if (jwtNombre && !isNumericId(jwtNombre)) {
+        return jwtNombre.trim();
+      }
+    }
+  }
+
+  // 3. Mapeo para perfiles de prueba sembrados conocidos
   if (user.usuario && KNOWN_REAL_NAMES[user.usuario]) {
     return KNOWN_REAL_NAMES[user.usuario];
   }
   if (user.cuil && KNOWN_REAL_NAMES[user.cuil]) {
     return KNOWN_REAL_NAMES[user.cuil];
   }
-  if (user.nombre && user.apellido) {
-    return `${user.nombre} ${user.apellido}`.trim();
+
+  // 4. Fallback estricto de rol - NUNCA mostrar DNI o números como nombre
+  switch (user.rol) {
+    case 'Paciente':
+      return 'Paciente';
+    case 'Profesional':
+      return 'Médico Especialista';
+    case 'Asistente':
+      return 'Asistente de Recepción';
+    case 'AdminConsultorio':
+      return 'Administrador de Sede';
+    case 'AdminInstitucion':
+    case 'Institucion':
+      return 'Administrador Institución';
+    case 'SuperAdmin':
+      return 'Super Administrador';
+    default:
+      return 'Usuario';
   }
-  return user.usuario || 'Usuario';
 };
 
 /**
@@ -81,12 +160,12 @@ const getRoleTag = (rol) => {
 };
 
 export const UserDropdownMenu = () => {
-  const { user, clearAuthData, getDashboardRoute } = useAuth();
+  const { user, token, clearAuthData, getDashboardRoute } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  const realName = getDisplayName(user);
+  const realName = getDisplayName(user, token);
   const initials = getInitials(realName);
   const roleTag = getRoleTag(user?.rol);
 
@@ -181,7 +260,7 @@ export const UserDropdownMenu = () => {
               {realName}
             </p>
             <p className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
-              {user.mail || user.usuario}
+              {user.mail || 'Cuenta TempusCare'}
             </p>
             <div className="mt-2 flex items-center gap-1.5">
               <span
@@ -214,7 +293,7 @@ export const UserDropdownMenu = () => {
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors cursor-pointer"
               >
-                <CalendarHeart className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CalendarHeart className="w-4 h-4 text-primary-600 shrink-0" />
                 <span>Mis Turnos Médicos</span>
               </button>
             )}

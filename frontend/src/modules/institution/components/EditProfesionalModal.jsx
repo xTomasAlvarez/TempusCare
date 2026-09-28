@@ -114,7 +114,7 @@ export const EditProfesionalModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
         {/* Identificación (CUIL) y Matrícula */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIL / CUIT (Cuenta)
@@ -153,7 +153,7 @@ export const EditProfesionalModal = ({
         </div>
 
         {/* Nombre y Apellido */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label htmlFor="edit-prof-nombre" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Nombre <span className="text-rose-500">*</span>
@@ -202,7 +202,7 @@ export const EditProfesionalModal = ({
         </div>
 
         {/* Especialidad y Teléfono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label htmlFor="edit-prof-especialidad" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Especialidad <span className="text-rose-500">*</span>

@@ -26,8 +26,7 @@ export const useVitalityAdmins = () => {
 
       setRequests(reqData || []);
       setAdmins(adminData || []);
-    } catch (err) {
-      console.error('Error al cargar datos de Super Administradores:', err);
+    } catch {
       setError('No se pudieron obtener las solicitudes de administradores.');
     } finally {
       setIsLoading(false);

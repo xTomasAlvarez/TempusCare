@@ -4,6 +4,7 @@ using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Exceptions;
 using TempusCare.Api.Application.Services;
 using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Domain.Enums;
 using TempusCare.Api.Infrastructure.Data;
 using Xunit;
 
@@ -95,5 +96,62 @@ public class HistoriaClinicaYObservacionTests
 
         var lista = await obsService.ObtenerObservacionesPorHistoriaClinicaAsync(hc.Id);
         Assert.Single(lista);
+    }
+
+    [Fact]
+    public async Task CompletarObservacion_CitaEnEstadoPendiente_ActualizaAtomicamenteA_Atendida()
+    {
+        var db = GetInMemoryDbContext(nameof(CompletarObservacion_CitaEnEstadoPendiente_ActualizaAtomicamenteA_Atendida));
+        var obsService = new ObservacionService(db, NullLogger<ObservacionService>.Instance);
+
+        var pac = new Paciente { Cuil = "27444555777", Nombre = "Elena", Apellido = "Vargas" };
+        var prof = new Profesional { Cuil = "20444555777", Nombre = "Dr. Martin", Apellido = "Palermo" };
+        var cons = new Consultorio { Cuit = "30444555777", Nombre = "Centro Médico Oeste" };
+        var hc = new HistoriaClinica { PacienteCuil = pac.Cuil };
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = 15, Mes = 10, Anio = 2026, HoraEntrada = new TimeSpan(9, 0, 0), HoraSalida = new TimeSpan(10, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = new DateTime(2026, 10, 15), HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(9, 30, 0), Estado = EstadoTurno.Reservado };
+
+        var cita = new Cita
+        {
+            Turno = turno,
+            PacienteCuil = pac.Cuil,
+            Fecha = new DateTime(2026, 10, 15),
+            Estado = EstadoCita.Solicitada, // Cita en estado Pendiente
+            Tipo = TipoCita.Consulta,
+            Cobertura = CoberturaCita.Particular
+        };
+
+        db.Pacientes.Add(pac);
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.HistoriasClinicas.Add(hc);
+        db.Agendas.Add(agenda);
+        db.Turnos.Add(turno);
+        db.Citas.Add(cita);
+        await db.SaveChangesAsync();
+
+        // Vincular cita al turno
+        turno.CitaId = cita.Id;
+        cita.TurnoId = turno.Id;
+        await db.SaveChangesAsync();
+
+        // Act: El médico completa la evolución clínica
+        var dto = new CompletarObservacionDto(
+            cita.Id,
+            hc.Id,
+            prof.Cuil,
+            "Evaluación clínica por cuadro febril",
+            "Faringitis aguda. Se prescribe amoxicilina e ibuprofeno."
+        );
+
+        var obs = await obsService.CompletarObservacionAsync(dto);
+
+        // Assert: Transición atómica de Pendiente -> Atendida
+        Assert.NotNull(obs);
+        var citaDb = await db.Citas.FindAsync(cita.Id);
+        var turnoDb = await db.Turnos.FindAsync(turno.Id);
+
+        Assert.Equal(EstadoCita.Atendida, citaDb?.Estado);
+        Assert.Equal(EstadoTurno.Atendido, turnoDb?.Estado);
     }
 }

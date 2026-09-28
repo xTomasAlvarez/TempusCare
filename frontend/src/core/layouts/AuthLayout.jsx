@@ -3,7 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 
 export const AuthLayout = () => {
   return (
-    <div className="h-screen max-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative">
       {/* Elementos ambientales de diseño sutil Clean Health */}
       <div 
         className="pointer-events-none absolute -top-40 -right-40 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl" 
@@ -15,7 +15,7 @@ export const AuthLayout = () => {
       />
 
       {/* Header Accesible de Autenticación alineado a la izquierda */}
-      <header className="w-full px-6 sm:px-8 py-3 sm:py-3.5 flex items-center justify-between relative z-10 flex-shrink-0">
+      <header className="w-full px-6 sm:px-8 py-4 flex items-center justify-between relative z-10 flex-shrink-0">
         <Link 
           to="/" 
           tabIndex={0}
@@ -38,8 +38,8 @@ export const AuthLayout = () => {
         </Link>
       </header>
 
-      {/* Contenido Principal con soporte de scroll vertical para pantallas pequeñas */}
-      <main id="main-content" className="flex-1 min-h-0 overflow-y-auto flex items-start sm:items-center justify-center px-4 relative z-10">
+      {/* Contenido Principal centrado con espaciado vertical seguro */}
+      <main id="main-content" className="flex-1 w-full flex flex-col justify-center items-center py-12 px-4 relative z-10">
         <Outlet />
       </main>
     </div>

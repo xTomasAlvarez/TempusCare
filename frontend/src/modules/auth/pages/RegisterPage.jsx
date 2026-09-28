@@ -22,13 +22,13 @@ export const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-    <div className="w-full max-h-screen overflow-y-auto py-4 px-2">
-      <div className="w-full max-w-[480px] mx-auto pb-16">
-        <Card className="border-slate-200/80 shadow-md mb-12">
+    <div className="w-full py-6 px-2">
+      <div className="w-full max-w-lg mx-auto pb-12">
+        <Card className="border-slate-200/80 shadow-md">
           {/* Cabecera con Jerarquía Visual */}
-          <CardHeader className="text-center px-6 sm:px-8 pt-6 pb-2">
+          <CardHeader className="text-center p-6 pb-2.5 sm:p-8 sm:pb-3">
             <div className="w-11 h-11 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-2 shadow-xs">
-              <UserRoundPlus className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
+              <UserRoundPlus className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
             </div>
             <CardTitle className="text-2xl font-bold font-heading text-slate-900">
               Registro de Paciente
@@ -38,7 +38,7 @@ export const RegisterPage = () => {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="px-6 sm:px-8 py-2">
+          <CardContent className="px-6 sm:px-8 py-0">
             <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
               {/* Fila Nombre y Apellido */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -52,7 +52,7 @@ export const RegisterPage = () => {
                   value={formData.nombre}
                   onChange={handleChange}
                   error={errors.nombre}
-                  leadingIcon={<UserRound className="w-4 h-4" strokeWidth={2} />}
+                  leadingIcon={<UserRound className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                   autoComplete="given-name"
                   className="py-2 text-sm"
                 />
@@ -67,7 +67,7 @@ export const RegisterPage = () => {
                   value={formData.apellido}
                   onChange={handleChange}
                   error={errors.apellido}
-                  leadingIcon={<UserRound className="w-4 h-4" strokeWidth={2} />}
+                  leadingIcon={<UserRound className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                   autoComplete="family-name"
                   className="py-2 text-sm"
                 />
@@ -84,7 +84,7 @@ export const RegisterPage = () => {
                 value={formData.dni}
                 onChange={handleChange}
                 error={errors.dni}
-                leadingIcon={<IdCard className="w-4 h-4" strokeWidth={2} />}
+                leadingIcon={<IdCard className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                 autoComplete="off"
                 className="py-2 text-sm"
                 helperText="Sin puntos ni espacios. Se utilizará como tu identificador de paciente."
@@ -101,7 +101,7 @@ export const RegisterPage = () => {
                 value={formData.email}
                 onChange={handleChange}
                 error={errors.email}
-                leadingIcon={<Mail className="w-4 h-4" strokeWidth={2} />}
+                leadingIcon={<Mail className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                 autoComplete="email"
                 className="py-2 text-sm"
               />
@@ -117,7 +117,7 @@ export const RegisterPage = () => {
                 value={formData.contrasena}
                 onChange={handleChange}
                 error={errors.contrasena}
-                leadingIcon={<Lock className="w-4 h-4" strokeWidth={2} />}
+                leadingIcon={<Lock className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                 autoComplete="new-password"
                 className="py-2 text-sm"
                 trailingIcon={
@@ -148,7 +148,7 @@ export const RegisterPage = () => {
                 value={formData.confirmarContrasena}
                 onChange={handleChange}
                 error={errors.confirmarContrasena}
-                leadingIcon={<Lock className="w-4 h-4" strokeWidth={2} />}
+                leadingIcon={<Lock className="w-4 h-4 text-primary-600" strokeWidth={2} />}
                 autoComplete="new-password"
                 className="py-2 text-sm"
                 trailingIcon={
@@ -225,7 +225,7 @@ export const RegisterPage = () => {
           </CardContent>
 
           {/* Footer con Enlace a Login */}
-          <CardFooter className="justify-center border-t border-slate-100 py-3 px-6 sm:px-8 bg-slate-50/40 rounded-b-2xl mt-3">
+          <CardFooter className="justify-center border-t border-slate-100 p-6 pt-3.5 sm:p-8 sm:pt-4 bg-slate-50/40 rounded-b-2xl mt-4">
             <p className="text-xs text-slate-500 text-center">
               ¿Ya tienes una cuenta registrada?{' '}
               <Link

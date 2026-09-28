@@ -42,8 +42,36 @@ public class TempusTokenAuthHandler : AuthenticationHandler<AuthenticationScheme
         string userId = "1";
         string username = "Usuario";
 
-        // Formato estándar emitido por AuthService: "JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}"
-        if (token.StartsWith("JWT-TOKEN-USER-", StringComparison.OrdinalIgnoreCase))
+        // Formato estándar JWT emitido por AuthService o formato legacy "JWT-TOKEN-USER-{usuario.Id}-{usuario.Rol}"
+        if (token.Contains('.'))
+        {
+            var parts = token.Split('.');
+            if (parts.Length == 3)
+            {
+                try
+                {
+                    var base64 = parts[1].Replace('-', '+').Replace('_', '/');
+                    switch (base64.Length % 4)
+                    {
+                        case 2: base64 += "=="; break;
+                        case 3: base64 += "="; break;
+                    }
+                    var payloadJson = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+                    using var doc = System.Text.Json.JsonDocument.Parse(payloadJson);
+                    if (doc.RootElement.TryGetProperty("sub", out var subProp))
+                        userId = subProp.GetString() ?? userId;
+                    if (doc.RootElement.TryGetProperty("rol", out var rolProp))
+                        rol = rolProp.GetString() ?? rol;
+                    if (doc.RootElement.TryGetProperty("unique_name", out var nameProp))
+                        username = nameProp.GetString() ?? username;
+                }
+                catch
+                {
+                    // Fallback to defaults
+                }
+            }
+        }
+        else if (token.StartsWith("JWT-TOKEN-USER-", StringComparison.OrdinalIgnoreCase))
         {
             var parts = token.Split('-');
             if (parts.Length >= 5)

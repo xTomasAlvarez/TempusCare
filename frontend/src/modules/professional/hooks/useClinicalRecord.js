@@ -61,7 +61,11 @@ export const useClinicalRecord = (appointment, onAppointmentUpdated) => {
     loadPatientData();
     setMotivoState(appointment?.motivoObservacion || '');
     setDetalleState(appointment?.detalleObservacion || '');
-    setIsSaved(appointment?.estado === 3);
+    setIsSaved(
+      appointment?.estado === 3 ||
+      appointment?.estado === 'Atendida' ||
+      appointment?.estado === 'Atendido'
+    );
   }, [appointment, loadPatientData]);
 
   /**

@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePatientDashboard } from '../hooks/usePatientDashboard';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../shared/components/ui/Card';
-import { CalendarHeart, Stethoscope, HeartPulse, ArrowRight, Clock, ShieldPlus, CalendarDays } from 'lucide-react';
+import { CalendarHeart, Stethoscope, HeartPulse, ArrowRight, Clock, ShieldPlus, CalendarDays, UserCog } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
+import { EditPatientProfileModal } from '../components/EditPatientProfileModal';
 
 /**
  * Dashboard Principal del Paciente.
  * Componente puramente visual que delega el estado y las llamadas de red al hook usePatientDashboard.
  */
 export const PatientDashboardPage = () => {
-  const { user, paciente, nextAppointment, isLoading } = usePatientDashboard();
+  const { user, paciente, nextAppointment, isLoading, refreshDashboard } = usePatientDashboard();
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const patientName = paciente?.nombre || user?.nombre || (user?.nombreCompleto ? user.nombreCompleto.split(' ')[0] : null) || 'Paciente';
 
@@ -28,6 +30,16 @@ export const PatientDashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setIsEditProfileOpen(true)}
+            className="gap-2 shadow-2xs border-slate-200 hover:border-primary-300 hover:bg-primary-50/50"
+          >
+            <UserCog className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
+            <span>Editar Perfil</span>
+          </Button>
+
           <Link to="/patient/search">
             <Button variant="primary" size="md" className="gap-2 shadow-xs">
               <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
@@ -134,8 +146,8 @@ export const PatientDashboardPage = () => {
         {/* Búsqueda de Profesionales */}
         <Card className="hover:border-primary-200 transition-all duration-300 hover:shadow-md">
           <CardHeader>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
-              <Stethoscope className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-2">
+              <Stethoscope className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
             </div>
             <CardTitle>Búsqueda y Mapa</CardTitle>
             <CardDescription>Especialistas médicos en consultorios</CardDescription>
@@ -155,12 +167,23 @@ export const PatientDashboardPage = () => {
 
         {/* Cobertura y Perfil */}
         <Card className="hover:border-primary-200 transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2">
-              <ShieldPlus className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
+          <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-2">
+                <ShieldPlus className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
+              </div>
+              <CardTitle>Mi Cobertura</CardTitle>
+              <CardDescription>Identificación y obras sociales</CardDescription>
             </div>
-            <CardTitle>Mi Cobertura</CardTitle>
-            <CardDescription>Identificación y obras sociales</CardDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditProfileOpen(true)}
+              className="text-xs text-primary-700 hover:bg-primary-50 border-primary-200 gap-1.5 shrink-0"
+            >
+              <UserCog className="w-3.5 h-3.5 text-primary-600" />
+              <span>Editar</span>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {/* Obras Sociales Asociadas */}
@@ -212,6 +235,16 @@ export const PatientDashboardPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Edición de Perfil de Paciente */}
+      <EditPatientProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        paciente={paciente}
+        onSuccess={() => {
+          refreshDashboard();
+        }}
+      />
     </div>
   );
 };

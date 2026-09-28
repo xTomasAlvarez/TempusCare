@@ -26,12 +26,12 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="w-full max-w-[435px] mx-auto -translate-y-6 sm:-translate-y-7">
+    <div className="w-full max-w-md mx-auto">
       <Card className="border-slate-200/80 shadow-md">
         {/* Cabecera espaciosa y jerárquica con dimensiones optimizadas */}
-        <CardHeader className="text-center px-7 pt-6 pb-2.5">
+        <CardHeader className="text-center p-6 pb-2.5 sm:p-8 sm:pb-3">
           <div className="w-11 h-11 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-2 shadow-xs">
-            <LogIn className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
+            <LogIn className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>
           <CardTitle className="text-2xl font-bold font-heading text-slate-900">Iniciar Sesión</CardTitle>
           <CardDescription className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -39,7 +39,7 @@ export const LoginPage = () => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-7 py-0">
+        <CardContent className="px-6 sm:px-8 py-0">
           <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
             <Input
               id="usuario"
@@ -51,7 +51,7 @@ export const LoginPage = () => {
               value={formData.usuario}
               onChange={handleChange}
               error={errors.usuario}
-              leadingIcon={<Mail className="w-4 h-4" strokeWidth={2} />}
+              leadingIcon={<Mail className="w-4 h-4 text-primary-600" strokeWidth={2} />}
               autoComplete="username"
               className="py-2.5 text-sm"
             />
@@ -66,7 +66,7 @@ export const LoginPage = () => {
               value={formData.contra}
               onChange={handleChange}
               error={errors.contra}
-              leadingIcon={<Lock className="w-4 h-4" strokeWidth={2} />}
+              leadingIcon={<Lock className="w-4 h-4 text-primary-600" strokeWidth={2} />}
               autoComplete="current-password"
               className="py-2.5 text-sm"
               trailingIcon={
@@ -141,7 +141,7 @@ export const LoginPage = () => {
           </div>
         </CardContent>
 
-        <CardFooter className="flex-col gap-2 justify-center border-t border-slate-100 py-3 px-7 bg-slate-50/40 rounded-b-2xl mt-4">
+        <CardFooter className="flex-col gap-2 justify-center border-t border-slate-100 p-6 pt-3.5 sm:p-8 sm:pt-4 bg-slate-50/40 rounded-b-2xl mt-4">
           <p className="text-xs text-slate-600 text-center">
             ¿No tienes cuenta de paciente?{' '}
             <Link to="/register" className="text-primary-700 font-semibold hover:underline">

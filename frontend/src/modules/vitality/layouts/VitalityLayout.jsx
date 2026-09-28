@@ -88,7 +88,7 @@ export const VitalityLayout = () => {
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-xs font-bold text-slate-800 font-heading">
-                  {user?.usuario || 'Super Admin'}
+                  {user?.nombreCompleto || 'Super Administrador'}
                 </span>
                 <span className="text-[10px] text-primary-700 font-mono">Consola Global</span>
               </div>

@@ -300,7 +300,8 @@ public class PacienteService : IPacienteService
             pac.Genero,
             pac.Telefono,
             dirStr,
-            pac.ObrasSociales.Select(o => o.ObraSocial?.Nombre ?? "").Where(s => s != "").ToList()
+            pac.ObrasSociales.Select(o => o.ObraSocial?.Nombre ?? "").Where(s => s != "").ToList(),
+            pac.ObrasSociales.Select(o => o.ObraSocialId).ToList()
         );
     }
 }

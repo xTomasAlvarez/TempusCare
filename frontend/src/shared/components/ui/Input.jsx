@@ -61,15 +61,19 @@ export const Input = React.forwardRef(({
         )}
       </div>
 
-      {/* Espacio fijo reservado para evitar saltos de layout (CLS = 0) */}
-      <div className="min-h-[20px] mt-1 flex items-center">
+      {/* Espacio reservado para evitar saltos de layout (CLS = 0) y mantener estabilidad de grilla */}
+      <div className="h-5 mt-1 flex items-center overflow-hidden">
         {error ? (
-          <p id={errorId} className="text-[11px] leading-tight text-rose-600 flex items-center gap-1 animate-in fade-in-0 duration-150">
-            <span aria-hidden="true" className="shrink-0 text-xs">⚠</span>
-            <span className="truncate">{error}</span>
+          <p
+            id={errorId}
+            title={error}
+            className="text-[11px] leading-tight text-rose-600 flex items-center gap-1 animate-in fade-in-0 duration-150 w-full"
+          >
+            <span aria-hidden="true" className="shrink-0 text-xs font-bold">⚠</span>
+            <span className="truncate font-medium">{error}</span>
           </p>
         ) : helperText ? (
-          <p id={helperId} className="text-[11px] leading-tight text-slate-500">
+          <p id={helperId} className="text-[11px] leading-tight text-slate-500 truncate w-full">
             {helperText}
           </p>
         ) : null}

@@ -12,7 +12,7 @@ export const CoverageParameterizationPage = () => {
   const { user } = useAuth();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -44,7 +44,7 @@ export const CoverageParameterizationPage = () => {
           )}
           <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 text-xs text-slate-600 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Asistente a cargo: <strong>{user?.nombreCompleto || user?.usuario}</strong></span>
+            <span>Asistente a cargo: <strong>{user?.nombreCompleto || (user?.nombre && user?.apellido ? `${user.nombre} ${user.apellido}` : 'Asistente de Sede')}</strong></span>
           </div>
         </div>
       </div>

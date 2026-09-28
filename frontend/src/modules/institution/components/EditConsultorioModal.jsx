@@ -124,7 +124,7 @@ export const EditConsultorioModal = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
         {/* Grilla Superior: CUIT (inmutable) y Nombre de Sede */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label htmlFor="edit-sede-cuit" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               CUIT de la Sede (Identificador)
@@ -172,7 +172,7 @@ export const EditConsultorioModal = ({
         </div>
 
         {/* Contacto: Email y Teléfono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label htmlFor="edit-sede-email" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Email Institucional de la Sede <span className="text-rose-500">*</span>
@@ -223,7 +223,7 @@ export const EditConsultorioModal = ({
         </div>
 
         {/* Nivel de Accesibilidad */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div>
             <label htmlFor="edit-sede-accesibilidad" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
               Nivel de Accesibilidad Universal
@@ -285,7 +285,7 @@ export const EditConsultorioModal = ({
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-start">
             <div className="sm:col-span-2">
               <label htmlFor="edit-sede-calle" className="block text-[11px] font-semibold text-slate-700 mb-1">
                 Calle <span className="text-rose-500">*</span>
@@ -346,7 +346,7 @@ export const EditConsultorioModal = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1 items-start">
             <div>
               <label htmlFor="edit-sede-localidad" className="block text-[11px] font-semibold text-slate-700 mb-1">
                 Localidad <span className="text-rose-500">*</span>

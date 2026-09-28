@@ -28,6 +28,8 @@ export const BookingModal = ({
     isSubmitting,
     submitError,
     confirmBooking,
+    isSlotPast,
+    getTodayStr,
   } = useBooking(doctor, (res) => {
     onBookingSuccess(res);
     onClose();
@@ -38,13 +40,19 @@ export const BookingModal = ({
   const doctorName = `Dr. ${doctor.nombre} ${doctor.apellido}`;
   const specialty = doctor.especialidades?.[0] || 'Medicina General';
 
-  // Generar opciones de fecha para los próximos 7 días
+  const todayStr = getTodayStr ? getTodayStr() : new Date().toLocaleDateString('en-CA');
+  const isToday = selectedDate === todayStr;
+
+  // Generar opciones de fecha para los próximos 7 días con fecha local precisa
   const today = new Date();
   const dateOptions = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return {
-      value: d.toISOString().split('T')[0],
+      value: `${year}-${month}-${day}`,
       label: d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' }),
     };
   });
@@ -207,18 +215,29 @@ export const BookingModal = ({
                 {availableSlots.map((slot) => {
                   const isSelected = selectedSlot?.id === slot.id;
                   const isOccupied = slot.ocupado === true || slot.disponible === false;
+                  const isPast = isSlotPast ? isSlotPast(slot, selectedDate) : false;
+                  const isDisabled = isOccupied || isPast;
                   // Formatear HoraInicio (TimeSpan o string)
                   const horaStr = slot.horaInicio?.substring ? slot.horaInicio.substring(0, 5) : `${slot.horaInicio}`;
+                  const slotLabel = isOccupied
+                    ? 'Ocupado'
+                    : isPast
+                    ? 'Horario pasado'
+                    : isSelected
+                    ? 'Seleccionado'
+                    : 'Disponible';
+
                   return (
                     <button
                       key={slot.id}
                       type="button"
-                      disabled={isOccupied}
-                      onClick={() => !isOccupied && setSelectedSlot(slot)}
-                      tabIndex={isOccupied ? -1 : 0}
-                      aria-label={`Horario ${horaStr} ${isOccupied ? '(Ocupado)' : isSelected ? '(Seleccionado)' : '(Disponible)'}`}
+                      disabled={isDisabled}
+                      onClick={() => !isDisabled && setSelectedSlot(slot)}
+                      tabIndex={isDisabled ? -1 : 0}
+                      title={isPast ? 'Este horario ya ha transcurrido hoy' : isOccupied ? 'Horario no disponible' : undefined}
+                      aria-label={`Horario ${horaStr} (${slotLabel})`}
                       className={`h-11 px-3 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                        isOccupied
+                        isDisabled
                           ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed line-through opacity-60'
                           : isSelected
                           ? 'bg-primary-600 text-white border-primary-600 shadow-sm ring-2 ring-primary-500/30 scale-[1.02]'
@@ -231,6 +250,12 @@ export const BookingModal = ({
                   );
                 })}
               </div>
+            )}
+            {isToday && (
+              <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-primary-600 shrink-0" aria-hidden="true" />
+                <span>Para el día de hoy, los horarios pasados se encuentran bloqueados automáticamente.</span>
+              </p>
             )}
           </div>
         </div>

@@ -20,7 +20,7 @@ public record AltaPerfilPacienteDto(
 );
 
 public record ModificacionPerfilPacienteDto(
-    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del paciente debe ser una cadena numérica de exactamente 11 dígitos.")]
+    [property: Required, RegularExpression(@"^\d{7,11}$", ErrorMessage = "El CUIL o DNI del paciente debe ser una cadena numérica de entre 7 y 11 dígitos.")]
     string Cuil,
     string Nombre,
     string Apellido,
@@ -44,7 +44,8 @@ public record PacientePerfilResponseDto(
     string Genero,
     string Telefono,
     string? DireccionCompleta,
-    List<string> ObrasSociales
+    List<string> ObrasSociales,
+    List<int>? ObrasSocialesIds = null
 );
 
 public record RegistroPacientePresencialDto(

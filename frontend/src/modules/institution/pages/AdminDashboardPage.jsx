@@ -36,7 +36,7 @@ export const AdminDashboardPage = () => {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 text-xs text-slate-600 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Administrador Institucional: <strong>{user?.nombreCompleto || user?.usuario}</strong></span>
+            <span>Administrador Institucional: <strong>{user?.nombreCompleto || (user?.nombre && user?.apellido ? `${user.nombre} ${user.apellido}` : 'Administrador Institución')}</strong></span>
           </div>
         </div>
       </div>

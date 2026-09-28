@@ -73,7 +73,7 @@ export const CoverageParameterizationForm = () => {
   return (
     <div className="space-y-6">
       {/* Formulario Principal de Configuración */}
-      <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
         {/* Encabezado con Identificación de la Sede */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
@@ -403,7 +403,7 @@ export const CoverageParameterizationForm = () => {
 
       {/* Tabla de Estudios y Coberturas Actuales del Profesional */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-6 sm:p-8 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h4 className="text-sm sm:text-base font-bold font-heading text-slate-900 leading-snug">
               Estudios Parametrizados — Dr./Dra. {selectedDoctor?.nombre} {selectedDoctor?.apellido}

@@ -38,8 +38,8 @@ export const useRegisterForm = () => {
         if (isMounted && Array.isArray(data)) {
           setObrasSociales(data);
         }
-      } catch (err) {
-        console.warn('No se pudo cargar el listado de obras sociales:', err);
+      } catch {
+        // Fallback silencioso si no se cargan las obras sociales
       } finally {
         if (isMounted) setIsLoadingObrasSociales(false);
       }

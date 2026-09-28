@@ -37,8 +37,8 @@ export const InteractiveMapPlaceholder = ({
         if (isMounted && Array.isArray(data)) {
           setBackendConsultorios(data);
         }
-      } catch (err) {
-        console.error('Error cargando consultorios para el mapa:', err);
+      } catch {
+        // Fallback silencioso a sedes por defecto si la API no está disponible
       }
     }
 

@@ -6,6 +6,7 @@ import { CreateAsistenteModal } from '../components/CreateAsistenteModal';
 import { EditAsistenteModal } from '../components/EditAsistenteModal';
 import { AssignProfesionalModal } from '../components/AssignProfesionalModal';
 import { EditProfesionalModal } from '../components/EditProfesionalModal';
+import { CreateProfesionalModal } from '../components/CreateProfesionalModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
 import {
@@ -21,13 +22,14 @@ import {
   UserCheck,
   UserRoundPlus,
   ShieldCheck,
+  Link2,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 
 /**
  * Panel de Administración de Sede Física (Admin de Consultorio).
  * Rol intermedio: Gestiona exclusivamente los asistentes de recepción de su sede
- * y vincula a los profesionales médicos habilitados para atender en ella.
+ * y realiza el ABM completo (solo cuentas e identidad) de médicos y asistentes.
  */
 export const ConsultorioAdminPage = () => {
   const { user } = useAuth();
@@ -48,6 +50,7 @@ export const ConsultorioAdminPage = () => {
     removeProfesional,
     registerDoctor,
     updateDoctor,
+    deleteDoctor,
     editingAsistente,
     isEditAsistenteModalOpen,
     openEditAsistenteModal,
@@ -61,6 +64,7 @@ export const ConsultorioAdminPage = () => {
   const [activeTab, setActiveTab] = useState('asistentes'); // 'asistentes' | 'profesionales'
   const [isAsistenteModalOpen, setIsAsistenteModalOpen] = useState(false);
   const [isProfesionalModalOpen, setIsProfesionalModalOpen] = useState(false);
+  const [isCreateProfesionalModalOpen, setIsCreateProfesionalModalOpen] = useState(false);
 
   // Columnas para la tabla de Asistentes
   const asistenteColumns = [
@@ -213,11 +217,22 @@ export const ConsultorioAdminPage = () => {
             variant="ghost"
             size="xs"
             onClick={() => removeProfesional(row.cuil, `${row.nombre} ${row.apellido}`)}
+            className="text-amber-700 hover:text-amber-800 hover:bg-amber-50"
+            title="Desvincular médico de la sede actual"
+          >
+            <Link2 className="w-3.5 h-3.5 mr-1" />
+            Desvincular
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => deleteDoctor(row.cuil, `${row.nombre} ${row.apellido}`)}
             className="text-rose-600 hover:bg-rose-50"
-            title="Desvincular médico de la sede"
+            title="Dar de baja definitiva al profesional médico"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1" />
-            Desvincular
+            Dar de baja
           </Button>
         </div>
       ),
@@ -276,7 +291,7 @@ export const ConsultorioAdminPage = () => {
           <div className="flex items-center gap-3">
             <div className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
               <span className="block text-[10px] text-slate-400 uppercase font-bold font-heading">Administrador a cargo</span>
-              <span className="font-bold text-slate-800">{user?.usuario}</span>
+              <span className="font-bold text-slate-800">{user?.nombreCompleto || (user?.nombre && user?.apellido ? `${user.nombre} ${user.apellido}` : 'Administrador de Sede')}</span>
             </div>
           </div>
         </div>
@@ -372,15 +387,26 @@ export const ConsultorioAdminPage = () => {
           searchPlaceholder="Buscar por nombre, matrícula o especialidad..."
           filterKey="nombre"
           actionButton={
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setIsProfesionalModalOpen(true)}
-            >
-              <Stethoscope className="w-4 h-4 mr-1.5" strokeWidth={2} />
-              Nuevo / Vincular Médico
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsProfesionalModalOpen(true)}
+              >
+                <Link2 className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                Vincular Médico
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => setIsCreateProfesionalModalOpen(true)}
+              >
+                <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                Dar de alta Médico
+              </Button>
+            </div>
           }
         />
       )}
@@ -400,7 +426,7 @@ export const ConsultorioAdminPage = () => {
         sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
 
-      {/* Modal para Vincular o Registrar Profesional */}
+      {/* Modal para Vincular Profesional Existente a la Sede */}
       <AssignProfesionalModal
         isOpen={isProfesionalModalOpen}
         onClose={() => setIsProfesionalModalOpen(false)}
@@ -419,6 +445,20 @@ export const ConsultorioAdminPage = () => {
         alreadyAssignedCuils={profesionales.map((p) => p.cuil)}
         especialidades={especialidades}
         sedeNombre={consultorio?.nombre || user?.sedeNombre || 'Sede Actual'}
+      />
+
+      {/* Modal para Dar de Alta Nuevo Médico en Sede (Solo cuenta y especialidad) */}
+      <CreateProfesionalModal
+        isOpen={isCreateProfesionalModalOpen}
+        onClose={() => setIsCreateProfesionalModalOpen(false)}
+        onSubmit={async (dto) => {
+          const success = await registerDoctor(dto);
+          if (success) setIsCreateProfesionalModalOpen(false);
+          return success;
+        }}
+        isSubmitting={isSubmitting}
+        especialidades={especialidades}
+        sedeNombre={consultorio?.nombre || user?.sedeNombre}
       />
 
       {/* Modal para Modificar Datos de Asistente */}

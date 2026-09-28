@@ -41,8 +41,7 @@ export const useVitalitySystem = () => {
             data.institucionesAccesibilidad ?? data.InstitucionesAccesibilidad ?? [],
         });
       }
-    } catch (err) {
-      console.error('Error al obtener estado del sistema y accesibilidad:', err);
+    } catch {
       setError('No se pudo verificar el estado del servidor ni la auditoría de accesibilidad.');
     } finally {
       setIsLoading(false);

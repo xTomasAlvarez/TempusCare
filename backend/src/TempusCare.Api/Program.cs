@@ -73,6 +73,7 @@ var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").
     "http://127.0.0.1:3000",
     "http://localhost:5044"
 };
+var envFrontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
 
 builder.Services.AddCors(options =>
 {
@@ -82,10 +83,21 @@ builder.Services.AddCors(options =>
               {
                   if (string.IsNullOrWhiteSpace(origin)) return false;
                   if (configuredOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)) return true;
+                  if (!string.IsNullOrWhiteSpace(envFrontendUrl) &&
+                      origin.Equals(envFrontendUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase)) return true;
                   if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
                   {
-                      return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-                             uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase);
+                      if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                          uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+                          return true;
+
+                      // Permitir dominios HTTPS de despliegue cloud autorizados (Railway, Vercel, Netlify, Render)
+                      if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) &&
+                          (uri.Host.EndsWith(".up.railway.app", StringComparison.OrdinalIgnoreCase) ||
+                           uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase) ||
+                           uri.Host.EndsWith(".netlify.app", StringComparison.OrdinalIgnoreCase) ||
+                           uri.Host.EndsWith(".onrender.com", StringComparison.OrdinalIgnoreCase)))
+                          return true;
                   }
                   return false;
               })

@@ -161,4 +161,6 @@ using (var scope = app.Services.CreateScope())
     );
 }
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
+
 app.Run();

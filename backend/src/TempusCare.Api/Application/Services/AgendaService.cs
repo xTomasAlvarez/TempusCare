@@ -40,6 +40,18 @@ public class AgendaService : IAgendaService
             throw new ConsultorioNotFoundException(dto.CuitConsultorio);
         }
 
+        DateTime fechaBase = new DateTime(dto.Anio, dto.Mes, dto.Dia);
+        if (fechaBase.Date < DateTime.Today)
+        {
+            _logger.LogWarning("Intento de crear agenda en fecha pasada: {Fecha:yyyy-MM-dd}", fechaBase);
+            throw new BusinessException("No se pueden crear agendas en fechas pasadas.");
+        }
+        if (fechaBase.Date > DateTime.Today.AddMonths(6))
+        {
+            _logger.LogWarning("Intento de crear agenda con más de 6 meses de antelación: {Fecha:yyyy-MM-dd}", fechaBase);
+            throw new BusinessException("Solo se permiten reservas y agendas con una antelación máxima de 6 meses.");
+        }
+
         // RN-01 / RN-05: Un profesional no puede tener dos turnos/agendas superpuestas en la misma franja horaria (incluso en distintos consultorios).
         // 1. Traer de la base de datos las agendas de ese médico para ese día específico en memoria para evitar excepciones de traducción LINQ en EF Core
         var agendasDelDia = await _db.Agendas
@@ -74,23 +86,45 @@ public class AgendaService : IAgendaService
         _db.Agendas.Add(agenda);
         await _db.SaveChangesAsync();
 
-        // Generación automática de franjas horarias (Turnos)
-        DateTime fechaBase = new DateTime(dto.Anio, dto.Mes, dto.Dia);
+        // Generación automática de franjas horarias (Turnos con pausa de descanso / almuerzo humana)
         TimeSpan tiempoActual = dto.HoraEntrada;
         int duracion = dto.DuracionTurnoMinutos > 0 ? dto.DuracionTurnoMinutos : 30;
 
         while (tiempoActual.Add(TimeSpan.FromMinutes(duracion)) <= dto.HoraSalida)
         {
-            var turno = new Turno
+            var finTurno = tiempoActual.Add(TimeSpan.FromMinutes(duracion));
+            bool enDescanso = false;
+
+            if (dto.HoraInicioDescanso.HasValue && dto.HoraFinDescanso.HasValue)
             {
-                AgendaId = agenda.Id,
-                Fecha = fechaBase,
-                HoraInicio = tiempoActual,
-                HoraFin = tiempoActual.Add(TimeSpan.FromMinutes(duracion)),
-                Estado = EstadoTurno.Disponible
-            };
-            _db.Turnos.Add(turno);
-            tiempoActual = tiempoActual.Add(TimeSpan.FromMinutes(duracion));
+                if (tiempoActual < dto.HoraFinDescanso.Value && finTurno > dto.HoraInicioDescanso.Value)
+                {
+                    enDescanso = true;
+                }
+            }
+            else if ((dto.HoraSalida - dto.HoraEntrada).TotalHours >= 6)
+            {
+                var defInicio = new TimeSpan(13, 0, 0);
+                var defFin = new TimeSpan(16, 0, 0);
+                if (tiempoActual < defFin && finTurno > defInicio)
+                {
+                    enDescanso = true;
+                }
+            }
+
+            if (!enDescanso)
+            {
+                var turno = new Turno
+                {
+                    AgendaId = agenda.Id,
+                    Fecha = fechaBase,
+                    HoraInicio = tiempoActual,
+                    HoraFin = finTurno,
+                    Estado = EstadoTurno.Disponible
+                };
+                _db.Turnos.Add(turno);
+            }
+            tiempoActual = finTurno;
         }
 
         await _db.SaveChangesAsync();

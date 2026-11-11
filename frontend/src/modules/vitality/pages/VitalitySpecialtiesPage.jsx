@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useVitalitySpecialties } from '../hooks/useVitalitySpecialties';
 import { SpecialtyModal } from '../components/SpecialtyModal';
 import { StudyModal } from '../components/StudyModal';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
+import { pageTransitionVariants, staggerContainerVariants, staggerItemVariants } from '../../../shared/motion';
 import {
   Stethoscope,
   Activity,
@@ -75,7 +77,12 @@ export const VitalitySpecialtiesPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -101,8 +108,16 @@ export const VitalitySpecialtiesPage = () => {
       </div>
 
       {/* Tarjetas de Métricas de Catálogo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      >
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Especialidades Médicas</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalSpecialties}</p>
@@ -111,9 +126,12 @@ export const VitalitySpecialtiesPage = () => {
           <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
             <Stethoscope className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estudios Clínicos Totales</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalStudies}</p>
@@ -122,9 +140,12 @@ export const VitalitySpecialtiesPage = () => {
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
             <Activity className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Duración Promedio</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.avgDuration} min</p>
@@ -133,8 +154,8 @@ export const VitalitySpecialtiesPage = () => {
           <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
             <Clock className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Barra de Filtro y Búsqueda */}
       <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
@@ -371,7 +392,7 @@ export const VitalitySpecialtiesPage = () => {
         onSubmit={saveStudy}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </motion.div>
   );
 };
 

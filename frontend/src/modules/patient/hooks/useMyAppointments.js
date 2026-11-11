@@ -59,9 +59,10 @@ export const useMyAppointments = () => {
   };
 
   // Filtrar citas futuras vs históricas
-  // EstadoCita: 1=Solicitada, 2=Confirmada, 3=Atendida, 4=Ausente, 5=Cancelada
+  // EstadoCita: 1=Solicitada, 2=Confirmada, 3=Atendida, 4=Ausente, 5=Cancelada, 6=EnSalaDeEspera, 7=EnAtencion
   const futureAppointments = appointments.filter(
-    (c) => (c.estado === 1 || c.estado === 2 || c.estado === 'Solicitada' || c.estado === 'Confirmada')
+    (c) => (c.estado === 1 || c.estado === 2 || c.estado === 6 || c.estado === 7 ||
+            c.estado === 'Solicitada' || c.estado === 'Confirmada' || c.estado === 'EnSalaDeEspera' || c.estado === 'EnAtencion')
   );
 
   const pastAppointments = appointments.filter(

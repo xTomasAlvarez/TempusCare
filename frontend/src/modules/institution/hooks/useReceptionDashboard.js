@@ -95,29 +95,29 @@ export const useReceptionDashboard = () => {
   };
 
   // 2. Pasar a Consulta (persiste EstadoCita.EnAtencion = 7)
-  const startAttention = async (citaId) => {
+  const startAttention = async (citaId, forzarAtencionFueraDeHorario = false) => {
     setIsActionLoading(true);
     try {
-      await receptionService.updateAppointmentStatus(citaId, 7);
+      await receptionService.updateAppointmentStatus(citaId, 7, forzarAtencionFueraDeHorario);
       await fetchDashboardData();
       return true;
     } catch (err) {
       setError(err.message || 'No se pudo llamar al paciente a consulta.');
-      return false;
+      throw err;
     } finally {
       setIsActionLoading(false);
     }
   };
 
-  // 3. Finalizar Atención Médica (persiste EstadoCita.Atendida = 3)
-  const finishAttention = async (citaId) => {
+  // 3. Marcar Ausente (persiste EstadoCita.Ausente = 4)
+  const markAsAbsent = async (citaId) => {
     setIsActionLoading(true);
     try {
-      await receptionService.updateAppointmentStatus(citaId, 3);
+      await receptionService.updateAppointmentStatus(citaId, 4);
       await fetchDashboardData();
       return true;
     } catch (err) {
-      setError(err.message || 'No se pudo finalizar la cita.');
+      setError(err.message || 'No se pudo marcar la cita como ausente.');
       return false;
     } finally {
       setIsActionLoading(false);
@@ -193,7 +193,7 @@ export const useReceptionDashboard = () => {
     error,
     markAsArrived,
     startAttention,
-    finishAttention,
+    markAsAbsent,
     cancelCita,
     refreshDashboard: fetchDashboardData,
   };

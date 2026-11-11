@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../shared/components/ui/Card';
 import { Input } from '../../../shared/components/ui/Input';
 import { Button } from '../../../shared/components/ui/Button';
 import { useLoginForm } from '../hooks/useLoginForm';
+import { pageTransitionVariants } from '../../../shared/motion';
 
 export const LoginPage = () => {
   const { formData, errors, isSubmitting, handleChange, handleSubmit } = useLoginForm();
@@ -13,8 +15,8 @@ export const LoginPage = () => {
   // Perfiles de prueba rápida para testing del jurado y desarrollo
   const testProfiles = [
     { label: 'Super Admin', user: 'admin@vitality.com', pass: 'Admin123!', hint: 'Vitality' },
-    { label: 'Institución', user: '30111222334', pass: 'Institucion123!', hint: 'Sedes' },
-    { label: 'Admin Sede', user: 'admin.cons101', pass: 'AdminCons123!', hint: 'Consultorio' },
+    { label: 'Institución', user: '30546789123', pass: 'Institucion123!', hint: 'Sanatorio 9 de Julio' },
+    { label: 'Admin Sede', user: 'admin.sede25demayo', pass: 'AdminCons123!', hint: 'Consultorio' },
     { label: 'Asistente', user: '27111111111', pass: 'Asistente123!', hint: 'Recepción' },
     { label: 'Médico', user: '20123456789', pass: 'Medico123!', hint: 'Atención' },
     { label: 'Paciente', user: '27000000001', pass: 'Paciente123!', hint: 'Turnos' },
@@ -26,14 +28,14 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto my-auto">
-      <Card className="border-slate-200/80 shadow-md">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-md mx-auto my-auto">
+      <Card className="border-slate-200/80 shadow-md" title="Formulario de inicio de sesión">
         {/* Cabecera compacta y jerárquica con dimensiones optimizadas */}
         <CardHeader className="text-center p-4 pb-1 sm:p-5 sm:pb-2">
-          <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1.5 shadow-xs">
+          <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1.5 shadow-xs" title="Acceso seguro a TempusCare">
             <LogIn className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>
-          <CardTitle className="text-xl sm:text-2xl font-bold font-heading text-slate-900 leading-tight">
+          <CardTitle className="text-xl sm:text-2xl font-bold font-heading text-slate-900 leading-tight" title="Iniciar Sesión">
             Iniciar Sesión
           </CardTitle>
           <CardDescription className="text-xs text-slate-500 mt-0.5">
@@ -49,6 +51,8 @@ export const LoginPage = () => {
               type="text"
               label="Usuario o CUIL / CUIT"
               placeholder="Ej. 20123456789 o correo"
+              title="Ingresa tu CUIL, CUIT, correo electrónico o nombre de usuario"
+              maxLength={120}
               required
               value={formData.usuario}
               onChange={handleChange}
@@ -64,6 +68,8 @@ export const LoginPage = () => {
               type={showPassword ? 'text' : 'password'}
               label="Contraseña"
               placeholder="••••••••"
+              title="Ingresa tu contraseña de acceso"
+              maxLength={128}
               required
               value={formData.contra}
               onChange={handleChange}
@@ -76,6 +82,7 @@ export const LoginPage = () => {
                   type="button"
                   tabIndex={0}
                   onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                   className="text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1"
                 >
@@ -84,9 +91,19 @@ export const LoginPage = () => {
               }
             />
 
+            <div className="flex justify-end -mt-1 mb-1">
+              <Link
+                to="/forgot-password"
+                title="Recuperar o restablecer tu contraseña olvidada"
+                className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
             {/* Mensaje de error general si existe */}
             {errors.general && (
-              <div className="py-0.5">
+              <div className="py-0.5" role="alert" aria-live="assertive">
                 <p className="text-xs text-rose-600 flex items-center gap-1.5 font-medium animate-in fade-in-0">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{errors.general}</span>
@@ -100,6 +117,7 @@ export const LoginPage = () => {
                 variant="primary"
                 size="md"
                 isLoading={isSubmitting}
+                title="Iniciar sesión y acceder a la plataforma"
                 className="w-full text-sm font-semibold shadow-xs py-2 gap-2"
               >
                 <LogIn className="w-4 h-4" strokeWidth={2} />
@@ -111,7 +129,7 @@ export const LoginPage = () => {
           {/* Accesos rápidos de desarrollo en grilla compacta de 2 columnas */}
           <div className="mt-2.5 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5" title="Perfiles preconfigurados para evaluación rápida del sistema">
                 <Sparkles className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
                 <span>Accesos rápidos de prueba:</span>
               </span>
@@ -123,8 +141,8 @@ export const LoginPage = () => {
                   key={p.label}
                   type="button"
                   onClick={() => fillQuickTest(p.user, p.pass)}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-all flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
-                  title={`${p.label} - ${p.user}`}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-transform duration-75 active:scale-[0.98] cursor-pointer flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
+                  title={`Autocompletar credenciales de ${p.label} (${p.hint}): ${p.user}`}
                 >
                   <div className="min-w-0 pr-1">
                     <span className="text-xs font-semibold text-slate-800 block leading-tight truncate">
@@ -146,19 +164,19 @@ export const LoginPage = () => {
         <CardFooter className="flex-col gap-1 justify-center border-t border-slate-100 p-3 sm:p-3.5 bg-slate-50/40 rounded-b-2xl mt-2.5">
           <p className="text-xs text-slate-600 text-center">
             ¿No tienes cuenta de paciente?{' '}
-            <Link to="/register" className="text-primary-700 font-semibold hover:underline">
+            <Link to="/register" title="Crear una nueva cuenta gratuita de paciente" className="text-primary-700 font-semibold hover:underline">
               Registrarse gratis
             </Link>
           </p>
           <p className="text-[11px] text-slate-400 text-center">
             ¿Necesitas asistencia técnica?{' '}
-            <span className="text-primary-700 font-semibold cursor-pointer hover:underline">
+            <span title="Centro de asistencia técnica de Vitality Software" className="text-primary-700 font-semibold cursor-pointer hover:underline">
               Soporte Vitality
             </span>
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

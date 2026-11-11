@@ -87,8 +87,9 @@ public class CitaServiceTests
         var prof = new Profesional { Cuil = $"20{testSuffix}", Nombre = "Prof", Apellido = "Test" };
         var cons = new Consultorio { Cuit = $"30{testSuffix}", Nombre = "Cons Test" };
         var pac = new Paciente { Cuil = $"27{testSuffix}", Nombre = "Pac", Apellido = "Test" };
-        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = 1, Mes = 1, Anio = 2026, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(9, 0, 0) };
-        var turno = new Turno { Agenda = agenda, Fecha = new DateTime(2026, 1, 1, 8, 0, 0), HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Disponible };
+        var fechaFutura = DateTime.Today.AddDays(7);
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaFutura.Day, Mes = fechaFutura.Month, Anio = fechaFutura.Year, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(9, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = fechaFutura, HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Disponible };
 
         db.Profesionales.Add(prof);
         db.Consultorios.Add(cons);
@@ -153,7 +154,133 @@ public class CitaServiceTests
         await db.SaveChangesAsync();
 
         var dto = new AltaCitaDto(pac.Cuil, prof.Cuil, turno.Id, TipoCita.Consulta, null, null);
-        var ex = await Assert.ThrowsAsync<ValidationException>(() => citaService.AltaCitaAsync(dto));
+        var ex = await Assert.ThrowsAsync<BusinessException>(() => citaService.AltaCitaAsync(dto));
         Assert.Contains("transcurrido", ex.Message);
+    }
+
+    [Fact]
+    public async Task AltaCita_TurnoConFechaDeAyer_LanzaBusinessException()
+    {
+        var db = GetInMemoryDbContext(nameof(AltaCita_TurnoConFechaDeAyer_LanzaBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20111222997", Nombre = "Esteban", Apellido = "Quito" };
+        var cons = new Consultorio { Cuit = "30111222997", Nombre = "Consultorio Central" };
+        var pac = new Paciente { Cuil = "27111222997", Nombre = "Clara", Apellido = "Soria" };
+        var ayer = DateTime.Today.AddDays(-1);
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = ayer.Day, Mes = ayer.Month, Anio = ayer.Year, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(9, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = ayer, HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Disponible };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+        db.Agendas.Add(agenda);
+        db.Turnos.Add(turno);
+        await db.SaveChangesAsync();
+
+        var dto = new AltaCitaDto(pac.Cuil, prof.Cuil, turno.Id, TipoCita.Consulta, null, null);
+        var ex = await Assert.ThrowsAsync<BusinessException>(() => citaService.AltaCitaAsync(dto));
+        Assert.Contains("transcurrido", ex.Message);
+    }
+
+    [Fact]
+    public async Task AltaCita_FechaMayorA6Meses_LanzaBusinessException()
+    {
+        var db = GetInMemoryDbContext(nameof(AltaCita_FechaMayorA6Meses_LanzaBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20111222111", Nombre = "A", Apellido = "B" };
+        var cons = new Consultorio { Cuit = "30111222111", Nombre = "C" };
+        var pac = new Paciente { Cuil = "27111222111", Nombre = "D", Apellido = "E" };
+        var fechaInvalida = DateTime.Today.AddMonths(7);
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaInvalida.Day, Mes = fechaInvalida.Month, Anio = fechaInvalida.Year, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(9, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = fechaInvalida, HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Disponible };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+        db.Agendas.Add(agenda);
+        db.Turnos.Add(turno);
+        await db.SaveChangesAsync();
+
+        var dto = new AltaCitaDto(pac.Cuil, prof.Cuil, turno.Id, TipoCita.Consulta, null, null);
+        var ex = await Assert.ThrowsAsync<BusinessException>(() => citaService.AltaCitaAsync(dto));
+        Assert.Contains("antelación máxima de 6 meses", ex.Message);
+    }
+
+    [Fact]
+    public async Task AltaCita_MismoPacienteTurnosSuperpuestos_LanzaBusinessException()
+    {
+        var db = GetInMemoryDbContext(nameof(AltaCita_MismoPacienteTurnosSuperpuestos_LanzaBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof1 = new Profesional { Cuil = "20111222112", Nombre = "Doc1", Apellido = "Uno" };
+        var prof2 = new Profesional { Cuil = "20111222113", Nombre = "Doc2", Apellido = "Dos" };
+        var cons = new Consultorio { Cuit = "30111222112", Nombre = "Cons" };
+        var pac = new Paciente { Cuil = "27111222112", Nombre = "Paciente", Apellido = "Test" };
+        var fechaFutura = DateTime.Today.AddDays(5);
+
+        var agenda1 = new Agenda { ProfesionalCuil = prof1.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaFutura.Day, Mes = fechaFutura.Month, Anio = fechaFutura.Year, HoraEntrada = new TimeSpan(9, 0, 0), HoraSalida = new TimeSpan(10, 0, 0) };
+        var turno1 = new Turno { Agenda = agenda1, Fecha = fechaFutura, HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(9, 30, 0), Estado = EstadoTurno.Disponible };
+
+        var agenda2 = new Agenda { ProfesionalCuil = prof2.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaFutura.Day, Mes = fechaFutura.Month, Anio = fechaFutura.Year, HoraEntrada = new TimeSpan(9, 0, 0), HoraSalida = new TimeSpan(10, 0, 0) };
+        var turno2 = new Turno { Agenda = agenda2, Fecha = fechaFutura, HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(9, 30, 0), Estado = EstadoTurno.Disponible };
+
+        db.Profesionales.AddRange(prof1, prof2);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+        db.Agendas.AddRange(agenda1, agenda2);
+        db.Turnos.AddRange(turno1, turno2);
+        await db.SaveChangesAsync();
+
+        // Primera reserva exitosa
+        await citaService.AltaCitaAsync(new AltaCitaDto(pac.Cuil, prof1.Cuil, turno1.Id, TipoCita.Consulta, null, null));
+
+        // Segunda reserva con otro médico a la misma hora para el mismo paciente => rechaza
+        var ex = await Assert.ThrowsAsync<BusinessException>(() =>
+            citaService.AltaCitaAsync(new AltaCitaDto(pac.Cuil, prof2.Cuil, turno2.Id, TipoCita.Consulta, null, null)));
+        Assert.Contains("ya posee otro turno reservado en ese mismo día y horario", ex.Message);
+    }
+
+    [Fact]
+    public async Task ModificarCitaEstado_AsistenteMarcaAtendida_LanzaBusinessException()
+    {
+        var db = GetInMemoryDbContext(nameof(ModificarCitaEstado_AsistenteMarcaAtendida_LanzaBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var (cita, _) = await CrearCitaValidaAsync(db, citaService, "993000000");
+
+        var ex = await Assert.ThrowsAsync<BusinessException>(() =>
+            citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.Atendida, "Asistente"));
+        Assert.Contains("Solo el profesional tratante puede finalizar la consulta", ex.Message);
+    }
+
+    [Fact]
+    public async Task ActualizarCitasVencidasAAusente_ActualizaCitasPasadasNoAtendidas()
+    {
+        var db = GetInMemoryDbContext(nameof(ActualizarCitasVencidasAAusente_ActualizaCitasPasadasNoAtendidas));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20111222114", Nombre = "A", Apellido = "B" };
+        var cons = new Consultorio { Cuit = "30111222114", Nombre = "C" };
+        var pac = new Paciente { Cuil = "27111222114", Nombre = "D", Apellido = "E" };
+        var fechaPasada = DateTime.Today.AddDays(-2);
+
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaPasada.Day, Mes = fechaPasada.Month, Anio = fechaPasada.Year, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(9, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = fechaPasada, HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Reservado };
+        var cita = new Cita { Turno = turno, PacienteCuil = pac.Cuil, Fecha = fechaPasada, Estado = EstadoCita.Confirmada, Tipo = TipoCita.Consulta };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+        db.Agendas.Add(agenda);
+        db.Turnos.Add(turno);
+        db.Citas.Add(cita);
+        await db.SaveChangesAsync();
+
+        await citaService.ActualizarCitasVencidasAAusenteAsync();
+
+        var citaActualizada = await db.Citas.FindAsync(cita.Id);
+        Assert.Equal(EstadoCita.Ausente, citaActualizada?.Estado);
     }
 }

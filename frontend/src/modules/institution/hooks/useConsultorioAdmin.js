@@ -13,6 +13,11 @@ export const useConsultorioAdmin = (consultorioCuit) => {
   const [profesionales, setProfesionales] = useState([]);
   const [allProfesionales, setAllProfesionales] = useState([]);
   const [especialidades, setEspecialidades] = useState([]);
+  const [metricas, setMetricas] = useState({
+    pacientesAtendidos: 0,
+    calificacionPromedio: 0,
+    visitasPerfil: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,12 +40,13 @@ export const useConsultorioAdmin = (consultorioCuit) => {
 
     try {
       setIsLoading(true);
-      const [consData, asisData, profsData, todosProfs, espData] = await Promise.all([
+      const [consData, asisData, profsData, todosProfs, espData, metricsData] = await Promise.all([
         institutionAdminService.getConsultorioByCuit(consultorioCuit).catch(() => null),
         institutionAdminService.getAsistentes(consultorioCuit).catch(() => []),
         institutionAdminService.getConsultorioProfesionales(consultorioCuit).catch(() => []),
         institutionAdminService.getProfesionales().catch(() => []),
         institutionAdminService.getEspecialidades().catch(() => []),
+        institutionAdminService.getConsultorioMetrics(consultorioCuit).catch(() => null),
       ]);
 
       setConsultorio(consData);
@@ -48,6 +54,9 @@ export const useConsultorioAdmin = (consultorioCuit) => {
       setProfesionales(profsData);
       setAllProfesionales(todosProfs);
       setEspecialidades(espData);
+      if (metricsData) {
+        setMetricas(metricsData);
+      }
     } catch (err) {
       addToast({
         title: 'Error de sincronización',
@@ -314,6 +323,7 @@ export const useConsultorioAdmin = (consultorioCuit) => {
 
   return {
     consultorio,
+    metricas,
     asistentes,
     profesionales,
     allProfesionales,

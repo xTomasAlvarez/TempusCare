@@ -193,6 +193,58 @@ public class InstitucionService : IInstitucionService
         )).ToList();
     }
 
+    public async Task RegistrarVisitaAsync(int id)
+    {
+        var inst = await _db.Instituciones.FirstOrDefaultAsync(i => i.Id == id);
+        if (inst == null)
+        {
+            throw new InstitucionNotFoundException(id);
+        }
+
+        inst.VisitasPerfil++;
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Visita registrada para institución ID {Id}. Total: {Total}", id, inst.VisitasPerfil);
+    }
+
+    public async Task<MetricasInstitucionDto> ObtenerMetricasAsync(int id)
+    {
+        var inst = await _db.Instituciones.FirstOrDefaultAsync(i => i.Id == id);
+        if (inst == null)
+        {
+            throw new InstitucionNotFoundException(id);
+        }
+
+        var pacientesAtendidos = await _db.Citas
+            .Include(c => c.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Where(c => c.Estado == EstadoCita.Atendida &&
+                        c.Turno != null &&
+                        c.Turno.Agenda != null &&
+                        c.Turno.Agenda.Consultorio != null &&
+                        c.Turno.Agenda.Consultorio.InstitucionId == id)
+            .CountAsync();
+
+        var cuestionarios = await _db.Cuestionarios
+            .Include(q => q.Cita).ThenInclude(c => c!.Turno).ThenInclude(t => t!.Agenda).ThenInclude(a => a!.Consultorio)
+            .Where(q => q.Cita != null &&
+                        q.Cita.Turno != null &&
+                        q.Cita.Turno.Agenda != null &&
+                        q.Cita.Turno.Agenda.Consultorio != null &&
+                        q.Cita.Turno.Agenda.Consultorio.InstitucionId == id)
+            .ToListAsync();
+
+        double calificacionPromedio = 0.0;
+        if (cuestionarios.Count > 0)
+        {
+            calificacionPromedio = Math.Round(cuestionarios.Average(q => (q.Puntualidad + q.Atencion + q.Profesionalismo) / 3.0), 1);
+        }
+
+        return new MetricasInstitucionDto(
+            pacientesAtendidos,
+            calificacionPromedio,
+            inst.VisitasPerfil
+        );
+    }
+
     private static InstitucionResponseDto MapToDto(Institucion inst)
     {
         return new InstitucionResponseDto(

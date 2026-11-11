@@ -32,7 +32,7 @@ export const DoctorCard = ({
     nombre,
     apellido,
     matricula,
-    puntuacion = 5.0,
+    puntuacion = 0,
     especialidades = [],
     obrasSociales = [],
     consultorios = [],
@@ -41,7 +41,17 @@ export const DoctorCard = ({
   } = doctor;
 
   const fullName = `Dr(a). ${nombre} ${apellido}`;
-  const displayScore = Number(puntuacion || 5.0).toFixed(1);
+  const hasScore = Number(puntuacion) > 0;
+  const displayScore = hasScore ? Number(puntuacion).toFixed(1) : null;
+
+  // Resumen semántico completo para lectores de pantalla NVDA y JAWS (WCAG 2.1 AA / ERS RNF-ACC-02)
+  const fullAccessibleSummary = `${fullName}, especialidad: ${
+    especialidades.length > 0 ? especialidades.join(', ') : 'Medicina General'
+  }${
+    hasScore ? `, calificación: ${displayScore} de 5 estrellas` : ', sin valoraciones registradas aún'
+  }${
+    consultorios.length > 0 ? `, atención en: ${consultorios.join(', ')}` : ''
+  }. Pulsa Enter o Espacio para abrir detalles del profesional.`;
 
   /**
    * Abre la vista detallada al hacer clic sobre cualquier parte de la tarjeta
@@ -81,14 +91,14 @@ export const DoctorCard = ({
         onMouseLeave={() => onHover && onHover(null)}
         tabIndex={0}
         role="button"
-        aria-label={`Ver detalles y estudios del ${fullName}`}
+        aria-label={fullAccessibleSummary}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleCardClick(e);
           }
         }}
-        className={`group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+        className={`group transition-transform duration-75 active:scale-[0.98] hover:shadow-md hover:border-primary-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
           isHighlighted ? 'ring-2 ring-primary-500 border-primary-500 shadow-md' : 'border-slate-200/80'
         }`}
       >
@@ -131,13 +141,22 @@ export const DoctorCard = ({
 
                 {/* Puntuación Calculada */}
                 <div className="flex items-center gap-2 pt-1">
-                  <div className="flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/80 px-2 py-0.5 rounded-full text-xs font-semibold">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" strokeWidth={2} aria-hidden="true" />
-                    <span>{displayScore}</span>
-                  </div>
-                  <span className="text-xs text-slate-500 font-medium">
-                    Excelente atención verificada
-                  </span>
+                  {hasScore ? (
+                    <>
+                      <div className="flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/80 px-2 py-0.5 rounded-full text-xs font-semibold">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" strokeWidth={2} aria-hidden="true" />
+                        <span>{displayScore}</span>
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium">
+                        Atención verificada
+                      </span>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-1 bg-slate-50 text-slate-500 border border-slate-200/80 px-2 py-0.5 rounded-full text-xs font-medium">
+                      <Star className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} aria-hidden="true" />
+                      <span>Sin valoraciones</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

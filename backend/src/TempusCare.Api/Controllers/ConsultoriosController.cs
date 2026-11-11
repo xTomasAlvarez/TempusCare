@@ -45,9 +45,23 @@ public class ConsultoriosController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> ObtenerTodos()
+    public async Task<IActionResult> ObtenerTodos([FromQuery] string? profesionalCuil = null)
     {
+        if (!string.IsNullOrWhiteSpace(profesionalCuil))
+        {
+            var porProf = await _consultorioService.ObtenerPorProfesionalAsync(profesionalCuil);
+            return Ok(porProf);
+        }
+
         var res = await _consultorioService.ObtenerTodosAsync();
+        return Ok(res);
+    }
+
+    [HttpGet("profesional/{profesionalCuil}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ObtenerPorProfesional(string profesionalCuil)
+    {
+        var res = await _consultorioService.ObtenerPorProfesionalAsync(profesionalCuil);
         return Ok(res);
     }
 
@@ -73,6 +87,22 @@ public class ConsultoriosController : ControllerBase
     {
         await _consultorioService.AsignarProfesionalAsync(cuit, profesionalCuil);
         return Ok(new { message = "Profesional vinculado correctamente al consultorio." });
+    }
+
+    [HttpPost("{cuit}/visita")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RegistrarVisita(string cuit)
+    {
+        await _consultorioService.RegistrarVisitaAsync(cuit);
+        return Ok(new { message = "Visita registrada correctamente al perfil del consultorio." });
+    }
+
+    [HttpGet("{cuit}/metricas")]
+    [Authorize(Roles = "AdminConsultorio,AdminInstitucion,Institucion,SuperAdmin")]
+    public async Task<IActionResult> ObtenerMetricas(string cuit)
+    {
+        var res = await _consultorioService.ObtenerMetricasAsync(cuit);
+        return Ok(res);
     }
 
     [HttpDelete("{cuit}/profesionales/{profesionalCuil}")]

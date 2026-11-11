@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { usePatientDashboard } from '../hooks/usePatientDashboard';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../shared/components/ui/Card';
 import { CalendarHeart, Stethoscope, HeartPulse, ArrowRight, Clock, ShieldPlus, CalendarDays, UserCog } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
 import { EditPatientProfileModal } from '../components/EditPatientProfileModal';
+import { pageTransitionVariants, staggerContainerVariants, staggerItemVariants } from '../../../shared/motion';
 
 /**
  * Dashboard Principal del Paciente.
@@ -17,7 +19,12 @@ export const PatientDashboardPage = () => {
   const patientName = paciente?.nombre || user?.nombre || (user?.nombreCompleto ? user.nombreCompleto.split(' ')[0] : null) || 'Paciente';
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Saludo y Acciones Rápidas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -109,7 +116,12 @@ export const PatientDashboardPage = () => {
       )}
 
       {/* Tarjetas de Módulos */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      >
         {/* Mis Turnos */}
         <Card className="hover:border-primary-200 transition-all duration-300 hover:shadow-md">
           <CardHeader>
@@ -234,7 +246,7 @@ export const PatientDashboardPage = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Modal de Edición de Perfil de Paciente */}
       <EditPatientProfileModal
@@ -245,6 +257,6 @@ export const PatientDashboardPage = () => {
           refreshDashboard();
         }}
       />
-    </div>
+    </motion.div>
   );
 };

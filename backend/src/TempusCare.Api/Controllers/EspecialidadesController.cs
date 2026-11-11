@@ -52,6 +52,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _especialidadService.ObtenerPorIdAsync(id);
@@ -59,6 +60,7 @@ public class EspecialidadesController : ControllerBase
     }
 
     [HttpGet("{id}/estudios")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerEstudios(int id)
     {
         var res = await _especialidadService.ObtenerEstudiosPorEspecialidadAsync(id);

@@ -49,6 +49,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpGet("consultorio")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerAdminsConsultorio([FromQuery] string? consultorioCuit)
     {
         var res = await _administradorService.ObtenerAdminsConsultorioAsync(consultorioCuit);
@@ -56,6 +57,7 @@ public class AdministradoresController : ControllerBase
     }
 
     [HttpGet("consultorio/{cuil}")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> ObtenerAdminConsultorioPorCuil(string cuil)
     {
         var res = await _administradorService.ObtenerAdminConsultorioPorCuilAsync(cuil);

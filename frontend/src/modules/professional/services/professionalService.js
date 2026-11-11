@@ -2,9 +2,12 @@ import { apiClient } from '../../../core/api/apiClient';
 
 export const professionalService = {
   /**
-   * Obtiene la lista de consultorios / sedes de atención
+   * Obtiene la lista de consultorios / sedes de atención (filtrada por el médico si se indica profesionalCuil)
    */
-  async getConsultorios() {
+  async getConsultorios(profesionalCuil = null) {
+    if (profesionalCuil) {
+      return await apiClient.get(`consultorios?profesionalCuil=${encodeURIComponent(profesionalCuil)}`);
+    }
     return await apiClient.get('consultorios');
   },
 
@@ -16,13 +19,16 @@ export const professionalService = {
   },
 
   /**
-   * Obtiene las citas del día para el médico
+   * Obtiene las citas del día para el médico (opcionalmente filtradas por sede activa)
    */
-  async getDailyAppointments(profesionalCuil, fecha) {
+  async getDailyAppointments(profesionalCuil, fecha, consultorioCuit = null) {
     const params = new URLSearchParams();
     if (fecha) {
       const dateStr = typeof fecha === 'string' ? fecha : fecha.toISOString().split('T')[0];
       params.append('fecha', dateStr);
+    }
+    if (consultorioCuit) {
+      params.append('consultorioCuit', consultorioCuit);
     }
 
     const query = params.toString();
@@ -75,10 +81,11 @@ export const professionalService = {
   /**
    * Modifica el estado de la cita (ej. marcar como Atendida tras finalizar consulta)
    */
-  async updateAppointmentStatus(citaId, estado) {
+  async updateAppointmentStatus(citaId, estado, forzarAtencionFueraDeHorario = false) {
     return await apiClient.put(`citas/${citaId}/estado`, {
       citaId: Number(citaId),
       estado: Number(estado),
+      forzarAtencionFueraDeHorario: Boolean(forzarAtencionFueraDeHorario),
     });
   },
 };

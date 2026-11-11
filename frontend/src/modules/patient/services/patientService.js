@@ -4,7 +4,7 @@ export const patientService = {
   /**
    * Consulta profesionales con filtros opcionales
    */
-  async getProfessionals({ nombre, busqueda, especialidadId, obraSocialId, consultorioCuit } = {}) {
+  async getProfessionals({ nombre, busqueda, especialidadId, obraSocialId, consultorioCuit, minRating, sortByRating } = {}) {
     const params = new URLSearchParams();
     const term = (busqueda || nombre || '').trim();
     if (term) {
@@ -14,6 +14,12 @@ export const patientService = {
     if (especialidadId) params.append('especialidadId', especialidadId);
     if (obraSocialId) params.append('obraSocialId', obraSocialId);
     if (consultorioCuit) params.append('consultorioCuit', consultorioCuit);
+    if (minRating !== undefined && minRating !== null && minRating !== '') {
+      params.append('minRating', minRating);
+    }
+    if (sortByRating) {
+      params.append('sortByRating', 'true');
+    }
 
     const query = params.toString();
     return await apiClient.get(`profesionales${query ? `?${query}` : ''}`);
@@ -82,6 +88,13 @@ export const patientService = {
    */
   async getPatientAppointments(pacienteCuil) {
     return await apiClient.get(`citas/paciente/${pacienteCuil}`);
+  },
+
+  /**
+   * Obtiene la historia clínica unificada y línea de tiempo del paciente (RN-04)
+   */
+  async getPatientClinicalHistory(pacienteCuil) {
+    return await apiClient.get(`historiasclinicas/paciente/${pacienteCuil}`);
   },
 
   /**

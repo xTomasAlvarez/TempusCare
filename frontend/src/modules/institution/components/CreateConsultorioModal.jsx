@@ -136,11 +136,11 @@ export const CreateConsultorioModal = ({
       maxWidth="max-w-lg"
       className="p-5 sm:p-6"
     >
-      <form onSubmit={handleSubmit} className="space-y-3 font-sans text-sm">
+      <form onSubmit={handleSubmit} className="space-y-2.5 font-sans text-sm">
         {/* Identificación de Sede */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
           <div>
-            <label htmlFor="cuit" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="cuit" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
               CUIT de la Sede <span className="text-rose-500">*</span>
             </label>
             <input
@@ -150,19 +150,16 @@ export const CreateConsultorioModal = ({
               value={formData.cuit}
               onChange={handleChange}
               placeholder="Ej: 30711223344"
-              className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono text-sm ${
+              className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono text-sm ${
                 errors.cuit ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
             />
-            {/* Espacio fijo reservado para error (sin salto de layout) */}
-            <div className="min-h-[16px] mt-0.5 flex items-center">
-              {errors.cuit && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.cuit}</p>}
-            </div>
+            {errors.cuit && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.cuit}</p>}
           </div>
 
           <div>
-            <label htmlFor="nombre" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="nombre" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
               Nombre de Sede / Consultorio <span className="text-rose-500">*</span>
             </label>
             <input
@@ -172,22 +169,19 @@ export const CreateConsultorioModal = ({
               value={formData.nombre}
               onChange={handleChange}
               placeholder="Ej: Consultorio 204"
-              className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
+              className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
                 errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
             />
-            {/* Espacio fijo reservado para error (sin salto de layout) */}
-            <div className="min-h-[16px] mt-0.5 flex items-center">
-              {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-            </div>
+            {errors.nombre && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.nombre}</p>}
           </div>
         </div>
 
         {/* Contacto */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
               Email Institucional <span className="text-rose-500">*</span>
             </label>
             <input
@@ -197,18 +191,16 @@ export const CreateConsultorioModal = ({
               value={formData.email}
               onChange={handleChange}
               placeholder="sede@tempuscare.com"
-              className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
+              className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
                 errors.email ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
             />
-            <div className="min-h-[16px] mt-0.5 flex items-center">
-              {errors.email && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.email}</p>}
-            </div>
+            {errors.email && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.email}</p>}
           </div>
 
           <div>
-            <label htmlFor="telefono" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="telefono" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
               Teléfono de Contacto <span className="text-rose-500">*</span>
             </label>
             <input
@@ -218,21 +210,19 @@ export const CreateConsultorioModal = ({
               value={formData.telefono}
               onChange={handleChange}
               placeholder="381-4001234"
-              className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
+              className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
                 errors.telefono ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
             />
-            <div className="min-h-[16px] mt-0.5 flex items-center">
-              {errors.telefono && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.telefono}</p>}
-            </div>
+            {errors.telefono && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.telefono}</p>}
           </div>
         </div>
 
         {/* Accesibilidad e Institución */}
-        <div className={`grid grid-cols-1 ${instituciones.length > 0 ? 'sm:grid-cols-2' : ''} gap-2.5 items-start`}>
+        <div className={`grid grid-cols-1 ${instituciones.length > 0 ? 'sm:grid-cols-2' : ''} gap-3 items-start`}>
           <div>
-            <label htmlFor="nivelAccesibilidad" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="nivelAccesibilidad" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
               Accesibilidad Universal
             </label>
             <select
@@ -240,7 +230,7 @@ export const CreateConsultorioModal = ({
               name="nivelAccesibilidad"
               value={formData.nivelAccesibilidad}
               onChange={handleChange}
-              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+              className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
               disabled={isSubmitting}
             >
               <option value="Total">Total (Rampas, Ascensor, Braille)</option>
@@ -252,7 +242,7 @@ export const CreateConsultorioModal = ({
 
           {instituciones.length > 0 && (
             <div>
-              <label htmlFor="institucionId" className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="institucionId" className="block text-xs font-semibold text-slate-700 mb-1 truncate">
                 Institución Perteneciente
               </label>
               <select
@@ -260,7 +250,7 @@ export const CreateConsultorioModal = ({
                 name="institucionId"
                 value={formData.institucionId}
                 onChange={handleChange}
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
                 disabled={isSubmitting}
               >
                 <option value="">Independiente</option>
@@ -287,14 +277,12 @@ export const CreateConsultorioModal = ({
                 value={formData.calle}
                 onChange={handleChange}
                 placeholder="Calle *"
-                className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
+                className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
                   errors.calle ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px] mt-0.5 flex items-center">
-                {errors.calle && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.calle}</p>}
-              </div>
+              {errors.calle && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.calle}</p>}
             </div>
 
             <div>
@@ -304,14 +292,12 @@ export const CreateConsultorioModal = ({
                 value={formData.nro}
                 onChange={handleChange}
                 placeholder="Número *"
-                className={`w-full p-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
+                className={`w-full h-9 px-3 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm ${
                   errors.nro ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px] mt-0.5 flex items-center">
-                {errors.nro && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nro}</p>}
-              </div>
+              {errors.nro && <p className="text-[11px] text-rose-600 truncate mt-0.5">{errors.nro}</p>}
             </div>
 
             <div>
@@ -321,14 +307,13 @@ export const CreateConsultorioModal = ({
                 value={formData.depto}
                 onChange={handleChange}
                 placeholder="Piso / Depto"
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px] mt-0.5" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-start mt-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-start mt-2">
             <div className="sm:col-span-2">
               <input
                 name="localidad"
@@ -336,7 +321,7 @@ export const CreateConsultorioModal = ({
                 value={formData.localidad}
                 onChange={handleChange}
                 placeholder="Localidad"
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
                 disabled={isSubmitting}
               />
             </div>
@@ -348,7 +333,7 @@ export const CreateConsultorioModal = ({
                 value={formData.provincia}
                 onChange={handleChange}
                 placeholder="Provincia"
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
                 disabled={isSubmitting}
               />
             </div>
@@ -360,7 +345,7 @@ export const CreateConsultorioModal = ({
                 value={formData.codPostal}
                 onChange={handleChange}
                 placeholder="Cód. Postal"
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-sm"
                 disabled={isSubmitting}
               />
             </div>
@@ -378,9 +363,9 @@ export const CreateConsultorioModal = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 items-start">
             <div>
-              <label htmlFor="adminCuil" className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label htmlFor="adminCuil" className="block text-[11px] font-medium text-slate-700 mb-0.5 truncate">
                 CUIL del Administrador
               </label>
               <input
@@ -390,18 +375,16 @@ export const CreateConsultorioModal = ({
                 value={adminData.cuil}
                 onChange={handleAdminChange}
                 placeholder="Ej: 20334455667"
-                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                className="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px] mt-0.5 flex items-center">
-                {(errors['adminConsultorio.cuil'] || errors.adminCuil) && (
-                  <p className="text-[10px] text-rose-600 truncate animate-in fade-in-0">{errors['adminConsultorio.cuil'] || errors.adminCuil}</p>
-                )}
-              </div>
+              {(errors['adminConsultorio.cuil'] || errors.adminCuil) && (
+                <p className="text-[10px] text-rose-600 truncate mt-0.5">{errors['adminConsultorio.cuil'] || errors.adminCuil}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="block text-[11px] font-medium text-slate-700 mb-0.5 truncate">
                 Nombre y Apellido
               </label>
               <div className="grid grid-cols-2 gap-1.5">
@@ -412,7 +395,7 @@ export const CreateConsultorioModal = ({
                   value={adminData.nombre}
                   onChange={handleAdminChange}
                   placeholder="Nombre"
-                  className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  className="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
                   disabled={isSubmitting}
                 />
                 <input
@@ -422,15 +405,14 @@ export const CreateConsultorioModal = ({
                   value={adminData.apellido}
                   onChange={handleAdminChange}
                   placeholder="Apellido"
-                  className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  className="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
                   disabled={isSubmitting}
                 />
               </div>
-              <div className="min-h-[16px]" />
             </div>
 
             <div>
-              <label htmlFor="adminTelefono" className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label htmlFor="adminTelefono" className="block text-[11px] font-medium text-slate-700 mb-0.5 truncate">
                 Teléfono
               </label>
               <input
@@ -440,14 +422,13 @@ export const CreateConsultorioModal = ({
                 value={adminData.telefono}
                 onChange={handleAdminChange}
                 placeholder="Ej: 381-4556677"
-                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                className="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px]" />
             </div>
 
             <div>
-              <label htmlFor="adminMail" className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label htmlFor="adminMail" className="block text-[11px] font-medium text-slate-700 mb-0.5 truncate">
                 Email Profesional
               </label>
               <input
@@ -457,24 +438,22 @@ export const CreateConsultorioModal = ({
                 value={adminData.mail}
                 onChange={handleAdminChange}
                 placeholder="admin.sede@tempuscare.com"
-                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                className="w-full h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[16px] mt-0.5 flex items-center">
-                {(errors['adminConsultorio.mail'] || errors.adminMail) && (
-                  <p className="text-[10px] text-rose-600 truncate animate-in fade-in-0">{errors['adminConsultorio.mail'] || errors.adminMail}</p>
-                )}
-              </div>
+              {(errors['adminConsultorio.mail'] || errors.adminMail) && (
+                <p className="text-[10px] text-rose-600 truncate mt-0.5">{errors['adminConsultorio.mail'] || errors.adminMail}</p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Botones de Acción con slot de error inline */}
         <div className="pt-2.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-slate-100">
-          <div className="min-h-[16px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
-            {errors.general && (
+          <div className="flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+            {(errors.general || serverError) && (
               <span className="flex items-center gap-1 animate-in fade-in-0">
-                <span aria-hidden="true">⚠</span> {errors.general}
+                <span aria-hidden="true">⚠</span> {errors.general || serverError}
               </span>
             )}
           </div>

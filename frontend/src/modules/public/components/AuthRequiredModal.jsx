@@ -11,8 +11,6 @@ export const AuthRequiredModal = ({
 }) => {
   const navigate = useNavigate();
 
-  if (!isOpen) return null;
-
   const doctorName = doctor ? `Dr. ${doctor.nombre} ${doctor.apellido}` : 'el profesional';
   const specialty = doctor?.especialidades?.[0] || 'Atención médica';
 

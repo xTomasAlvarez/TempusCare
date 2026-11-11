@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useVitalityAdmins } from '../hooks/useVitalityAdmins';
 import { ProposeAdminModal } from '../components/ProposeAdminModal';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../shared/components/ui/Card';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
+import { pageTransitionVariants, snappySpring, tabContentVariants } from '../../../shared/motion';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -60,7 +62,12 @@ export const VitalityAdminsPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
       {/* Encabezado Principal */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
@@ -156,50 +163,62 @@ export const VitalityAdminsPage = () => {
       </div>
 
       {/* Selector de Pestañas de Vista */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-        <button
-          type="button"
-          onClick={() => setActiveTab('PENDING')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'PENDING'
-              ? 'bg-amber-50 text-amber-800 border border-amber-200/90 shadow-2xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <Clock className="w-4 h-4 text-amber-600" />
-          <span>Solicitudes Pendientes</span>
-          {pendingRequests.length > 0 && (
-            <span className="ml-1 px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[10px] font-bold">
-              {pendingRequests.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('ACTIVE_ADMINS')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'ACTIVE_ADMINS'
-              ? 'bg-primary-50 text-primary-700 border border-primary-200/90 shadow-2xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <Users className="w-4 h-4 text-primary-600" />
-          <span>Super Administradores Activos ({admins.length})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('HISTORY')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'HISTORY'
-              ? 'bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-slate-500" />
-          <span>Historial de Consenso ({resolvedRequests.length})</span>
-        </button>
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        {[
+          {
+            id: 'PENDING',
+            label: 'Solicitudes Pendientes',
+            badge: pendingRequests.length,
+            badgeClass: 'bg-amber-500 text-white',
+            icon: Clock,
+            activeClass: 'text-amber-800 font-bold',
+            iconClass: 'text-amber-600',
+          },
+          {
+            id: 'ACTIVE_ADMINS',
+            label: `Super Administradores Activos (${admins.length})`,
+            icon: Users,
+            activeClass: 'text-primary-700 font-bold',
+            iconClass: 'text-primary-600',
+          },
+          {
+            id: 'HISTORY',
+            label: `Historial de Consenso (${resolvedRequests.length})`,
+            icon: ShieldCheck,
+            activeClass: 'text-slate-800 font-bold',
+            iconClass: 'text-slate-500',
+          },
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          const TabIcon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors duration-150 active:scale-[0.98] cursor-pointer ${
+                isActive ? tab.activeClass : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="vitality-admin-tab"
+                  transition={snappySpring}
+                  className="absolute inset-0 bg-white border border-slate-200/90 rounded-xl shadow-xs"
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <TabIcon className={`w-4 h-4 ${tab.iconClass}`} />
+                <span>{tab.label}</span>
+                {tab.badge > 0 && (
+                  <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${tab.badgeClass}`}>
+                    {tab.badge}
+                  </span>
+                )}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ========================================================================= */}
@@ -534,6 +553,6 @@ export const VitalityAdminsPage = () => {
         onSubmit={proposeAdmin}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </motion.div>
   );
 };

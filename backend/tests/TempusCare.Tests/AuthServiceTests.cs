@@ -26,7 +26,7 @@ public class AuthServiceTests
         var db = GetInMemoryDbContext(nameof(RegistrarUsuario_Paciente_GeneratesProfileAndToken));
         var authService = new AuthService(db, NullLogger<AuthService>.Instance);
 
-        var dto = new RegistrarUsuarioDto("juanperez", "contra123", "juan@test.com", RolUsuario.Paciente);
+        var dto = new RegistrarUsuarioDto("juanperez", "ContraSegura123!", "juan@test.com", RolUsuario.Paciente);
         var res = await authService.RegistrarUsuarioAsync(dto);
 
         Assert.NotNull(res);
@@ -45,10 +45,10 @@ public class AuthServiceTests
         var db = GetInMemoryDbContext(nameof(RegistrarUsuario_NombreUsuarioDuplicado_ThrowsConflictException));
         var authService = new AuthService(db, NullLogger<AuthService>.Instance);
 
-        var dto1 = new RegistrarUsuarioDto("usuariorepetido", "pass1", "mail1@test.com", RolUsuario.Paciente);
+        var dto1 = new RegistrarUsuarioDto("usuariorepetido", "ContraSegura123!", "mail1@test.com", RolUsuario.Paciente);
         await authService.RegistrarUsuarioAsync(dto1);
 
-        var dto2 = new RegistrarUsuarioDto("usuariorepetido", "pass2", "mail2@test.com", RolUsuario.Profesional);
+        var dto2 = new RegistrarUsuarioDto("usuariorepetido", "ContraSegura123!", "mail2@test.com", RolUsuario.Profesional);
         await Assert.ThrowsAsync<ConflictException>(() => authService.RegistrarUsuarioAsync(dto2));
     }
 
@@ -58,10 +58,10 @@ public class AuthServiceTests
         var db = GetInMemoryDbContext(nameof(RegistrarUsuario_MailDuplicado_ThrowsConflictException));
         var authService = new AuthService(db, NullLogger<AuthService>.Instance);
 
-        var dto1 = new RegistrarUsuarioDto("user1", "pass1", "mismo@test.com", RolUsuario.Paciente);
+        var dto1 = new RegistrarUsuarioDto("user1", "ContraSegura123!", "mismo@test.com", RolUsuario.Paciente);
         await authService.RegistrarUsuarioAsync(dto1);
 
-        var dto2 = new RegistrarUsuarioDto("user2", "pass2", "mismo@test.com", RolUsuario.Paciente);
+        var dto2 = new RegistrarUsuarioDto("user2", "ContraSegura123!", "mismo@test.com", RolUsuario.Paciente);
         await Assert.ThrowsAsync<ConflictException>(() => authService.RegistrarUsuarioAsync(dto2));
     }
 
@@ -126,5 +126,49 @@ public class AuthServiceTests
 
         await Assert.ThrowsAsync<NotAuthenticatedException>(() =>
             authService.IniciarSesionAsync(new IniciarSesionDto("validuser", "wrongpassword")));
+    }
+
+    [Theory]
+    [InlineData("")] // Vacía
+    [InlineData("Pass1!")] // Menos de 8 caracteres
+    [InlineData("contrasegura123!")] // Sin mayúscula
+    [InlineData("CONTRASEGURA123!")] // Sin minúscula
+    [InlineData("ContraSeguraSinNumero!")] // Sin dígitos
+    [InlineData("ContraSegura1234")] // Sin carácter especial
+    public void ValidarSeguridadContrasena_CondicionesInseguras_LanzaBusinessException(string weakPass)
+    {
+        var ex = Assert.Throws<BusinessException>(() => AuthService.ValidarSeguridadContrasena(weakPass));
+        Assert.False(string.IsNullOrWhiteSpace(ex.Message));
+    }
+
+    [Theory]
+    [InlineData("Admin123!")]
+    [InlineData("ContraSegura123#")]
+    [InlineData("MyPassword2026$")]
+    [InlineData("Clave_Robusta_89")]
+    public void ValidarSeguridadContrasena_CondicionesCumplidas_NoLanzaExcepcion(string validPass)
+    {
+        // Debe pasar sin lanzar ninguna excepción
+        AuthService.ValidarSeguridadContrasena(validPass);
+    }
+
+    [Fact]
+    public async Task RegistrarPaciente_ContrasenaDebil_LanzaBusinessException()
+    {
+        var db = GetInMemoryDbContext(nameof(RegistrarPaciente_ContrasenaDebil_LanzaBusinessException));
+        var authService = new AuthService(db, NullLogger<AuthService>.Instance);
+
+        var dto = new RegistrarPacienteDto(
+            "Carlos",
+            "Gomez",
+            "30405060",
+            "carlos@test.com",
+            "123456", // Débil
+            null,
+            "20304050607"
+        );
+
+        var ex = await Assert.ThrowsAsync<BusinessException>(() => authService.RegistrarPacienteAsync(dto));
+        Assert.Contains("caracteres", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

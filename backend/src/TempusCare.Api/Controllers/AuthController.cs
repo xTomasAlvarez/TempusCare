@@ -36,4 +36,20 @@ public class AuthController : ControllerBase
         var res = await _authService.IniciarSesionAsync(dto);
         return Ok(res);
     }
+
+    [HttpPost("forgot-password")]
+    [HttpPost("olvide-contrasena")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        var res = await _authService.ForgotPasswordAsync(dto);
+        return Ok(res);
+    }
+
+    [HttpPost("reset-password")]
+    [HttpPost("restablecer-contrasena")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        var res = await _authService.ResetPasswordAsync(dto);
+        return Ok(res);
+    }
 }

@@ -9,6 +9,7 @@ export const REGEX = {
   TELEFONO: /^[0-9+\s-]{6,20}$/,
   SOLO_LETRAS: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]+$/,
   HORA_HH_MM: /^([01]\d|2[0-3]):[0-5]\d$/,
+  SIN_ETIQUETAS_HTML: /^[^<>]*$/,
 };
 
 /**
@@ -32,8 +33,8 @@ export const patientRegistrationSchema = z
       .string()
       .trim()
       .transform((val) => val.replace(/\D/g, ''))
-      .refine((val) => REGEX.DNI.test(val), {
-        message: 'El DNI debe contener solo números (entre 7 y 9 dígitos)',
+      .refine((val) => REGEX.CUIT_CUIL.test(val), {
+        message: 'El CUIL debe contener exactamente 11 dígitos numéricos sin puntos ni guiones (ej. 20123456789)',
       }),
     email: z
       .string()
@@ -42,9 +43,11 @@ export const patientRegistrationSchema = z
       .max(100, 'El correo no puede superar los 100 caracteres'),
     contrasena: z
       .string()
-      .min(6, 'La contraseña debe tener al menos 6 caracteres')
-      .regex(/[a-zA-Z]/, 'La contraseña debe contener al menos una letra')
-      .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+      .min(8, 'La contraseña debe tener al menos 8 caracteres')
+      .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula (A-Z)')
+      .regex(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula (a-z)')
+      .regex(/[0-9]/, 'La contraseña debe contener al menos un número (0-9)')
+      .regex(/[^A-Za-z0-9]/, 'La contraseña debe contener al menos un carácter especial o símbolo (!@#$%^&*.,_-)'),
     confirmarContrasena: z
       .string()
       .min(1, 'Debes confirmar tu contraseña'),
@@ -66,10 +69,13 @@ export const loginSchema = z.object({
   usuario: z
     .string()
     .trim()
-    .min(3, 'Ingresa tu usuario, CUIL o correo electrónico'),
+    .min(3, 'Ingresa tu usuario, CUIL o correo electrónico')
+    .max(120, 'El identificador no puede superar los 120 caracteres')
+    .regex(REGEX.SIN_ETIQUETAS_HTML, 'El usuario contiene caracteres no permitidos'),
   contra: z
     .string()
-    .min(1, 'Ingresa tu contraseña'),
+    .min(1, 'Ingresa tu contraseña')
+    .max(128, 'La contraseña excede la longitud máxima permitida'),
 });
 
 /**
@@ -402,12 +408,15 @@ export const agendaSchema = z
       .string()
       .min(1, 'Debes seleccionar una fecha de atención válida')
       .refine((val) => {
-        const selected = new Date(val);
+        const selected = new Date(val + 'T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return selected >= today;
+        const maxDate = new Date();
+        maxDate.setMonth(maxDate.getMonth() + 6);
+        maxDate.setHours(23, 59, 59, 999);
+        return selected >= today && selected <= maxDate;
       }, {
-        message: 'La fecha de la agenda no puede ser anterior a hoy',
+        message: 'La fecha de la agenda debe estar entre hoy y un máximo de 6 meses',
       }),
     horaEntrada: z
       .string()
@@ -421,6 +430,9 @@ export const agendaSchema = z
       .refine((val) => [15, 20, 30, 45, 60, 90].includes(val), {
         message: 'Selecciona una duración válida de slot (15, 20, 30, 45, 60 o 90 minutos)',
       }),
+    tieneDescanso: z.boolean().optional(),
+    horaInicioDescanso: z.string().optional().nullable(),
+    horaFinDescanso: z.string().optional().nullable(),
   })
   .refine(
     (data) => {

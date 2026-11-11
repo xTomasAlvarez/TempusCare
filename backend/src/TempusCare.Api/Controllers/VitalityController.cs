@@ -27,11 +27,6 @@ public class VitalityController : ControllerBase
             return userId;
         }
 
-        if (Request.Headers.TryGetValue("X-SuperAdmin-Id", out var hVal) && int.TryParse(hVal, out var hId))
-        {
-            return hId;
-        }
-
         return null;
     }
 

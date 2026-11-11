@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
@@ -6,6 +7,7 @@ import { Input } from '../../../shared/components/ui/Input';
 import { Stethoscope, Search, Link2, AlertCircle } from 'lucide-react';
 import { profesionalSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
+import { snappySpring, tabContentVariants } from '../../../shared/motion';
 
 /**
  * Modal para vincular un profesional existente o dar de alta un nuevo médico para la sede física.
@@ -148,31 +150,53 @@ export const AssignProfesionalModal = ({
           <button
             type="button"
             onClick={() => setMode('link')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              mode === 'link'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`relative flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 active:scale-[0.98] cursor-pointer ${
+              mode === 'link' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Link2 className="w-3.5 h-3.5" />
-            <span>Vincular del Catálogo</span>
+            {mode === 'link' && (
+              <motion.div
+                layoutId="assign-mode-pill"
+                transition={snappySpring}
+                className="absolute inset-0 bg-white rounded-lg shadow-xs"
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-1.5">
+              <Link2 className="w-3.5 h-3.5" />
+              <span>Vincular del Catálogo</span>
+            </span>
           </button>
           <button
             type="button"
             onClick={() => setMode('create')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              mode === 'create'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`relative flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 active:scale-[0.98] cursor-pointer ${
+              mode === 'create' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Stethoscope className="w-3.5 h-3.5" strokeWidth={2} />
-            <span>Dar de Alta Nuevo Médico</span>
+            {mode === 'create' && (
+              <motion.div
+                layoutId="assign-mode-pill"
+                transition={snappySpring}
+                className="absolute inset-0 bg-white rounded-lg shadow-xs"
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-1.5">
+              <Stethoscope className="w-3.5 h-3.5" strokeWidth={2} />
+              <span>Dar de Alta Nuevo Médico</span>
+            </span>
           </button>
         </div>
 
-        {mode === 'link' ? (
-          <form onSubmit={handleLinkSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {mode === 'link' ? (
+            <motion.div
+              key="assign-mode-link"
+              variants={tabContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <form onSubmit={handleLinkSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
             {/* Buscador Rápido */}
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -263,7 +287,15 @@ export const AssignProfesionalModal = ({
               </Button>
             </div>
           </form>
-        ) : (
+        </motion.div>
+      ) : (
+        <motion.div
+          key="assign-mode-create"
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
           <form onSubmit={handleCreateSubmit} className="space-y-3.5 font-sans text-xs sm:text-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -411,8 +443,10 @@ export const AssignProfesionalModal = ({
               </div>
             </div>
           </form>
-        )}
-      </div>
-    </Modal>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+</Modal>
   );
 };

@@ -4,7 +4,8 @@ import { cn } from '../../utils/cn';
 export const Card = ({ className, children, ...props }) => (
   <div
     className={cn(
-      "rounded-2xl border border-slate-200/70 bg-white shadow-sm transition-all duration-300",
+      "rounded-2xl border border-slate-200/70 bg-white shadow-sm transition-all duration-150",
+      props.onClick && "cursor-pointer active:scale-[0.98] transition-transform duration-75 select-none",
       className
     )}
     {...props}
@@ -19,8 +20,9 @@ export const CardHeader = ({ className, children, ...props }) => (
   </div>
 );
 
-export const CardTitle = ({ className, children, ...props }) => (
+export const CardTitle = ({ className, children, title, ...props }) => (
   <h3
+    title={title || (typeof children === 'string' ? children : undefined)}
     className={cn("text-xl font-semibold tracking-tight text-slate-900 font-heading", className)}
     {...props}
   >

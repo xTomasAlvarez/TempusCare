@@ -1,16 +1,32 @@
-import React from 'react';
-import { CalendarHeart, Clock, Stethoscope, Microscope, ShieldPlus, AlertCircle, Check, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { patientService } from '../services/patientService';
+import { CalendarHeart, UserRoundPlus, Clock, Stethoscope, Microscope, ShieldPlus, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { useBooking } from '../hooks/useBooking';
+import { useAuth } from '../../../core/context/AuthContext';
 
 export const BookingModal = ({
   isOpen,
   onClose,
   doctor,
   onBookingSuccess,
+  patientCuil = null,
+  patientName = null,
 }) => {
+  const { user } = useAuth();
+  const [obrasSocialesCatalog, setObrasSocialesCatalog] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    patientService.getHealthInsurances().then((data) => {
+      if (isMounted && Array.isArray(data)) {
+        setObrasSocialesCatalog(data);
+      }
+    }).catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   const {
     selectedDate,
     setSelectedDate,
@@ -30,32 +46,99 @@ export const BookingModal = ({
     confirmBooking,
     isSlotPast,
     getTodayStr,
+    patientCuil: effectivePatientCuil,
+    setPatientCuil,
   } = useBooking(doctor, (res) => {
     onBookingSuccess(res);
     onClose();
-  });
+  }, patientCuil);
 
-  if (!doctor) return null;
+  const slotButtonsRef = useRef([]);
 
-  const doctorName = `Dr. ${doctor.nombre} ${doctor.apellido}`;
-  const specialty = doctor.especialidades?.[0] || 'Medicina General';
+  // Índices de turnos habilitados para navegación por teclado
+  const enabledSlotIndices = useMemo(() => {
+    return availableSlots
+      .map((slot, idx) => {
+        const isOccupied = slot.ocupado === true || slot.disponible === false;
+        const isPast = isSlotPast ? isSlotPast(slot, selectedDate) : false;
+        return isOccupied || isPast ? -1 : idx;
+      })
+      .filter((idx) => idx !== -1);
+  }, [availableSlots, selectedDate, isSlotPast]);
+
+  // Soporte de navegación accesible por teclado mediante flechas (WCAG 2.1 AA / RNF-ACC-02)
+  const handleSlotKeyDown = (e, index) => {
+    const currentPos = enabledSlotIndices.indexOf(index);
+    if (currentPos === -1) return;
+
+    const COLS = window.innerWidth >= 640 ? 4 : 3;
+    let targetPos = -1;
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      targetPos = currentPos + 1 < enabledSlotIndices.length ? currentPos + 1 : 0;
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      targetPos = currentPos - 1 >= 0 ? currentPos - 1 : enabledSlotIndices.length - 1;
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      targetPos = currentPos + COLS < enabledSlotIndices.length ? currentPos + COLS : currentPos;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      targetPos = currentPos - COLS >= 0 ? currentPos - COLS : currentPos;
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      setSelectedSlot(availableSlots[index]);
+      return;
+    }
+
+    if (targetPos !== -1) {
+      const targetSlotIndex = enabledSlotIndices[targetPos];
+      slotButtonsRef.current[targetSlotIndex]?.focus();
+    }
+  };
+
+  const [cachedDoctor, setCachedDoctor] = useState(doctor);
+  useEffect(() => {
+    if (doctor) setCachedDoctor(doctor);
+  }, [doctor]);
+
+  const activeDoctor = doctor || cachedDoctor;
+  if (!activeDoctor) return null;
+
+  const doctorName = `Dr. ${activeDoctor.nombre} ${activeDoctor.apellido}`;
+  const specialty = activeDoctor.especialidades?.[0] || 'Medicina General';
 
   const todayStr = getTodayStr ? getTodayStr() : new Date().toLocaleDateString('en-CA');
+  const sixMonthsFromNowStr = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  })();
   const isToday = selectedDate === todayStr;
 
-  // Generar opciones de fecha para los próximos 7 días con fecha local precisa
+  // Generar opciones de fecha para los próximos 7 días hábiles (Lunes a Viernes, sin Sábados ni Domingos)
   const today = new Date();
-  const dateOptions = Array.from({ length: 7 }, (_, i) => {
+  const dateOptions = [];
+  let offset = 0;
+  while (dateOptions.length < 7) {
     const d = new Date(today);
-    d.setDate(today.getDate() + i);
+    d.setDate(today.getDate() + offset);
+    offset++;
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    return {
+    dateOptions.push({
       value: `${year}-${month}-${day}`,
       label: d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' }),
-    };
-  });
+    });
+  }
 
   return (
     <Modal
@@ -67,17 +150,57 @@ export const BookingModal = ({
     >
       <div className="space-y-6">
         {/* Banner del Profesional */}
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
-          <div className="w-11 h-11 rounded-xl bg-primary-600 text-white font-heading font-bold text-lg flex items-center justify-center shrink-0">
-            {doctor.nombre?.[0]}{doctor.apellido?.[0]}
+        <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-primary-600 text-white font-heading font-bold text-lg flex items-center justify-center shrink-0">
+              {activeDoctor.nombre?.[0]}{activeDoctor.apellido?.[0]}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 font-heading">{doctorName}</h3>
+              <p className="text-xs text-slate-500">
+                {activeDoctor.consultorios?.[0] || 'Sanatorio Tucumán'} • Mat. {activeDoctor.matricula}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 font-heading">{doctorName}</h3>
-            <p className="text-xs text-slate-500">
-              {doctor.consultorios?.[0] || 'Sanatorio Tucumán'} • Mat. {doctor.matricula}
-            </p>
-          </div>
+          <Badge variant="primary" size="sm" title="Flujo optimizado RNF-USA-02 (máximo 4 clics) y accesible por teclado RNF-ACC-02">
+            Reserva Rápida ≤ 4 Clics
+          </Badge>
         </div>
+
+        {/* Sección de Paciente para Secretaría / Staff (RF-ASI-06) */}
+        {(patientName || patientCuil || user?.rol !== 'Paciente') && (
+          <div className="bg-primary-50/70 border border-primary-200/80 rounded-xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-primary-950 uppercase tracking-wider flex items-center gap-1.5">
+                <UserRoundPlus className="w-4 h-4 text-primary-600" />
+                Asignación de Turno (Recepción)
+              </span>
+              {patientName && (
+                <Badge variant="primary">Paciente Presencial</Badge>
+              )}
+            </div>
+            {patientName ? (
+              <div className="text-xs text-primary-900">
+                <span className="font-semibold">{patientName}</span> • CUIL/DNI: <span className="font-mono font-medium">{patientCuil || effectivePatientCuil}</span>
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="booking-secretary-patient-cuil" className="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  CUIL / DNI del Paciente:
+                </label>
+                <input
+                  id="booking-secretary-patient-cuil"
+                  type="text"
+                  placeholder="Ej: 27123456789 o DNI 38123456"
+                  value={effectivePatientCuil || ''}
+                  onChange={(e) => setPatientCuil(e.target.value)}
+                  className="w-full h-9 px-3 rounded-lg border border-primary-200 bg-white text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 1. Selector de Tipo de Cita */}
         <div>
@@ -89,7 +212,7 @@ export const BookingModal = ({
               type="button"
               onClick={() => setTipoCita(1)}
               tabIndex={0}
-              className={`p-3 rounded-xl border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              className={`p-3 rounded-xl border text-left transition-transform duration-75 active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 tipoCita === 1
                   ? 'border-primary-600 bg-primary-50/60 ring-1 ring-primary-500 text-primary-900'
                   : 'border-slate-200 hover:border-slate-300 text-slate-700'
@@ -105,14 +228,14 @@ export const BookingModal = ({
             <button
               type="button"
               onClick={() => setTipoCita(3)}
-              disabled={!doctor.estudios || doctor.estudios.length === 0}
+              disabled={!activeDoctor.estudios || activeDoctor.estudios.length === 0}
               tabIndex={0}
-              className={`p-3 rounded-xl border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              className={`p-3 rounded-xl border text-left transition-transform duration-75 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 tipoCita === 3
-                  ? 'border-primary-600 bg-primary-50/60 ring-1 ring-primary-500 text-primary-900'
-                  : !doctor.estudios || doctor.estudios.length === 0
+                  ? 'border-primary-600 bg-primary-50/60 ring-1 ring-primary-500 text-primary-900 active:scale-[0.98] cursor-pointer'
+                  : !activeDoctor.estudios || activeDoctor.estudios.length === 0
                   ? 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed text-slate-400'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-700 active:scale-[0.98] cursor-pointer'
               }`}
             >
               <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
@@ -120,13 +243,13 @@ export const BookingModal = ({
                 Estudio Médico
               </span>
               <span className="text-[11px] text-slate-500">
-                {doctor.estudios?.length > 0 ? 'Estudios de diagnóstico' : 'No disponible'}
+                {activeDoctor.estudios?.length > 0 ? 'Estudios de diagnóstico' : 'No disponible'}
               </span>
             </button>
           </div>
 
           {/* Selector de Estudio específico si eligió Estudio */}
-          {tipoCita === 3 && doctor.estudios?.length > 0 && (
+          {tipoCita === 3 && activeDoctor.estudios?.length > 0 && (
             <div className="mt-3">
               <label htmlFor="select-estudio" className="block text-xs font-semibold text-slate-600 mb-1">
                 Selecciona el Estudio Requerido:
@@ -138,7 +261,7 @@ export const BookingModal = ({
                 className="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-800 focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Selecciona un estudio...</option>
-                {doctor.estudios.map((est) => (
+                {activeDoctor.estudios.map((est) => (
                   <option key={est.estudioId} value={est.estudioId}>
                     {est.estudioNombre} ({est.duracionTurno} min)
                   </option>
@@ -148,12 +271,34 @@ export const BookingModal = ({
           )}
         </div>
 
-        {/* 2. Selector de Fecha */}
+        {/* 2. Selector de Fecha (Próximos días hábiles y selector libre hasta 6 meses) */}
         <div>
-          <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-            <CalendarHeart className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
-            2. Selecciona la Fecha
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <CalendarHeart className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
+              2. Selecciona la Fecha
+            </label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-400">Otra fecha:</span>
+              <input
+                type="date"
+                min={todayStr}
+                max={sixMonthsFromNowStr}
+                value={selectedDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    const parsed = new Date(`${val}T00:00:00`);
+                    if (parsed.getDay() === 0 || parsed.getDay() === 6) {
+                      return; // Ignorar selección de fin de semana
+                    }
+                    setSelectedDate(val);
+                  }
+                }}
+                className="h-8 px-2 py-0.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          </div>
           <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
             {dateOptions.map((opt) => {
               const isSelected = selectedDate === opt.value;
@@ -163,7 +308,7 @@ export const BookingModal = ({
                   type="button"
                   onClick={() => setSelectedDate(opt.value)}
                   tabIndex={0}
-                  className={`shrink-0 px-3.5 py-2 rounded-xl border text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  className={`shrink-0 px-3.5 py-2 rounded-xl border text-xs font-medium transition-transform duration-75 active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     isSelected
                       ? 'bg-primary-600 text-white border-primary-600 shadow-xs'
                       : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
@@ -179,10 +324,14 @@ export const BookingModal = ({
         {/* 3. Horarios Disponibles con SKELETON LOADER */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            <label id="horarios-disponibles-label" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
               3. Horarios Disponibles
             </label>
-            <span className="text-[11px] text-slate-400">
+            <span
+              className="text-[11px] text-slate-400"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {availableSlots.length} horarios libres
             </span>
           </div>
@@ -200,7 +349,7 @@ export const BookingModal = ({
                 ))}
               </div>
             ) : slotError ? (
-              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+              <div role="alert" className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{slotError}</span>
               </div>
@@ -211,8 +360,12 @@ export const BookingModal = ({
                 <p className="text-[11px] text-slate-400 mt-0.5">Prueba seleccionando otro día en el calendario.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
-                {availableSlots.map((slot) => {
+              <div
+                role="group"
+                aria-labelledby="horarios-disponibles-label"
+                className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1"
+              >
+                {availableSlots.map((slot, index) => {
                   const isSelected = selectedSlot?.id === slot.id;
                   const isOccupied = slot.ocupado === true || slot.disponible === false;
                   const isPast = isSlotPast ? isSlotPast(slot, selectedDate) : false;
@@ -230,18 +383,21 @@ export const BookingModal = ({
                   return (
                     <button
                       key={slot.id}
+                      ref={(el) => (slotButtonsRef.current[index] = el)}
                       type="button"
                       disabled={isDisabled}
                       onClick={() => !isDisabled && setSelectedSlot(slot)}
+                      onKeyDown={(e) => handleSlotKeyDown(e, index)}
                       tabIndex={isDisabled ? -1 : 0}
+                      aria-pressed={isSelected}
                       title={isPast ? 'Este horario ya ha transcurrido hoy' : isOccupied ? 'Horario no disponible' : undefined}
-                      aria-label={`Horario ${horaStr} (${slotLabel})`}
-                      className={`h-11 px-3 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                      aria-label={`Horario ${horaStr}, estado: ${slotLabel}`}
+                      className={`h-11 px-3 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-transform duration-75 focus:outline-none focus:ring-2 focus:ring-primary-500 focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 ${
                         isDisabled
                           ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed line-through opacity-60'
                           : isSelected
-                          ? 'bg-primary-600 text-white border-primary-600 shadow-sm ring-2 ring-primary-500/30 scale-[1.02]'
-                          : 'bg-white border-slate-200 text-slate-800 hover:border-primary-400 hover:bg-primary-50/50 hover:text-primary-900 shadow-2xs'
+                          ? 'bg-primary-600 text-white border-primary-600 shadow-sm ring-2 ring-primary-500/30 scale-[1.02] active:scale-[0.98] cursor-pointer'
+                          : 'bg-white border-slate-200 text-slate-800 hover:border-primary-400 hover:bg-primary-50/50 hover:text-primary-900 shadow-2xs active:scale-[0.98] cursor-pointer'
                       }`}
                     >
                       <Clock className="w-3.5 h-3.5" aria-hidden="true" />
@@ -273,18 +429,29 @@ export const BookingModal = ({
             className="w-full h-11 px-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
           >
             <option value="">Atención Particular (Sin Obra Social)</option>
-            {doctor.obrasSociales?.map((os, idx) => (
-              <option key={idx} value={idx + 1}>
-                {os}
-              </option>
-            ))}
+            {activeDoctor.obrasSociales?.map((os, idx) => {
+              const osName = typeof os === 'string' ? os : (os.nombre || '');
+              const matched = obrasSocialesCatalog.find(
+                (item) => item.nombre?.toLowerCase().trim() === osName.toLowerCase().trim()
+              );
+              const realId = matched ? matched.id : (typeof os === 'object' && os.id ? os.id : idx + 1);
+              return (
+                <option key={idx} value={realId}>
+                  {osName}
+                </option>
+              );
+            })}
           </select>
         </div>
 
         {/* Espacio fijo reservado para mensaje de error inline (sin saltos de layout) */}
         <div className="min-h-[22px] flex items-center">
           {submitError && (
-            <p className="text-xs text-rose-600 flex items-center gap-1.5 animate-in fade-in-0 duration-150 font-medium">
+            <p
+              role="alert"
+              aria-live="assertive"
+              className="text-xs text-rose-600 flex items-center gap-1.5 animate-in fade-in-0 duration-150 font-medium"
+            >
               <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
               <span>{submitError}</span>
             </p>

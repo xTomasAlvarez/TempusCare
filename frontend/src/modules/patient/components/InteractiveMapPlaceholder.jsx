@@ -8,6 +8,27 @@ import { patientService } from '../services/patientService';
 export const TUCUMAN_CENTER = [-26.8280, -65.2040];
 export const INITIAL_ZOOM = 16; // Nivel de zoom a nivel de cuadras/calles para apreciación inmediata
 
+/**
+ * Componente auxiliar para encuadre automático reactivo del mapa.
+ * - Si hay 1 solo consultorio en los resultados, ejecuta map.flyTo([lat, lng], 16, { duration: 0.8 }).
+ * - Si hay varios consultorios, aplica map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 }).
+ */
+export const MapBoundsUpdater = ({ map, activeLocations }) => {
+  useEffect(() => {
+    if (!map || !activeLocations || activeLocations.length === 0) return;
+
+    if (activeLocations.length === 1) {
+      const single = activeLocations[0];
+      map.flyTo([single.latitud, single.longitud], 16, { duration: 0.8 });
+    } else if (activeLocations.length > 1) {
+      const bounds = L.latLngBounds(activeLocations.map((l) => [l.latitud, l.longitud]));
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    }
+  }, [map, activeLocations]);
+
+  return null;
+};
+
 export const InteractiveMapPlaceholder = ({
   doctors = [],
   consultorios: initialConsultorios = null,
@@ -18,6 +39,7 @@ export const InteractiveMapPlaceholder = ({
 }) => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const [mapInstance, setMapInstance] = useState(null);
   const markersRef = useRef([]);
   const [backendConsultorios, setBackendConsultorios] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -53,8 +75,12 @@ export const InteractiveMapPlaceholder = ({
     const list = [];
     const cuitSet = new Set();
 
+    const consultoriosList = (initialConsultorios && initialConsultorios.length > 0)
+      ? initialConsultorios
+      : backendConsultorios;
+
     // 1. Sedes cargadas desde el endpoint /api/consultorios
-    backendConsultorios.forEach((c) => {
+    consultoriosList.forEach((c) => {
       if (
         c &&
         c.cuit &&
@@ -68,12 +94,18 @@ export const InteractiveMapPlaceholder = ({
           c.calle && c.nro
             ? `${c.calle} ${c.nro}`
             : c.direccionCompleta || 'San Miguel de Tucumán';
+        const localidad =
+          c.localidad ||
+          (c.calle?.toLowerCase().includes('aconquija') || c.nombre?.toLowerCase().includes('yerba buena')
+            ? 'Yerba Buena'
+            : 'San Miguel de Tucumán');
 
         list.push({
           cuit: c.cuit,
           nombre: c.nombre,
           institucionNombre: c.institucionNombre || 'Sanatorio / Institución',
           direccionTexto,
+          localidad,
           direccionCompleta: c.direccionCompleta || direccionTexto,
           latitud: c.latitud,
           longitud: c.longitud,
@@ -100,12 +132,18 @@ export const InteractiveMapPlaceholder = ({
               cd.calle && cd.nro
                 ? `${cd.calle} ${cd.nro}`
                 : cd.direccionCompleta || 'San Miguel de Tucumán';
+            const localidad =
+              cd.localidad ||
+              (cd.calle?.toLowerCase().includes('aconquija') || cd.nombre?.toLowerCase().includes('yerba buena')
+                ? 'Yerba Buena'
+                : 'San Miguel de Tucumán');
 
             list.push({
               cuit: cd.cuit,
               nombre: cd.nombre,
               institucionNombre: cd.institucionNombre || 'Sanatorio / Institución',
               direccionTexto,
+              localidad,
               direccionCompleta: cd.direccionCompleta || direccionTexto,
               latitud: cd.latitud,
               longitud: cd.longitud,
@@ -117,7 +155,33 @@ export const InteractiveMapPlaceholder = ({
     });
 
     return list;
-  }, [backendConsultorios, doctors]);
+  }, [backendConsultorios, initialConsultorios, doctors]);
+
+  // Agrupación por Sede: Filtramos las sedes activas para los resultados actuales de la búsqueda
+  const activeLocations = useMemo(() => {
+    if (!doctors || doctors.length === 0) {
+      return locations.map((loc) => ({ ...loc, doctorsInLoc: [] }));
+    }
+
+    const matched = locations
+      .map((loc) => {
+        const doctorsInLoc = doctors.filter((d) => {
+          const matchCuit = d.consultoriosDetalle?.some((cd) => cd.cuit === loc.cuit);
+          if (matchCuit) return true;
+          const matchNombre = d.consultorios?.some(
+            (c) =>
+              c.toLowerCase().includes(loc.nombre.toLowerCase()) ||
+              loc.nombre.toLowerCase().includes(c.toLowerCase())
+          );
+          if (matchNombre) return true;
+          return loc.profesionalesBackend?.some((p) => p.cuil === d.cuil);
+        });
+        return { ...loc, doctorsInLoc };
+      })
+      .filter((loc) => loc.doctorsInLoc.length > 0);
+
+    return matched.length > 0 ? matched : locations.map((loc) => ({ ...loc, doctorsInLoc: [] }));
+  }, [locations, doctors]);
 
   // Helper para generar icono HTML corporativo para cada sede médica con anclaje en la punta inferior
   const createMedicalPinIcon = (doctorCount, isSelected = false) => {
@@ -217,14 +281,28 @@ export const InteractiveMapPlaceholder = ({
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     mapInstanceRef.current = map;
+    setMapInstance(map);
+
+    // Invalida tamaño automáticamente cuando la cuadrícula se expande
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
 
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
+      setMapInstance(null);
     };
   }, []);
 
-  // Actualizar Marcadores en el Mapa estrictamente con latitud y longitud del backend
+  // Actualizar Marcadores en el Mapa agrupados por Sede (sin superposición de pines)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -233,51 +311,51 @@ export const InteractiveMapPlaceholder = ({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Iteración estricta de sedes físicas con coordenadas del backend
-    locations.forEach((loc) => {
-      // Doctores asignados a esta sede
-      const doctorsInLoc = doctors.filter((d) => {
-        // Coincidencia por CUIT en consultoriosDetalle
-        const matchCuit = d.consultoriosDetalle?.some((cd) => cd.cuit === loc.cuit);
-        if (matchCuit) return true;
-
-        // Coincidencia por nombre en consultorios
-        const matchNombre = d.consultorios?.some(
-          (c) =>
-            c.toLowerCase().includes(loc.nombre.toLowerCase()) ||
-            loc.nombre.toLowerCase().includes(c.toLowerCase())
-        );
-        if (matchNombre) return true;
-
-        // Coincidencia en profesionales asociados del backend
-        const matchBackendProf = loc.profesionalesBackend?.some((p) => p.cuil === d.cuil);
-        return Boolean(matchBackendProf);
-      });
-
+    // Iteración de sedes activas únicas para los resultados de la búsqueda
+    activeLocations.forEach((loc) => {
+      const doctorsInLoc = loc.doctorsInLoc || [];
       const count = doctorsInLoc.length > 0 ? doctorsInLoc.length : (loc.profesionalesBackend?.length || 1);
       const isSelected = selectedLocation?.cuit === loc.cuit;
 
-      // Marcador posicionado en coordenadas reales del backend
+      // Marcador posicionado en coordenadas reales catastrales
       const marker = L.marker([loc.latitud, loc.longitud], {
         icon: createMedicalPinIcon(count, isSelected),
         title: `${loc.institucionNombre} - ${loc.nombre}`,
       });
 
-      // Crear Popup emergente con nombre de institución y dirección exacta en texto
+      // Popup emergente con Nombre en negrita, Dirección exacta y Listado de médicos con especialidad
       const popupHtml = `
-        <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 170px; padding: 2px;">
+        <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 210px; max-width: 290px; padding: 2px;">
           <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #1e4287; letter-spacing: 0.5px; margin-bottom: 2px;">
             ${loc.institucionNombre}
           </div>
-          <h4 style="font-weight: 700; color: #0f172a; font-size: 13px; margin: 0 0 2px 0;">
+          <h4 style="font-weight: 700; color: #0f172a; font-size: 13px; margin: 0 0 3px 0; line-height: 1.3;">
             ${loc.nombre}
           </h4>
           <p style="color: #475569; font-size: 11px; margin: 2px 0 6px 0; font-weight: 600;">
-            📍 ${loc.direccionTexto}
+            📍 ${loc.direccionTexto}${loc.localidad ? `, ${loc.localidad}` : ''}
           </p>
-          <div style="display: inline-block; background: #eff6ff; color: #1e4287; font-weight: 600; padding: 2px 8px; border-radius: 6px; font-size: 11px;">
-            ${count} médico${count > 1 ? 's' : ''} disponible${count > 1 ? 's' : ''}
-          </div>
+          ${doctorsInLoc.length > 0 ? `
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 4px;">
+              <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">
+                Profesionales en esta sede (${doctorsInLoc.length})
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px; max-height: 130px; overflow-y: auto;">
+                ${doctorsInLoc.map((d) => `
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 6px;">
+                    <div style="font-weight: 600; font-size: 11px; color: #0f172a;">Dr(a). ${d.nombre} ${d.apellido}</div>
+                    <div style="font-size: 10px; color: #0284c7; font-weight: 500;">
+                      ${Array.isArray(d.especialidades) && d.especialidades.length > 0 ? d.especialidades.join(', ') : 'Atención General'}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : `
+            <div style="display: inline-block; background: #eff6ff; color: #1e4287; font-weight: 600; padding: 2px 8px; border-radius: 6px; font-size: 11px;">
+              Sede habilitada en plataforma
+            </div>
+          `}
         </div>
       `;
 
@@ -299,7 +377,7 @@ export const InteractiveMapPlaceholder = ({
       marker.addTo(map);
       markersRef.current.push(marker);
     });
-  }, [locations, doctors]);
+  }, [mapInstance, activeLocations, selectedLocation]);
 
   // Si se resalta un médico desde la lista (hover), centrar mapa suavemente en su sede
   useEffect(() => {
@@ -329,7 +407,14 @@ export const InteractiveMapPlaceholder = ({
   // Centrar nuevamente en San Miguel de Tucumán
   const handleRecenter = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView(center, zoom, { animate: true });
+      if (activeLocations.length > 1) {
+        const bounds = L.latLngBounds(activeLocations.map((l) => [l.latitud, l.longitud]));
+        mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+      } else if (activeLocations.length === 1) {
+        mapInstanceRef.current.flyTo([activeLocations[0].latitud, activeLocations[0].longitud], 16, { duration: 0.8 });
+      } else {
+        mapInstanceRef.current.setView(center, zoom, { animate: true });
+      }
       setSelectedLocation(null);
     }
   };
@@ -343,6 +428,9 @@ export const InteractiveMapPlaceholder = ({
         tabIndex={0}
         aria-label="Mapa interactivo de San Miguel de Tucumán"
       />
+
+      {/* Auto-encuadre reactivo de límites y coordenadas */}
+      <MapBoundsUpdater map={mapInstance} activeLocations={activeLocations} />
 
       {/* Barra superior de herramientas y contexto geográfico */}
       <div className="relative z-10 p-3 flex items-center justify-between pointer-events-none">

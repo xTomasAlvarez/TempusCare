@@ -22,13 +22,13 @@ public class ProfesionalesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaProfesionalDto dto)
     {
         var adminConsultorioCuit = await ObtenerConsultorioCuitAdminAsync();
         if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            return BadRequest("El administrador no posee una sede física asignada para asociar profesionales.");
+            return Forbid();
         }
 
         // Asignación automática estricta del consultorio del administrador logueado
@@ -40,7 +40,7 @@ public class ProfesionalesController : ControllerBase
     }
 
     [HttpPut("{cuil}")]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Modificar(string cuil, [FromBody] ModificarProfesionalDto dto)
     {
         if (cuil != dto.Cuil)
@@ -49,7 +49,7 @@ public class ProfesionalesController : ControllerBase
         var adminConsultorioCuit = await ObtenerConsultorioCuitAdminAsync();
         if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            return BadRequest("El administrador no posee una sede física asignada.");
+            return Forbid();
         }
 
         // Restricción: verificar que el profesional pertenezca a la sede del administrador logueado
@@ -57,7 +57,7 @@ public class ProfesionalesController : ControllerBase
             .AnyAsync(pc => pc.ProfesionalCuil == cuil && pc.ConsultorioCuit == adminConsultorioCuit);
         if (!pertenece)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, "No tiene permisos para modificar profesionales de otra sede.");
+            return Forbid();
         }
 
         // Preservar la sede del administrador en la lista de consultorios
@@ -73,18 +73,20 @@ public class ProfesionalesController : ControllerBase
     }
 
     [HttpDelete("{cuil}")]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuil)
     {
         var adminConsultorioCuit = await ObtenerConsultorioCuitAdminAsync();
-        if (!string.IsNullOrEmpty(adminConsultorioCuit))
+        if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            var pertenece = await _db.ProfesionalConsultorios
-                .AnyAsync(pc => pc.ProfesionalCuil == cuil && pc.ConsultorioCuit == adminConsultorioCuit);
-            if (!pertenece)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, "No tiene permisos para dar de baja profesionales de otra sede.");
-            }
+            return Forbid();
+        }
+
+        var pertenece = await _db.ProfesionalConsultorios
+            .AnyAsync(pc => pc.ProfesionalCuil == cuil && pc.ConsultorioCuit == adminConsultorioCuit);
+        if (!pertenece)
+        {
+            return Forbid();
         }
 
         await _profesionalService.BajaProfesionalAsync(cuil);
@@ -106,8 +108,7 @@ public class ProfesionalesController : ControllerBase
                 return admin.ConsultorioCuit;
         }
 
-        var fallbackAdmin = await _db.AdministradoresConsultorio.FirstOrDefaultAsync();
-        return fallbackAdmin?.ConsultorioCuit;
+        return null;
     }
 
     [HttpGet]
@@ -117,10 +118,12 @@ public class ProfesionalesController : ControllerBase
         [FromQuery] string? busqueda,
         [FromQuery] int? especialidadId,
         [FromQuery] int? obraSocialId,
-        [FromQuery] string? consultorioCuit)
+        [FromQuery] string? consultorioCuit,
+        [FromQuery] double? minRating,
+        [FromQuery] bool? sortByRating)
     {
         var termino = !string.IsNullOrWhiteSpace(busqueda) ? busqueda : nombre;
-        var res = await _profesionalService.ConsultarProfesionalesAsync(termino, especialidadId, obraSocialId, consultorioCuit);
+        var res = await _profesionalService.ConsultarProfesionalesAsync(termino, especialidadId, obraSocialId, consultorioCuit, minRating, sortByRating);
         return Ok(res);
     }
 

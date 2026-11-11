@@ -12,7 +12,9 @@ public record AltaAgendaDto(
     int Anio,
     TimeSpan HoraEntrada,
     TimeSpan HoraSalida,
-    int DuracionTurnoMinutos = 30
+    int DuracionTurnoMinutos = 30,
+    TimeSpan? HoraInicioDescanso = null,
+    TimeSpan? HoraFinDescanso = null
 )
 {
     public DateTime Fecha => new DateTime(Anio, Mes, Dia);

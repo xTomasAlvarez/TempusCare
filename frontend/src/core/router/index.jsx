@@ -1,10 +1,12 @@
 import React from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useRouteError, Link } from 'react-router-dom';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
 import { HomePage } from '../../modules/public/pages/HomePage';
 import { LoginPage } from '../../modules/auth/pages/LoginPage';
 import { RegisterPage } from '../../modules/auth/pages/RegisterPage';
+import { ForgotPasswordPage } from '../../modules/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../../modules/auth/pages/ResetPasswordPage';
 import { PatientDashboardPage } from '../../modules/patient/pages/PatientDashboardPage';
 import { SearchProfessionalsPage } from '../../modules/patient/pages/SearchProfessionalsPage';
 import { MyAppointmentsPage } from '../../modules/patient/pages/MyAppointmentsPage';
@@ -22,6 +24,39 @@ import { VitalityMetricsPage } from '../../modules/vitality/pages/VitalityMetric
 import { VitalitySystemPage } from '../../modules/vitality/pages/VitalitySystemPage';
 import { VitalityAdminsPage } from '../../modules/vitality/pages/VitalityAdminsPage';
 import { useAuth } from '../context/AuthContext';
+
+const RouteErrorFallback = () => {
+  const error = useRouteError();
+  return (
+    <div className="h-screen max-h-screen overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-lg p-6 text-center space-y-4">
+        <h1 className="text-xl font-bold font-heading text-slate-900" title="Aviso del sistema">
+          Se produjo un inconveniente al cargar la vista
+        </h1>
+        <p className="text-xs text-slate-600">
+          {error?.message || 'Por favor, recarga la página o regresa al inicio.'}
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            title="Recargar la vista actual"
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold cursor-pointer"
+          >
+            Recargar página
+          </button>
+          <Link
+            to="/"
+            title="Volver a la página principal"
+            className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold"
+          >
+            Ir al inicio
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /**
  * Componente Guard para rutas protegidas en memoria con aislamiento estricto de roles
@@ -49,9 +84,11 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+    errorElement: <RouteErrorFallback />,
   },
   {
     element: <AuthLayout />,
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         path: '/login',
@@ -61,6 +98,14 @@ export const router = createBrowserRouter([
         path: '/register',
         element: <RegisterPage />,
       },
+      {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
+      },
     ],
   },
   {
@@ -69,6 +114,7 @@ export const router = createBrowserRouter([
         <MainLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         path: '/patient/dashboard',
@@ -174,6 +220,7 @@ export const router = createBrowserRouter([
         <VitalityLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         path: '/vitality/clients',

@@ -1,12 +1,9 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 
 export const AuthLayout = () => {
-  const location = useLocation();
-  const isLogin = location.pathname === '/login';
-
   return (
-    <div className={`min-h-screen ${isLogin ? 'h-screen max-h-screen overflow-hidden' : 'overflow-x-hidden'} bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative`}>
+    <div className="min-h-screen h-screen max-h-screen overflow-hidden bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative">
       {/* Elementos ambientales de diseño sutil Clean Health encapsulados sin generar scroll */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div 
@@ -22,12 +19,14 @@ export const AuthLayout = () => {
         <Link 
           to="/" 
           tabIndex={0}
+          title="Ir a la página principal de TempusCare"
           aria-label="Ir a página de inicio de TempusCare"
           className="flex items-center gap-2.5 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <img
             src="/tempuscare.png"
             alt="TempusCare Logo"
+            title="Logotipo de TempusCare"
             className="w-8 h-8 object-contain"
           />
           <div className="flex flex-col">
@@ -41,8 +40,8 @@ export const AuthLayout = () => {
         </Link>
       </header>
 
-      {/* Contenido Principal centrado con leve margen vertical seguro */}
-      <main id="main-content" className={`flex-1 w-full flex flex-col justify-center items-center px-4 ${isLogin ? 'py-1 sm:py-2.5 overflow-hidden' : 'py-8'} relative z-10 min-h-0`}>
+      {/* Contenido Principal centrado vertical y horizontalmente sin scroll */}
+      <main id="main-content" className="flex-1 w-full flex flex-col justify-center items-center px-4 py-1 sm:py-2 overflow-hidden relative z-10 min-h-0">
         <Outlet />
       </main>
     </div>

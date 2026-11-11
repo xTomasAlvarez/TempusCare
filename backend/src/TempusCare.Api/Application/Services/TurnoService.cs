@@ -21,11 +21,17 @@ public class TurnoService : ITurnoService
     {
         _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha} y consultorio {Cons}", profesionalCuil, fecha, consultorioCuit);
 
+        var hoy = DateTime.Today;
+        var ahora = DateTime.Now;
+        var maxFecha = hoy.AddMonths(6);
+
         var query = _db.Turnos
             .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
             .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
             .Where(t => t.Estado == EstadoTurno.Disponible &&
-                        t.Agenda!.ProfesionalCuil == profesionalCuil)
+                        t.Agenda!.ProfesionalCuil == profesionalCuil &&
+                        t.Fecha >= hoy &&
+                        t.Fecha <= maxFecha)
             .AsQueryable();
 
         if (fecha.HasValue)
@@ -41,6 +47,15 @@ public class TurnoService : ITurnoService
         }
 
         var lista = await query.ToListAsync();
+
+        // Filtrado en memoria: SQLite no traduce TimeSpan en cláusulas WHERE u ORDER BY en SQL.
+        // RN-02 y RF-PAC-07: solo devolver turnos cuya fecha y hora combinada sea posterior a ahora.
+        lista = lista
+            .Where(t => t.Fecha.Date > hoy || (t.Fecha.Date == hoy && t.HoraInicio > ahora.TimeOfDay))
+            .OrderBy(t => t.Fecha)
+            .ThenBy(t => t.HoraInicio)
+            .ToList();
+
         _logger.LogInformation("Encontrados {Count} turnos disponibles", lista.Count);
 
         return lista.Select(t => MapTurnoDto(t)).ToList();

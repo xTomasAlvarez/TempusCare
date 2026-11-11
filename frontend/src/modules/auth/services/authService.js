@@ -69,4 +69,24 @@ export const authService = {
       obrasSociales: data.obrasSociales || [],
     };
   },
+
+  /**
+   * Conecta con AuthController POST /api/auth/forgot-password
+   */
+  async forgotPassword(email) {
+    return await apiClient.post('auth/forgot-password', {
+      email: email.trim().toLowerCase(),
+    });
+  },
+
+  /**
+   * Conecta con AuthController POST /api/auth/reset-password
+   */
+  async resetPassword({ email, token, nuevaContrasena }) {
+    return await apiClient.post('auth/reset-password', {
+      email: email.trim().toLowerCase(),
+      token: token.trim(),
+      nuevaContrasena,
+    });
+  },
 };

@@ -79,7 +79,7 @@ export const CoverageParameterizationForm = () => {
           <div>
             <h3 className="text-base sm:text-lg font-bold font-heading text-slate-900 flex items-center gap-2">
               <ShieldPlus className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
-              Configuración de Estudios y Obras Sociales (RN-02)
+              Configuración de Estudios y Obras Sociales
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Define los estudios que realiza cada médico en esta sede física y qué obras sociales acepta para cada combinación.
@@ -87,12 +87,9 @@ export const CoverageParameterizationForm = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 font-medium">
+            <span className="text-xs bg-slate-100 border border-slate-200/80 px-3 py-1.5 rounded-xl text-slate-700 font-medium shadow-2xs">
               Sede: <strong className="text-slate-900">{sedeNombre || 'Consultorio ' + consultorioCuit}</strong>
             </span>
-            <Badge variant="primary" size="sm" className="font-mono">
-              RN-02 Cobertura B2B
-            </Badge>
           </div>
         </div>
 
@@ -302,7 +299,7 @@ export const CoverageParameterizationForm = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider">
-                3. Obras Sociales Aceptadas para esta combinación (RN-02)
+                3. Obras Sociales Aceptadas para este estudio
               </label>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Selecciona las entidades que cubren este estudio específico con este profesional.
@@ -395,7 +392,7 @@ export const CoverageParameterizationForm = () => {
           >
             <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
             <span>
-              {existingMapping ? 'Actualizar Parametrización (RN-02)' : 'Guardar Parametrización (RN-02)'}
+              {existingMapping ? 'Actualizar Configuración' : 'Guardar Configuración'}
             </span>
           </Button>
         </div>
@@ -425,7 +422,7 @@ export const CoverageParameterizationForm = () => {
                 <th className="py-3 px-4 font-semibold">Estudio Médico</th>
                 <th className="py-3 px-4 font-semibold">Duración</th>
                 <th className="py-3 px-4 font-semibold">Precio Particular</th>
-                <th className="py-3 px-4 font-semibold">Obras Sociales Aceptadas (RN-02)</th>
+                <th className="py-3 px-4 font-semibold">Obras Sociales Aceptadas</th>
                 <th className="py-3 px-4 font-semibold text-right">Acciones</th>
               </tr>
             </thead>

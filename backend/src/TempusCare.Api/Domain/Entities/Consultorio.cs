@@ -11,6 +11,8 @@ public class Consultorio
     public double? Latitud { get; set; }
     public double? Longitud { get; set; }
 
+    public int VisitasPerfil { get; set; } = 0;
+
     public int? InstitucionId { get; set; }
     public Institucion? Institucion { get; set; }
 

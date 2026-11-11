@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../../../shared/components/ui/Button';
+import { AutoResizeTextarea } from '../../../shared/components/ui/AutoResizeTextarea';
 import {
   FileHeart,
   ClipboardCheck,
@@ -158,15 +159,16 @@ Se mantienen indicaciones previas y se programa control en 30 días.`;
             </span>
           </div>
 
-          <textarea
+          <AutoResizeTextarea
             id="detalle-evolucion"
-            rows={12}
             value={detalle}
             onChange={(e) => setDetalle(e.target.value)}
             placeholder="Escriba aquí los hallazgos clínicos, anamnesis del paciente, examen físico realizado, prescripción médica y pautas acordadas..."
-            className={`w-full p-4 text-sm bg-slate-50/60 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-sans resize-y leading-relaxed text-slate-800 ${
+            className={`w-full p-4 text-sm bg-slate-50/60 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white font-sans text-slate-800 ${
               fieldErrors?.detalle ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
             }`}
+            minHeight={180}
+            maxHeight={450}
             disabled={isSaving}
           />
           <div className="min-h-[20px] mt-0.5 flex items-center">

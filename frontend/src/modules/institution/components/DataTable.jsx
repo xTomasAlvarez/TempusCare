@@ -190,7 +190,7 @@ export const DataTable = ({
               type="button"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-transform duration-75 active:scale-[0.98] cursor-pointer"
               aria-label="Página anterior"
             >
               <ChevronLeft className="w-4 h-4" strokeWidth={2} />
@@ -204,7 +204,7 @@ export const DataTable = ({
               type="button"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-transform duration-75 active:scale-[0.98] cursor-pointer"
               aria-label="Página siguiente"
             >
               <ChevronRight className="w-4 h-4" strokeWidth={2} />

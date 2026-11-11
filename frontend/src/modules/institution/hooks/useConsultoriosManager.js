@@ -6,11 +6,16 @@ import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 /**
  * Hook para la gestión de Sedes Físicas y Consultorios Médicos.
  */
-export const useConsultoriosManager = () => {
+export const useConsultoriosManager = (institucionId = null) => {
   const { addToast } = useToast();
   const { confirmDelete } = useConfirmDelete();
   const [consultorios, setConsultorios] = useState([]);
   const [instituciones, setInstituciones] = useState([]);
+  const [metricas, setMetricas] = useState({
+    pacientesAtendidos: 0,
+    calificacionPromedio: 0,
+    visitasPerfil: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,12 +33,18 @@ export const useConsultoriosManager = () => {
       ]);
       setConsultorios(data);
       setInstituciones(insts);
+
+      const targetInstId = institucionId || (insts.length > 0 ? insts[0].id : 1);
+      const metricsData = await institutionAdminService.getInstitucionMetrics(targetInstId).catch(() => null);
+      if (metricsData) {
+        setMetricas(metricsData);
+      }
     } catch (err) {
       setError(err.message || 'Error al cargar sedes.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [institucionId]);
 
   useEffect(() => {
     fetchConsultorios();
@@ -152,6 +163,7 @@ export const useConsultoriosManager = () => {
   return {
     consultorios,
     instituciones,
+    metricas,
     isLoading,
     isSubmitting,
     isModalOpen,

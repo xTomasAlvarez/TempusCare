@@ -13,7 +13,8 @@ export const useVitalityInstitutions = () => {
   const [institutions, setInstitutions] = useState([]);
   const [planMap, setPlanMap] = useState(() => {
     return {
-      '30111222334': 'Enterprise',
+      '30546789123': 'Enterprise',
+      '30612345678': 'Enterprise',
       '30555666778': 'Profesional',
     };
   });

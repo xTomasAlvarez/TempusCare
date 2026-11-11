@@ -15,6 +15,7 @@ export const ConfirmDeleteProvider = ({ children }) => {
     itemName: null,
     confirmText: 'Sí, eliminar definitivamente',
     cancelText: 'Cancelar',
+    iconType: 'delete',
     isLoading: false,
   });
 
@@ -22,7 +23,7 @@ export const ConfirmDeleteProvider = ({ children }) => {
 
   /**
    * Abre el modal de confirmación y retorna una Promesa que resuelve a `true` si el usuario
-   * confirma en el botón rojo "Sí, eliminar definitivamente", o `false` si cancela.
+   * confirma, o `false` si cancela.
    */
   const confirmDelete = useCallback(
     ({
@@ -31,6 +32,7 @@ export const ConfirmDeleteProvider = ({ children }) => {
       itemName = null,
       confirmText = 'Sí, eliminar definitivamente',
       cancelText = 'Cancelar',
+      iconType = 'delete',
     } = {}) => {
       return new Promise((resolve) => {
         resolverRef.current = resolve;
@@ -41,6 +43,7 @@ export const ConfirmDeleteProvider = ({ children }) => {
           itemName,
           confirmText,
           cancelText,
+          iconType,
           isLoading: false,
         });
       });
@@ -74,6 +77,7 @@ export const ConfirmDeleteProvider = ({ children }) => {
         itemName={modalState.itemName}
         confirmText={modalState.confirmText}
         cancelText={modalState.cancelText}
+        iconType={modalState.iconType}
         isLoading={modalState.isLoading}
         onConfirm={handleConfirm}
         onClose={handleClose}

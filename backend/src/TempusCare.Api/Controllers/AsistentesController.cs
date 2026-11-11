@@ -22,13 +22,13 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaAsistenteDto dto)
     {
         var (adminConsultorioCuit, adminCuil) = await ObtenerDatosAdminSedeAsync();
         if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            return BadRequest("El administrador no posee una sede física asignada para asociar asistentes.");
+            return Forbid();
         }
 
         // Asignación automática estricta del consultorio y cuil del administrador logueado
@@ -43,7 +43,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpPut("{cuil}")]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Modificar(string cuil, [FromBody] ModificarAsistenteDto dto)
     {
         if (cuil != dto.Cuil)
@@ -52,7 +52,7 @@ public class AsistentesController : ControllerBase
         var (adminConsultorioCuit, adminCuil) = await ObtenerDatosAdminSedeAsync();
         if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            return BadRequest("El administrador no posee una sede física asignada.");
+            return Forbid();
         }
 
         // Restricción: verificar que el asistente pertenezca a la sede del administrador logueado
@@ -64,7 +64,7 @@ public class AsistentesController : ControllerBase
 
         if (asistente.ConsultorioCuit != adminConsultorioCuit)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, "No tiene permisos para modificar asistentes de otra sede.");
+            return Forbid();
         }
 
         // Preservar la sede del administrador logueado
@@ -79,22 +79,24 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpDelete("{cuil}")]
-    [Authorize(Roles = "AdminSede")]
+    [Authorize(Roles = "AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuil)
     {
         var (adminConsultorioCuit, _) = await ObtenerDatosAdminSedeAsync();
-        if (!string.IsNullOrEmpty(adminConsultorioCuit))
+        if (string.IsNullOrEmpty(adminConsultorioCuit))
         {
-            var asistente = await _db.Asistentes.FirstOrDefaultAsync(a => a.Cuil == cuil);
-            if (asistente == null)
-            {
-                return NotFound("Asistente no encontrado.");
-            }
+            return Forbid();
+        }
 
-            if (asistente.ConsultorioCuit != adminConsultorioCuit)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, "No tiene permisos para dar de baja asistentes de otra sede.");
-            }
+        var asistente = await _db.Asistentes.FirstOrDefaultAsync(a => a.Cuil == cuil);
+        if (asistente == null)
+        {
+            return NotFound("Asistente no encontrado.");
+        }
+
+        if (asistente.ConsultorioCuit != adminConsultorioCuit)
+        {
+            return Forbid();
         }
 
         await _asistenteService.BajaAsistenteAsync(cuil);
@@ -153,11 +155,11 @@ public class AsistentesController : ControllerBase
         if (!string.IsNullOrEmpty(cuitClaim))
             return (cuitClaim, null);
 
-        var fallbackAdmin = await _db.AdministradoresConsultorio.FirstOrDefaultAsync();
-        return (fallbackAdmin?.ConsultorioCuit, fallbackAdmin?.Cuil);
+        return (null, null);
     }
 
     [HttpPost("{cuil}/agendas/{agendaId}")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,AdminInstitucion,SuperAdmin")]
     public async Task<IActionResult> AsignarAgenda(string cuil, int agendaId)
     {
         await _asistenteService.AsignarAgendaAsync(cuil, agendaId);
@@ -165,6 +167,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpDelete("{cuil}/agendas/{agendaId}")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,AdminInstitucion,SuperAdmin")]
     public async Task<IActionResult> RemoverAgenda(string cuil, int agendaId)
     {
         await _asistenteService.RemoverAgendaAsync(cuil, agendaId);
@@ -172,6 +175,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet("{cuil}/agendas")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,AdminInstitucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerAgendasAsignadas(string cuil)
     {
         var res = await _asistenteService.ObtenerAgendasAsignadasAsync(cuil);
@@ -179,6 +183,7 @@ public class AsistentesController : ControllerBase
     }
 
     [HttpGet("{cuil}/agendas/{agendaId}/permiso")]
+    [Authorize(Roles = "Asistente,AdminConsultorio,AdminInstitucion,SuperAdmin")]
     public async Task<IActionResult> ValidarPermisoAgenda(string cuil, int agendaId)
     {
         var tienePermiso = await _asistenteService.ValidarPermisoAsistenteAgendaAsync(cuil, agendaId);

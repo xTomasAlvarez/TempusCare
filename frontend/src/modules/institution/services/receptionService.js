@@ -63,6 +63,8 @@ export const receptionService = {
     horaEntrada,
     horaSalida,
     duracionTurnoMinutos = 30,
+    horaInicioDescanso = null,
+    horaFinDescanso = null,
   }) {
     return await apiClient.post('agendas', {
       profesionalCuil,
@@ -73,16 +75,19 @@ export const receptionService = {
       horaEntrada: horaEntrada.length === 5 ? `${horaEntrada}:00` : horaEntrada,
       horaSalida: horaSalida.length === 5 ? `${horaSalida}:00` : horaSalida,
       duracionTurnoMinutos: Number(duracionTurnoMinutos),
+      horaInicioDescanso: horaInicioDescanso ? (horaInicioDescanso.length === 5 ? `${horaInicioDescanso}:00` : horaInicioDescanso) : null,
+      horaFinDescanso: horaFinDescanso ? (horaFinDescanso.length === 5 ? `${horaFinDescanso}:00` : horaFinDescanso) : null,
     });
   },
 
   /**
    * Modifica el estado de una cita médica
    */
-  async updateAppointmentStatus(citaId, nuevoEstado) {
+  async updateAppointmentStatus(citaId, nuevoEstado, forzarAtencionFueraDeHorario = false) {
     return await apiClient.put(`citas/${citaId}/estado`, {
       citaId: Number(citaId),
       estado: Number(nuevoEstado),
+      forzarAtencionFueraDeHorario: Boolean(forzarAtencionFueraDeHorario),
     });
   },
 

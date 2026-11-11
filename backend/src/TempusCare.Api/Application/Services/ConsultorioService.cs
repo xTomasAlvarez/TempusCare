@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Exceptions;
 using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Domain.Enums;
 using TempusCare.Api.Infrastructure.Data;
 
 namespace TempusCare.Api.Application.Services;
@@ -206,6 +207,21 @@ public class ConsultorioService : IConsultorioService
         return lista.Select(c => MapToDto(c)).ToList();
     }
 
+    public async Task<List<ConsultorioResponseDto>> ObtenerPorProfesionalAsync(string profesionalCuil)
+    {
+        var cuilClean = (profesionalCuil ?? string.Empty).Trim();
+        _logger.LogInformation("Obteniendo consultorios asignados al profesional CUIL {Cuil}", cuilClean);
+
+        var lista = await _db.Consultorios
+            .Include(c => c.Direccion)
+            .Include(c => c.Institucion)
+            .Include(c => c.Profesionales).ThenInclude(p => p.Profesional).ThenInclude(pr => pr!.Especialidades).ThenInclude(pe => pe.Especialidad)
+            .Where(c => c.Profesionales.Any(pc => pc.ProfesionalCuil == cuilClean))
+            .ToListAsync();
+
+        return lista.Select(c => MapToDto(c)).ToList();
+    }
+
     public async Task<List<ProfesionalVinculadoDto>> ObtenerProfesionalesPorConsultorioAsync(string consultorioCuit)
     {
         _logger.LogInformation("Obteniendo profesionales del consultorio {Cuit}", consultorioCuit);
@@ -285,6 +301,56 @@ public class ConsultorioService : IConsultorioService
         _db.ProfesionalConsultorios.Remove(vinculacion);
         await _db.SaveChangesAsync();
         _logger.LogInformation("Profesional {Cuil} desvinculado de consultorio {Cuit}", profesionalCuil, consultorioCuit);
+    }
+
+    public async Task RegistrarVisitaAsync(string cuit)
+    {
+        var consultorio = await _db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == cuit);
+        if (consultorio == null)
+        {
+            throw new ConsultorioNotFoundException(cuit);
+        }
+
+        consultorio.VisitasPerfil++;
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Visita registrada para consultorio {Cuit}. Total: {Total}", cuit, consultorio.VisitasPerfil);
+    }
+
+    public async Task<MetricasSedeDto> ObtenerMetricasAsync(string cuit)
+    {
+        var consultorio = await _db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == cuit);
+        if (consultorio == null)
+        {
+            throw new ConsultorioNotFoundException(cuit);
+        }
+
+        var pacientesAtendidos = await _db.Citas
+            .Include(c => c.Turno).ThenInclude(t => t!.Agenda)
+            .Where(c => c.Estado == EstadoCita.Atendida &&
+                        c.Turno != null &&
+                        c.Turno.Agenda != null &&
+                        c.Turno.Agenda.ConsultorioCuit == cuit)
+            .CountAsync();
+
+        var cuestionarios = await _db.Cuestionarios
+            .Include(q => q.Cita).ThenInclude(c => c!.Turno).ThenInclude(t => t!.Agenda)
+            .Where(q => q.Cita != null &&
+                        q.Cita.Turno != null &&
+                        q.Cita.Turno.Agenda != null &&
+                        q.Cita.Turno.Agenda.ConsultorioCuit == cuit)
+            .ToListAsync();
+
+        double calificacionPromedio = 0.0;
+        if (cuestionarios.Count > 0)
+        {
+            calificacionPromedio = Math.Round(cuestionarios.Average(q => (q.Puntualidad + q.Atencion + q.Profesionalismo) / 3.0), 1);
+        }
+
+        return new MetricasSedeDto(
+            pacientesAtendidos,
+            calificacionPromedio,
+            consultorio.VisitasPerfil
+        );
     }
 
     private static ConsultorioResponseDto MapToDto(Consultorio c)

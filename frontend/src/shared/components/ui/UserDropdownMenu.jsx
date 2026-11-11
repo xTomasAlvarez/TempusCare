@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, ChevronDown, LayoutDashboard, CalendarHeart } from 'lucide-react';
 import { useAuth } from '../../../core/context/AuthContext';
+import { useConfirmDelete } from '../../hooks/useConfirmDelete';
+import { toastVariants } from '../../motion';
 
 // Mapeo defensivo de nombres reales para perfiles sembrados de prueba
 const KNOWN_REAL_NAMES = {
@@ -18,9 +21,15 @@ const KNOWN_REAL_NAMES = {
   '27289990001': 'Dra. Gabriela Castro',
   '27111111111': 'Lucía Fernández',
   '20334455667': 'Roberto Sánchez',
+  'admin.sede25demayo': 'Roberto Sánchez',
+  'admin.sedesarmiento': 'Claudia Jiménez',
+  'admin.9dejulio': 'Ricardo Paz Posse',
+  'admin.modelo': 'Marcela Terán',
   'admin.cons101': 'Roberto Sánchez',
-  '30111222334': 'Sanatorio Tucumán',
-  '30555666778': 'Clínica Mayo',
+  '30546789123': 'Sanatorio 9 de Julio',
+  '30612345678': 'Sanatorio Modelo S.A.',
+  '30111222334': 'Sanatorio 9 de Julio',
+  '30555666778': 'Clínica Mayo de Tucumán',
   'admin@vitality.com': 'Super Administrador Vitality',
 };
 
@@ -161,6 +170,7 @@ const getRoleTag = (rol) => {
 
 export const UserDropdownMenu = () => {
   const { user, token, clearAuthData, getDashboardRoute } = useAuth();
+  const { confirmDelete } = useConfirmDelete();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -194,8 +204,17 @@ export const UserDropdownMenu = () => {
     };
   }, [isOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false);
+    const confirmed = await confirmDelete({
+      title: '¿Estás seguro de cerrar sesión?',
+      message: 'Finalizarás tu sesión actual en la plataforma y deberás volver a ingresar tus credenciales para acceder.',
+      itemName: `${realName} — ${roleTag.label}`,
+      confirmText: 'Sí, cerrar sesión',
+      cancelText: 'Cancelar',
+      iconType: 'logout',
+    });
+    if (!confirmed) return;
     clearAuthData();
     navigate('/', { replace: true });
   };
@@ -216,6 +235,7 @@ export const UserDropdownMenu = () => {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="true"
         aria-expanded={isOpen}
+        title={`Menú de perfil y sesión de ${realName} (${roleTag.label})`}
         aria-label={`Menú de usuario: ${realName}`}
         className={`flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer ${
           isOpen
@@ -248,72 +268,79 @@ export const UserDropdownMenu = () => {
       </button>
 
       {/* Menú Desplegable Flotante */}
-      {isOpen && (
-        <div
-          role="menu"
-          aria-orientation="vertical"
-          className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200/90 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 focus:outline-none"
-        >
-          {/* Cabecera del Dropdown con información completa del usuario */}
-          <div className="px-3 py-2.5 bg-slate-50/80 rounded-xl mb-1.5 border border-slate-100">
-            <p className="text-xs font-bold text-slate-900 font-heading leading-tight">
-              {realName}
-            </p>
-            <p className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
-              {user.mail || 'Cuenta TempusCare'}
-            </p>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span
-                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleTag.bg} ${roleTag.text} ${roleTag.border}`}
-              >
-                {roleTag.label}
-              </span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="user-dropdown-panel"
+            role="menu"
+            aria-orientation="vertical"
+            variants={toastVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200/90 p-2 z-50 focus:outline-none"
+          >
+            {/* Cabecera del Dropdown con información completa del usuario */}
+            <div className="px-3 py-2.5 bg-slate-50/80 rounded-xl mb-1.5 border border-slate-100">
+              <p className="text-xs font-bold text-slate-900 font-heading leading-tight">
+                {realName}
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
+                {user.mail || 'Cuenta TempusCare'}
+              </p>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span
+                  className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleTag.bg} ${roleTag.text} ${roleTag.border}`}
+                >
+                  {roleTag.label}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Opciones de Navegación según Rol */}
-          <div className="space-y-0.5 py-1">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={handleGoDashboard}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors cursor-pointer"
-            >
-              <LayoutDashboard className="w-4 h-4 text-primary-600 shrink-0" />
-              <span>Mi Panel Principal</span>
-            </button>
-
-            {user.rol === 'Paciente' && (
+            {/* Opciones de Navegación según Rol */}
+            <div className="space-y-0.5 py-1">
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/patient/appointments');
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors cursor-pointer"
+                onClick={handleGoDashboard}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-transform duration-75 active:scale-[0.98] cursor-pointer"
               >
-                <CalendarHeart className="w-4 h-4 text-primary-600 shrink-0" />
-                <span>Mis Turnos Médicos</span>
+                <LayoutDashboard className="w-4 h-4 text-primary-600 shrink-0" />
+                <span>Mi Panel Principal</span>
               </button>
-            )}
-          </div>
 
-          {/* Separador */}
-          <div className="border-t border-slate-100 my-1" />
+              {user.rol === 'Paciente' && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/patient/appointments');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-transform duration-75 active:scale-[0.98] cursor-pointer"
+                >
+                  <CalendarHeart className="w-4 h-4 text-primary-600 shrink-0" />
+                  <span>Mis Turnos Médicos</span>
+                </button>
+              )}
+            </div>
 
-          {/* Opción Obligatoria: Cerrar Sesión */}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
-      )}
+            {/* Separador */}
+            <div className="border-t border-slate-100 my-1" />
+
+            {/* Opción Obligatoria: Cerrar Sesión */}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-transform duration-75 active:scale-[0.98] cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
+              <span>Cerrar Sesión</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

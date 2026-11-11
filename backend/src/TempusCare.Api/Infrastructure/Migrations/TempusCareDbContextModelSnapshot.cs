@@ -20,6 +20,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.AdministradorConsultorio", b =>
                 {
                     b.Property<string>("Cuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Apellido")
@@ -28,6 +29,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("ConsultorioCuit")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("FechaNacimiento")
@@ -57,6 +59,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.AdministradorInstitucion", b =>
                 {
                     b.Property<string>("Cuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Apellido")
@@ -101,6 +104,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("ConsultorioCuit")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Dia")
@@ -117,6 +121,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("ProfesionalCuil")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -131,9 +136,11 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Asistente", b =>
                 {
                     b.Property<string>("Cuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AdminConsultorioCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Apellido")
@@ -141,6 +148,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ConsultorioCuit")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DireccionId")
@@ -186,6 +194,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.AsistenteAgenda", b =>
                 {
                     b.Property<string>("AsistenteCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("AgendaId")
@@ -221,6 +230,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("PacienteCuil")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Tipo")
@@ -267,6 +277,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Consultorio", b =>
                 {
                     b.Property<string>("Cuit")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DireccionId")
@@ -280,9 +291,11 @@ namespace TempusCare.Api.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<double?>("Latitud")
+                        .HasPrecision(18, 6)
                         .HasColumnType("REAL");
 
                     b.Property<double?>("Longitud")
+                        .HasPrecision(18, 6)
                         .HasColumnType("REAL");
 
                     b.Property<string>("NivelAccesibilidad")
@@ -296,6 +309,9 @@ namespace TempusCare.Api.Infrastructure.Migrations
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("VisitasPerfil")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Cuit");
 
@@ -459,6 +475,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("PacienteCuil")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TelefonoContacto")
@@ -481,6 +498,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("Cuit")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -496,6 +514,9 @@ namespace TempusCare.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UsuarioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VisitasPerfil")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -546,6 +567,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProfesionalCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -563,6 +585,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Paciente", b =>
                 {
                     b.Property<string>("Cuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Apellido")
@@ -603,6 +626,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.PacienteObraSocial", b =>
                 {
                     b.Property<string>("PacienteCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ObraSocialId")
@@ -618,6 +642,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Profesional", b =>
                 {
                     b.Property<string>("Cuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Apellido")
@@ -665,9 +690,11 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.ProfesionalConsultorio", b =>
                 {
                     b.Property<string>("ProfesionalCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ConsultorioCuit")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.HasKey("ProfesionalCuil", "ConsultorioCuit");
@@ -680,6 +707,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.ProfesionalEspecialidad", b =>
                 {
                     b.Property<string>("ProfesionalCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EspecialidadId")
@@ -712,6 +740,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
 
                     b.Property<string>("ProfesionalCuil")
                         .IsRequired()
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -727,6 +756,7 @@ namespace TempusCare.Api.Infrastructure.Migrations
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.ProfesionalObraSocial", b =>
                 {
                     b.Property<string>("ProfesionalCuil")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ObraSocialId")
@@ -737,6 +767,43 @@ namespace TempusCare.Api.Infrastructure.Migrations
                     b.HasIndex("ObraSocialId");
 
                     b.ToTable("ProfesionalObrasSociales");
+                });
+
+            modelBuilder.Entity("TempusCare.Api.Domain.Entities.SolicitudSuperAdmin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("AprobadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EmailPropuesto")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FechaResolucion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProponenteId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AprobadorId");
+
+                    b.HasIndex("ProponenteId");
+
+                    b.ToTable("SolicitudesSuperAdmin");
                 });
 
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Turno", b =>
@@ -1027,12 +1094,12 @@ namespace TempusCare.Api.Infrastructure.Migrations
                     b.HasOne("TempusCare.Api.Domain.Entities.Cita", "Cita")
                         .WithOne("Observacion")
                         .HasForeignKey("TempusCare.Api.Domain.Entities.Observacion", "CitaId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("TempusCare.Api.Domain.Entities.HistoriaClinica", "HistoriaClinica")
                         .WithMany("Observaciones")
                         .HasForeignKey("HistoriaClinicaId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TempusCare.Api.Domain.Entities.Profesional", "Profesional")
                         .WithMany("Observaciones")
@@ -1175,6 +1242,24 @@ namespace TempusCare.Api.Infrastructure.Migrations
                     b.Navigation("ObraSocial");
 
                     b.Navigation("Profesional");
+                });
+
+            modelBuilder.Entity("TempusCare.Api.Domain.Entities.SolicitudSuperAdmin", b =>
+                {
+                    b.HasOne("TempusCare.Api.Domain.Entities.Usuario", "Aprobador")
+                        .WithMany()
+                        .HasForeignKey("AprobadorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TempusCare.Api.Domain.Entities.Usuario", "Proponente")
+                        .WithMany()
+                        .HasForeignKey("ProponenteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Aprobador");
+
+                    b.Navigation("Proponente");
                 });
 
             modelBuilder.Entity("TempusCare.Api.Domain.Entities.Turno", b =>

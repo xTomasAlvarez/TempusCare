@@ -127,4 +127,16 @@ export const institutionAdminService = {
   async getInstituciones() {
     return await apiClient.get('instituciones');
   },
+
+  // ==========================================
+  // Métricas y Estadísticas
+  // ==========================================
+
+  async getConsultorioMetrics(cuit) {
+    return await apiClient.get(`consultorios/${encodeURIComponent(cuit)}/metricas`);
+  },
+
+  async getInstitucionMetrics(id) {
+    return await apiClient.get(`instituciones/${encodeURIComponent(id)}/metricas`);
+  },
 };

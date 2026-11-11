@@ -1,6 +1,8 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Button } from '../../../shared/components/ui/Button';
+import { Modal } from '../../../shared/components/ui/Modal';
 import {
   CalendarHeart,
   Clock,
@@ -14,6 +16,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
+import { staggerContainerVariants, staggerItemVariants, snappySpring } from '../../../shared/motion';
 
 /**
  * Vista de Agenda Diaria del Profesional Médico.
@@ -33,6 +36,58 @@ export const DailyAgendaList = ({
   onSelectPatient,
   activeConsultorio,
 }) => {
+  const [pendingOutOfScheduleAppointment, setPendingOutOfScheduleAppointment] = React.useState(null);
+  const [cachedPendingApt, setCachedPendingApt] = React.useState(null);
+  React.useEffect(() => {
+    if (pendingOutOfScheduleAppointment) setCachedPendingApt(pendingOutOfScheduleAppointment);
+  }, [pendingOutOfScheduleAppointment]);
+  const activePendingApt = pendingOutOfScheduleAppointment || cachedPendingApt;
+
+  const handlePatientAction = (appointment) => {
+    const isAttended = isCitaAtendida(appointment.estado);
+    if (isAttended) {
+      onSelectPatient(appointment, false);
+      return;
+    }
+
+    const isInWaitingRoom = appointment.estado === 6 || appointment.estado === 'EnSalaDeEspera';
+    const isAlreadyInAttention = appointment.estado === 7 || appointment.estado === 'EnAtencion';
+
+    // Si ya está en atención, ingresar a la ficha clínica
+    if (isAlreadyInAttention) {
+      onSelectPatient(appointment, true, false);
+      return;
+    }
+
+    // Regla de Negocio: Debe estar en Sala de Espera para poder ser llamado a consulta
+    if (!isInWaitingRoom) {
+      return;
+    }
+
+    // Validación de ventana de horario (tolerancia razonable de ±45 min)
+    const now = new Date();
+    const appointmentDateStr = (appointment.fecha || '').split('T')[0];
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const isSameDay = appointmentDateStr === todayStr;
+
+    let isWithinTimeWindow = false;
+    if (isSameDay && appointment.horaInicio) {
+      const [hIni, mIni] = String(appointment.horaInicio).split(':').map(Number);
+      const [hFin, mFin] = String(appointment.horaFin || appointment.horaInicio).split(':').map(Number);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const startMin = hIni * 60 + mIni;
+      const endMin = hFin * 60 + mFin;
+      if (nowMin >= startMin - 45 && nowMin <= endMin + 45) {
+        isWithinTimeWindow = true;
+      }
+    }
+
+    if (!isSameDay || !isWithinTimeWindow) {
+      setPendingOutOfScheduleAppointment(appointment);
+    } else {
+      onSelectPatient(appointment, true, false);
+    }
+  };
   const formatTime = (timeStr) => {
     if (!timeStr) return '--:--';
     if (typeof timeStr === 'string') {
@@ -154,42 +209,33 @@ export const DailyAgendaList = ({
       {/* Métricas y Tabs de Filtrado de Estado */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-          <button
-            type="button"
-            onClick={() => onStatusFilterChange('ALL')}
-            className={cn(
-              'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
-              statusFilter === 'ALL'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-900'
-            )}
-          >
-            Todos ({stats.total})
-          </button>
-          <button
-            type="button"
-            onClick={() => onStatusFilterChange('PENDING')}
-            className={cn(
-              'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
-              statusFilter === 'PENDING'
-                ? 'bg-white text-primary-700 shadow-xs'
-                : 'text-slate-500 hover:text-slate-900'
-            )}
-          >
-            Pendientes ({stats.pending})
-          </button>
-          <button
-            type="button"
-            onClick={() => onStatusFilterChange('ATTENDED')}
-            className={cn(
-              'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
-              statusFilter === 'ATTENDED'
-                ? 'bg-white text-emerald-700 shadow-xs'
-                : 'text-slate-500 hover:text-slate-900'
-            )}
-          >
-            Atendidos ({stats.attended})
-          </button>
+          {[
+            { id: 'ALL', label: `Todos (${stats.total})`, activeColor: 'text-slate-900' },
+            { id: 'PENDING', label: `Pendientes (${stats.pending})`, activeColor: 'text-primary-700' },
+            { id: 'ATTENDED', label: `Atendidos (${stats.attended})`, activeColor: 'text-emerald-700' },
+          ].map((tab) => {
+            const isActive = statusFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onStatusFilterChange(tab.id)}
+                className={cn(
+                  'relative px-3 py-1 rounded-lg text-xs font-semibold transition-colors duration-150 active:scale-[0.98] cursor-pointer',
+                  isActive ? tab.activeColor : 'text-slate-500 hover:text-slate-900'
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="daily-agenda-tab"
+                    transition={snappySpring}
+                    className="absolute inset-0 bg-white rounded-lg shadow-xs"
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         <span className="text-xs text-slate-500 font-medium">
@@ -231,14 +277,25 @@ export const DailyAgendaList = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <motion.div
+          key={statusFilter + '_' + selectedDate}
+          variants={staggerContainerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {appointments.map((appointment) => {
             const isAttended = isCitaAtendida(appointment.estado);
+            const isAlreadyInAttention = appointment.estado === 7 || appointment.estado === 'EnAtencion';
+            const isInWaitingRoom = appointment.estado === 6 || appointment.estado === 'EnSalaDeEspera';
+            const canAttend = isAttended || isAlreadyInAttention || isInWaitingRoom;
+
             return (
-              <div
+              <motion.div
                 key={appointment.id}
+                variants={staggerItemVariants}
                 className={cn(
-                  'group p-4 sm:p-5 rounded-2xl border transition-all duration-200',
+                  'group p-4 sm:p-5 rounded-2xl border transition-all duration-150',
                   'flex flex-col sm:flex-row sm:items-center justify-between gap-4',
                   isAttended
                     ? 'bg-slate-50/70 border-slate-200/90 hover:border-emerald-300 hover:bg-slate-50/90'
@@ -299,14 +356,21 @@ export const DailyAgendaList = ({
                 {/* Acciones */}
                 <div className="flex items-center gap-2 sm:self-center">
                   <Button
-                    onClick={() => onSelectPatient(appointment)}
+                    onClick={() => handlePatientAction(appointment)}
+                    disabled={!canAttend}
                     variant={isAttended ? 'outline' : 'primary'}
                     size="sm"
                     className={cn(
                       'w-full sm:w-auto gap-1.5',
-                      isAttended && 'border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      isAttended && 'border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900',
+                      !canAttend && 'opacity-60 bg-slate-100 text-slate-400 border border-slate-200 shadow-none cursor-not-allowed hover:bg-slate-100'
                     )}
-                    aria-label={`${isAttended ? 'Ver ficha y evolución clínica' : 'Atender paciente'} de ${appointment.pacienteNombre}`}
+                    title={!canAttend ? 'El paciente debe registrar su llegada en Sala de Espera antes de ser llamado' : ''}
+                    aria-label={
+                      !canAttend
+                        ? `No se puede atender a ${appointment.pacienteNombre}: debe registrar su llegada en Sala de Espera`
+                        : `${isAttended ? 'Ver ficha y evolución clínica' : 'Atender paciente'} de ${appointment.pacienteNombre}`
+                    }
                   >
                     {isAttended ? (
                       <>
@@ -316,17 +380,66 @@ export const DailyAgendaList = ({
                     ) : (
                       <>
                         <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-                        <span>Atender Paciente</span>
+                        <span>{isAlreadyInAttention ? 'Continuar Consulta' : 'Atender Paciente'}</span>
                       </>
                     )}
                     <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
+
+      {/* Modal de Advertencia y Confirmación de Atención Fuera de Horario */}
+      <Modal
+        isOpen={Boolean(pendingOutOfScheduleAppointment)}
+        onClose={() => setPendingOutOfScheduleAppointment(null)}
+        title="Aviso de Horario"
+        description="Verificación de horario programado de la cita médica"
+        maxWidth="max-w-md"
+      >
+        {activePendingApt && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed space-y-1.5">
+                <p className="text-sm">
+                  Aviso de Horario: Este turno está programado para las{' '}
+                  <strong>{formatTime(activePendingApt.horaInicio)} hs</strong> y actualmente son las{' '}
+                  <strong>{new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</strong>.
+                </p>
+                <p className="font-semibold text-slate-900 pt-1">
+                  ¿Desea iniciar la atención fuera del horario estipulado?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPendingOutOfScheduleAppointment(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => {
+                  const apt = pendingOutOfScheduleAppointment || activePendingApt;
+                  setPendingOutOfScheduleAppointment(null);
+                  if (apt) onSelectPatient(apt, true, true);
+                }}
+              >
+                Iniciar Atención
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

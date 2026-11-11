@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useVitalityMetrics } from '../hooks/useVitalityMetrics';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../shared/components/ui/Card';
 import { Badge } from '../../../shared/components/ui/Badge';
@@ -33,6 +34,11 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import {
+  staggerContainerVariants,
+  staggerItemVariants,
+  pageTransitionVariants,
+} from '../../../shared/motion';
 
 /**
  * Pestaña de Métricas de Adopción para el Super Administrador de Vitality.
@@ -92,7 +98,7 @@ export const VitalityMetricsPage = () => {
       : '0';
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="space-y-8">
       {/* Encabezado Principal */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
@@ -135,116 +141,129 @@ export const VitalityMetricsPage = () => {
         </div>
       )}
 
-      {/* Tarjetas de Resumen Principales (4 Métricas Estrictas) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Tarjetas de Resumen Principales (4 Métricas Estrictas) en Cascada */}
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+      >
         {/* 1. Instituciones Activas */}
-        <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
-                Instituciones Activas
-              </span>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Hospital className="w-5 h-5" />
+        <motion.div variants={staggerItemVariants} className="transition-transform duration-75 active:scale-[0.98]">
+          <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
+                  Instituciones Activas
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Hospital className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold font-heading text-slate-900">
-                {isLoading ? '...' : metrics.totalInstituciones}
-              </span>
-              <Badge variant="emerald" size="sm" className="font-semibold">
-                +100% activas
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-              Clientes B2B multi-tenant en producción
-            </p>
-          </CardContent>
-        </Card>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-heading text-slate-900">
+                  {isLoading ? '...' : metrics.totalInstituciones}
+                </span>
+                <Badge variant="emerald" size="sm" className="font-semibold">
+                  +100% activas
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                Clientes B2B multi-tenant en producción
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 2. Sedes Registradas */}
-        <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
-                Sedes Registradas
-              </span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Building2 className="w-5 h-5" />
+        <motion.div variants={staggerItemVariants} className="transition-transform duration-75 active:scale-[0.98]">
+          <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
+                  Sedes Registradas
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Building2 className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold font-heading text-slate-900">
-                {isLoading ? '...' : metrics.totalSedes}
-              </span>
-              <Badge variant="teal" size="sm" className="font-semibold">
-                {promedioSedesPorInst} por cliente
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              Consultorios y centros operativos
-            </p>
-          </CardContent>
-        </Card>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-heading text-slate-900">
+                  {isLoading ? '...' : metrics.totalSedes}
+                </span>
+                <Badge variant="teal" size="sm" className="font-semibold">
+                  {promedioSedesPorInst} por cliente
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Consultorios y centros operativos
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 3. Profesionales en la Plataforma */}
-        <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-600" />
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
-                Profesionales en Red
-              </span>
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Users className="w-5 h-5" />
+        <motion.div variants={staggerItemVariants} className="transition-transform duration-75 active:scale-[0.98]">
+          <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-600" />
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
+                  Profesionales en Red
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold font-heading text-slate-900">
-                {isLoading ? '...' : metrics.totalProfesionales}
-              </span>
-              <Badge variant="indigo" size="sm" className="font-semibold">
-                {promedioMedicosPorInst} por sede
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-              <Activity className="w-3.5 h-3.5 text-purple-500" />
-              Especialistas con agendas habilitadas
-            </p>
-          </CardContent>
-        </Card>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-heading text-slate-900">
+                  {isLoading ? '...' : metrics.totalProfesionales}
+                </span>
+                <Badge variant="indigo" size="sm" className="font-semibold">
+                  {promedioMedicosPorInst} por sede
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                <Activity className="w-3.5 h-3.5 text-purple-500" />
+                Especialistas con agendas habilitadas
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 4. Volumen de Turnos Procesados */}
-        <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600" />
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
-                Volumen de Turnos
-              </span>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CalendarCheck className="w-5 h-5" />
+        <motion.div variants={staggerItemVariants} className="transition-transform duration-75 active:scale-[0.98]">
+          <Card className="hover:shadow-md transition-all border-slate-200/90 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600" />
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-slate-500">
+                  Volumen de Turnos
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CalendarCheck className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold font-heading text-slate-900">
-                {isLoading ? '...' : metrics.totalTurnos}
-              </span>
-              <Badge variant="warning" size="sm" className="font-semibold">
-                {metrics.totalCitas} citas
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
-              Franjas horarias y slots asistenciales
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold font-heading text-slate-900">
+                  {isLoading ? '...' : metrics.totalTurnos}
+                </span>
+                <Badge variant="warning" size="sm" className="font-semibold">
+                  {metrics.totalCitas} citas
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+                Franjas horarias y slots asistenciales
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Gráficos Visuales de Análisis */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -518,6 +537,6 @@ export const VitalityMetricsPage = () => {
           </p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

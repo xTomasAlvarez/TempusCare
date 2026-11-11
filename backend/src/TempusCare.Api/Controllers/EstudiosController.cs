@@ -52,6 +52,7 @@ public class EstudiosController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _estudioService.ObtenerPorIdAsync(id);

@@ -52,12 +52,19 @@ export const AppointmentCard = ({
       case 5:
       case 'Cancelada':
         return <Badge variant="danger">Cancelada</Badge>;
+      case 6:
+      case 'EnSalaDeEspera':
+        return <Badge variant="secondary">En Sala de Espera</Badge>;
+      case 7:
+      case 'EnAtencion':
+        return <Badge variant="primary">En Atención</Badge>;
       default:
         return <Badge variant="default">{estado}</Badge>;
     }
   };
 
-  const isFuture = estado === 1 || estado === 2 || estado === 'Solicitada' || estado === 'Confirmada';
+  const isFuture = estado === 1 || estado === 2 || estado === 6 || estado === 7 ||
+                   estado === 'Solicitada' || estado === 'Confirmada' || estado === 'EnSalaDeEspera' || estado === 'EnAtencion';
   const isCompleted = estado === 3 || estado === 'Atendida';
   const isCancelled = estado === 5 || estado === 'Cancelada';
 

@@ -52,6 +52,7 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _institucionService.ObtenerPorIdAsync(id);
@@ -59,13 +60,31 @@ public class InstitucionesController : ControllerBase
     }
 
     [HttpGet("{id}/asistentes")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
     public async Task<IActionResult> ObtenerAsistentes(int id)
     {
         var res = await _institucionService.ObtenerAsistentesInstitucionAsync(id);
         return Ok(res);
     }
 
+    [HttpPost("{id}/visita")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RegistrarVisita(int id)
+    {
+        await _institucionService.RegistrarVisitaAsync(id);
+        return Ok(new { message = "Visita registrada correctamente al perfil de la institución." });
+    }
+
+    [HttpGet("{id}/metricas")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,SuperAdmin")]
+    public async Task<IActionResult> ObtenerMetricas(int id)
+    {
+        var res = await _institucionService.ObtenerMetricasAsync(id);
+        return Ok(res);
+    }
+
     [HttpGet("{id}/consultorios")]
+    [Authorize(Roles = "AdminInstitucion,Institucion,AdminConsultorio,AdminSede,SuperAdmin")]
     public async Task<IActionResult> ObtenerConsultorios(int id)
     {
         var res = await _institucionService.ObtenerConsultoriosInstitucionAsync(id);

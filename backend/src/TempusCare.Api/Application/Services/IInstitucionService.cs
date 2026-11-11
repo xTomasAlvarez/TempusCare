@@ -11,4 +11,6 @@ public interface IInstitucionService
     Task<InstitucionResponseDto> ObtenerPorIdAsync(int id);
     Task<List<AsistenteResponseDto>> ObtenerAsistentesInstitucionAsync(int id);
     Task<List<ConsultorioResponseDto>> ObtenerConsultoriosInstitucionAsync(int id);
+    Task RegistrarVisitaAsync(int id);
+    Task<MetricasInstitucionDto> ObtenerMetricasAsync(int id);
 }

@@ -1,11 +1,42 @@
 using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Infrastructure.Auth;
+using TempusCare.Api.Infrastructure.Security;
 
 namespace TempusCare.Api.Infrastructure.Data;
 
 public class TempusCareDbContext : DbContext
 {
     public TempusCareDbContext(DbContextOptions<TempusCareDbContext> options) : base(options) { }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnsurePasswordsHashed();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnsurePasswordsHashed();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// RNF-SEG-01: Intercepta cualquier alta o modificación de Usuario para garantizar
+    /// que ninguna contraseña se almacene en texto plano en la base de datos.
+    /// </summary>
+    private void EnsurePasswordsHashed()
+    {
+        foreach (var entry in ChangeTracker.Entries<Usuario>())
+        {
+            if ((entry.State == EntityState.Added || entry.State == EntityState.Modified) &&
+                !string.IsNullOrWhiteSpace(entry.Entity.Contrasena) &&
+                !PasswordSecurity.IsHashed(entry.Entity.Contrasena))
+            {
+                entry.Entity.Contrasena = PasswordSecurity.HashPassword(entry.Entity.Contrasena);
+            }
+        }
+    }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Asistente> Asistentes => Set<Asistente>();
@@ -216,9 +247,27 @@ public class TempusCareDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         // Historia Clinica 1:1 Paciente (RNF-SEG-06: Confidencialidad y protección de datos médicos Ley 25.326)
+        var clinicalNonNullableConverter = ClinicalDataProtector.CreateNonNullableConverter();
+
         modelBuilder.Entity<HistoriaClinica>()
             .Property(hc => hc.PacienteCuil)
             .HasMaxLength(11);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Discapacidad)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Alergias)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.EnfermedadesCronicas)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Medicamentos)
+            .HasConversion(clinicalNonNullableConverter);
 
         modelBuilder.Entity<HistoriaClinica>()
             .HasOne(hc => hc.Paciente)
@@ -226,7 +275,7 @@ public class TempusCareDbContext : DbContext
             .HasForeignKey<HistoriaClinica>(hc => hc.PacienteCuil)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Historia Clinica 1:N Observaciones (Preservación inalterable del historial médico)
+        // Historia Clinica 1:N Observaciones (Preservación inalterable y cifrada del historial médico - Ley 25.326)
         modelBuilder.Entity<HistoriaClinica>()
             .HasMany(hc => hc.Observaciones)
             .WithOne(o => o.HistoriaClinica)
@@ -237,6 +286,14 @@ public class TempusCareDbContext : DbContext
         modelBuilder.Entity<Observacion>()
             .Property(o => o.ProfesionalCuil)
             .HasMaxLength(11);
+
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.Motivo)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.Detalle)
+            .HasConversion(clinicalNonNullableConverter);
 
         modelBuilder.Entity<Observacion>()
             .HasOne(o => o.Profesional)

@@ -38,6 +38,17 @@ public record VitalityMetricsDto(
     object VolumenMensual
 );
 
+public record ConsultorioAccesibilidadAuditDto(
+    string Cuit,
+    string Nombre,
+    string DireccionCompleta,
+    string Telefono,
+    string NivelAccesibilidad,
+    int? InstitucionId,
+    string InstitucionNombre,
+    int PuntajeAccesibilidad
+);
+
 public record InstitucionAccesibilidadAuditDto(
     int InstitucionId,
     string Nombre,
@@ -45,11 +56,17 @@ public record InstitucionAccesibilidadAuditDto(
     string Plan,
     int SedesTotal,
     int SedesAccesibles,
+    int SedesTotalNivel,
+    int SedesEspecializadaNivel,
+    int SedesMediaNivel,
+    int SedesBasicaNivel,
+    string NivelPredominante,
     bool LectorPantalla,
     bool AltoContraste,
     bool NavegacionTeclado,
     int PorcentajeCumplimiento,
-    string Estado
+    string Estado,
+    List<ConsultorioAccesibilidadAuditDto> Consultorios
 );
 
 public record SystemStatusDto(
@@ -60,5 +77,6 @@ public record SystemStatusDto(
     int LatenciaMs,
     string Version,
     int TotalInstitucionesAuditadas,
-    List<InstitucionAccesibilidadAuditDto> InstitucionesAccesibilidad
+    List<InstitucionAccesibilidadAuditDto> InstitucionesAccesibilidad,
+    List<ConsultorioAccesibilidadAuditDto>? ConsultoriosAccesibilidad = null
 );

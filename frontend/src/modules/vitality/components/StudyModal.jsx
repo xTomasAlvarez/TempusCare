@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
+import { AutoResizeTextarea } from '../../../shared/components/ui/AutoResizeTextarea';
 import { Clock, FileText, Activity, AlertCircle, Sparkles, Layers } from 'lucide-react';
 import { studySchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
@@ -102,7 +103,7 @@ export const StudyModal = ({
       description="Configura la duración en minutos requerida y las indicaciones previas para el turno del estudio."
       maxWidth="max-w-xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
+      <form onSubmit={handleSubmit} className="space-y-3.5 font-sans text-xs sm:text-sm">
         {/* Especialidad Asociada */}
         <div>
           <label htmlFor="estudio-esp" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
@@ -115,7 +116,7 @@ export const StudyModal = ({
               name="especialidadId"
               value={formData.especialidadId}
               onChange={handleChange}
-              className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+              className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
                 errors.especialidadId ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
@@ -128,9 +129,7 @@ export const StudyModal = ({
               ))}
             </select>
           </div>
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.especialidadId && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.especialidadId}</p>}
-          </div>
+          {errors.especialidadId && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.especialidadId}</p>}
         </div>
 
         {/* Nombre del Estudio */}
@@ -147,15 +146,13 @@ export const StudyModal = ({
               value={formData.nombre}
               onChange={handleChange}
               placeholder="Ej: Doppler Fetal, Resonancia Magnética o Ergometría"
-              className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+              className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
                 errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
             />
           </div>
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-          </div>
+          {errors.nombre && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.nombre}</p>}
         </div>
 
         {/* Duración en Minutos (OBLIGATORIA) */}
@@ -181,7 +178,7 @@ export const StudyModal = ({
               value={formData.duracion}
               onChange={handleChange}
               placeholder="30"
-              className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-semibold ${
+              className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-semibold ${
                 errors.duracion ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
               disabled={isSubmitting}
@@ -190,7 +187,7 @@ export const StudyModal = ({
           </div>
 
           {/* Accesos rápidos de duración habitual */}
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             <span className="text-[11px] text-slate-400 mr-1">Rápido:</span>
             {presetDurations.map((mins) => (
               <button
@@ -208,9 +205,7 @@ export const StudyModal = ({
             ))}
           </div>
 
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.duracion && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.duracion}</p>}
-          </div>
+          {errors.duracion && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.duracion}</p>}
         </div>
 
         {/* Descripción */}
@@ -218,21 +213,20 @@ export const StudyModal = ({
           <label htmlFor="estudio-desc" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
             Descripción y Metodología <span className="text-rose-500">*</span>
           </label>
-          <textarea
+          <AutoResizeTextarea
             id="estudio-desc"
             name="descripcion"
-            rows={2}
             value={formData.descripcion}
             onChange={handleChange}
             placeholder="Breve descripción del estudio y su objetivo clínico..."
-            className={`w-full p-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all resize-none ${
+            className={`w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white text-xs sm:text-sm ${
               errors.descripcion ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
             }`}
+            minHeight={54}
+            maxHeight={140}
             disabled={isSubmitting}
           />
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.descripcion && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.descripcion}</p>}
-          </div>
+          {errors.descripcion && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.descripcion}</p>}
         </div>
 
         {/* Indicaciones de Preparación Previa */}
@@ -248,18 +242,16 @@ export const StudyModal = ({
               value={formData.preparacion}
               onChange={handleChange}
               placeholder="Ej: Ayuno de 6 horas, ropa cómoda, vejiga llena, etc."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+              className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
               disabled={isSubmitting}
             />
           </div>
-          <div className="min-h-[20px] mt-0.5 flex items-center">
-            {errors.preparacion && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.preparacion}</p>}
-          </div>
+          {errors.preparacion && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.preparacion}</p>}
         </div>
 
         {/* Acciones */}
-        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
-          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+        <div className="pt-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div className="flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
             {(errors.general || serverError) && (
               <span className="flex items-center gap-1 animate-in fade-in-0">
                 <span aria-hidden="true">⚠</span> {errors.general || serverError}

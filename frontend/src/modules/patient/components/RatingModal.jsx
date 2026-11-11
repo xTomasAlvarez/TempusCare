@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, MessageSquare, HeartHandshake, Clock, Stethoscope, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
+import { AutoResizeTextarea } from '../../../shared/components/ui/AutoResizeTextarea';
 import { useSatisfactionSurvey } from '../hooks/useSatisfactionSurvey';
 
 export const RatingModal = ({
@@ -23,9 +24,15 @@ export const RatingModal = ({
     onClose();
   });
 
-  if (!appointment) return null;
+  const [cachedAppointment, setCachedAppointment] = React.useState(appointment);
+  React.useEffect(() => {
+    if (appointment) setCachedAppointment(appointment);
+  }, [appointment]);
 
-  const doctorName = appointment.profesionalNombre || 'Profesional tratante';
+  const activeAppointment = appointment || cachedAppointment;
+  if (!activeAppointment) return null;
+
+  const doctorName = activeAppointment.profesionalNombre || 'Profesional tratante';
 
   const StarSelector = ({ category, label, icon: Icon, value }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
@@ -53,7 +60,7 @@ export const RatingModal = ({
               aria-label={`${star} estrella${star > 1 ? 's' : ''} de 5`}
               onClick={() => setRating(category, star)}
               tabIndex={0}
-              className="p-1 rounded-lg hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="p-1 rounded-lg hover:scale-110 active:scale-90 transition-transform duration-75 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <Star
                 className={`w-6 h-6 transition-colors ${
@@ -110,13 +117,14 @@ export const RatingModal = ({
           >
             Comentario u observaciones (Opcional)
           </label>
-          <textarea
+          <AutoResizeTextarea
             id="survey-comment"
-            rows={3}
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
             placeholder="Comparte tu experiencia durante la consulta o estudio..."
-            className="w-full p-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all resize-none"
+            className="w-full p-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            minHeight={72}
+            maxHeight={200}
           />
         </div>
 

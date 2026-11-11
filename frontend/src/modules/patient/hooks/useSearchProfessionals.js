@@ -5,11 +5,15 @@ export const useSearchProfessionals = () => {
   const [professionals, setProfessionals] = useState([]);
   const [specialties, setSpecialties] = useState([]);
   const [healthInsurances, setHealthInsurances] = useState([]);
+  const [consultorios, setConsultorios] = useState([]);
 
   const [filters, setFilters] = useState({
     nombre: '',
     especialidadId: '',
     obraSocialId: '',
+    consultorioCuit: '',
+    minRating: '',
+    sortByRating: false,
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -23,13 +27,15 @@ export const useSearchProfessionals = () => {
 
     async function loadCatalogs() {
       try {
-        const [specs, insurances] = await Promise.all([
+        const [specs, insurances, cons] = await Promise.all([
           patientService.getSpecialties().catch(() => []),
           patientService.getHealthInsurances().catch(() => []),
+          patientService.getConsultorios().catch(() => []),
         ]);
         if (isMounted) {
           setSpecialties(specs);
           setHealthInsurances(insurances);
+          setConsultorios(cons);
         }
       } catch (err) {
         // Silently handled fallback
@@ -51,6 +57,9 @@ export const useSearchProfessionals = () => {
         nombre: filters.nombre,
         especialidadId: filters.especialidadId || null,
         obraSocialId: filters.obraSocialId || null,
+        consultorioCuit: filters.consultorioCuit || null,
+        minRating: filters.minRating || null,
+        sortByRating: filters.sortByRating || false,
       });
       setProfessionals(data);
     } catch (err) {
@@ -77,6 +86,9 @@ export const useSearchProfessionals = () => {
       nombre: '',
       especialidadId: '',
       obraSocialId: '',
+      consultorioCuit: '',
+    minRating: '',
+    sortByRating: false,
     });
   };
 
@@ -84,6 +96,7 @@ export const useSearchProfessionals = () => {
     professionals,
     specialties,
     healthInsurances,
+    consultorios,
     filters,
     isLoading,
     error,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
+import { AutoResizeTextarea } from '../../../shared/components/ui/AutoResizeTextarea';
 import { Stethoscope, FileText, Sparkles } from 'lucide-react';
 import { specialtySchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
@@ -116,16 +117,17 @@ export const SpecialtyModal = ({
             Descripción y Alcance Clínico <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
-            <textarea
+            <AutoResizeTextarea
               id="esp-descripcion"
               name="descripcion"
-              rows={3}
               value={formData.descripcion}
               onChange={handleChange}
               placeholder="Describe el alcance asistencial y enfoque clínico de la especialidad..."
-              className={`w-full p-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all resize-none ${
+              className={`w-full p-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white text-xs sm:text-sm ${
                 errors.descripcion ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
               }`}
+              minHeight={72}
+              maxHeight={200}
               disabled={isSubmitting}
             />
           </div>

@@ -11,6 +11,8 @@ export const Input = React.forwardRef(({
   trailingIcon,
   type = 'text',
   required = false,
+  title,
+  maxLength,
   ...props
 }, ref) => {
   const generatedId = React.useId();
@@ -18,14 +20,33 @@ export const Input = React.forwardRef(({
   const errorId = `${inputId}-error`;
   const helperId = `${inputId}-helper`;
 
+  const computedTitle =
+    title ||
+    props['aria-label'] ||
+    (typeof label === 'string' ? `${label}${required ? ' (Obligatorio)' : ''}` : '') ||
+    props.placeholder ||
+    'Campo de entrada de datos';
+
+  const safeMaxLength =
+    maxLength !== undefined
+      ? maxLength
+      : type === 'password'
+      ? 128
+      : type === 'email'
+      ? 120
+      : type === 'text' || type === 'search' || type === 'tel'
+      ? 200
+      : undefined;
+
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col">
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5"
+          title={computedTitle}
+          className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 truncate"
         >
-          {label} {required && <span className="text-rose-500" aria-hidden="true">*</span>}
+          {label} {required && <span className="text-rose-500" title="Campo obligatorio" aria-hidden="true">*</span>}
         </label>
       )}
 
@@ -41,10 +62,12 @@ export const Input = React.forwardRef(({
           id={inputId}
           type={type}
           required={required}
+          title={computedTitle}
+          maxLength={safeMaxLength}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : helperText ? helperId : undefined}
           className={cn(
-            "block w-full rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200",
+            "block w-full rounded-xl border border-slate-200/80 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200",
             "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20",
             leadingIcon && "pl-10",
             trailingIcon && "pr-10",
@@ -61,23 +84,25 @@ export const Input = React.forwardRef(({
         )}
       </div>
 
-      {/* Espacio reservado para evitar saltos de layout (CLS = 0) y mantener estabilidad de grilla */}
-      <div className="h-5 mt-1 flex items-center overflow-hidden">
-        {error ? (
-          <p
-            id={errorId}
-            title={error}
-            className="text-[11px] leading-tight text-rose-600 flex items-center gap-1 animate-in fade-in-0 duration-150 w-full"
-          >
-            <span aria-hidden="true" className="shrink-0 text-xs font-bold">⚠</span>
-            <span className="truncate font-medium">{error}</span>
-          </p>
-        ) : helperText ? (
-          <p id={helperId} className="text-[11px] leading-tight text-slate-500 truncate w-full">
-            {helperText}
-          </p>
-        ) : null}
-      </div>
+      {(error || helperText) && (
+        <div className="mt-1 flex items-center overflow-hidden">
+          {error ? (
+            <p
+              id={errorId}
+              role="alert"
+              title={error}
+              className="text-[11px] leading-tight text-rose-600 flex items-center gap-1 animate-in fade-in-0 duration-150 w-full"
+            >
+              <span aria-hidden="true" className="shrink-0 text-xs font-bold">⚠</span>
+              <span className="truncate font-medium">{error}</span>
+            </p>
+          ) : (
+            <p id={helperId} title={helperText} className="text-[11px] leading-tight text-slate-500 truncate w-full">
+              {helperText}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 });

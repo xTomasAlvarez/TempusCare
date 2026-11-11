@@ -7,7 +7,13 @@ public interface IProfesionalService
     Task<ProfesionalResponseDto> AltaProfesionalAsync(AltaProfesionalDto dto);
     Task<ProfesionalResponseDto> ModificarProfesionalAsync(ModificarProfesionalDto dto);
     Task BajaProfesionalAsync(string cuil);
-    Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(string? nombre, int? especialidadId, int? obraSocialId, string? consultorioCuit);
+    Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(
+        string? nombre = null,
+        int? especialidadId = null,
+        int? obraSocialId = null,
+        string? consultorioCuit = null,
+        double? minRating = null,
+        bool? sortByRating = null);
     Task<ProfesionalResponseDto> ObtenerPorCuilAsync(string cuil);
 
     // Métodos de administración operativa del Asistente (Estudios y Coberturas)

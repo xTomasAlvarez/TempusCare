@@ -1,11 +1,20 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
 
+const extractBadgeText = (node) => {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractBadgeText).filter(Boolean).join(' ').trim();
+  if (React.isValidElement(node) && node.props?.children) return extractBadgeText(node.props.children);
+  return '';
+};
+
 export const Badge = ({
   children,
   variant = 'default',
   size = 'md',
   className,
+  title,
+  ...props
 }) => {
   const variants = {
     default: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -27,14 +36,18 @@ export const Badge = ({
     lg: 'text-sm px-3 py-1.5',
   };
 
+  const computedTitle = title || extractBadgeText(children) || 'Indicador de estado';
+
   return (
     <span
+      title={computedTitle}
       className={cn(
         'inline-flex items-center gap-1 font-medium rounded-full border transition-colors',
         variants[variant] || variants.default,
         sizes[size] || sizes.md,
         className
       )}
+      {...props}
     >
       {children}
     </span>

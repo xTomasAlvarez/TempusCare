@@ -26,14 +26,14 @@ export const DoctorDetailModal = ({
   doctor,
   onBook,
 }) => {
-  if (!isOpen || !doctor) return null;
+  if (!doctor) return null;
 
   const {
     cuil,
     nombre,
     apellido,
     matricula,
-    puntuacion = 5.0,
+    puntuacion = 0,
     especialidades = [],
     obrasSociales = [],
     consultorios = [],
@@ -42,7 +42,8 @@ export const DoctorDetailModal = ({
   } = doctor;
 
   const fullName = `Dr(a). ${nombre} ${apellido}`;
-  const displayScore = Number(puntuacion || 5.0).toFixed(1);
+  const hasScore = Number(puntuacion) > 0;
+  const displayScore = hasScore ? Number(puntuacion).toFixed(1) : null;
 
   return (
     <Modal
@@ -83,10 +84,17 @@ export const DoctorDetailModal = ({
           </div>
 
           {/* Puntuación */}
-          <div className="flex items-center gap-2 self-start sm:self-auto bg-amber-50 text-amber-900 border border-amber-200/90 px-3 py-1.5 rounded-xl text-xs font-bold">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-500" strokeWidth={2} />
-            <span>{displayScore} / 5.0</span>
-          </div>
+          {hasScore ? (
+            <div className="flex items-center gap-2 self-start sm:self-auto bg-amber-50 text-amber-900 border border-amber-200/90 px-3 py-1.5 rounded-xl text-xs font-bold">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-500" strokeWidth={2} />
+              <span>{displayScore} / 5.0</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 text-slate-500 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-medium">
+              <Star className="w-4 h-4 text-slate-400" strokeWidth={2} />
+              <span>Sin valoraciones</span>
+            </div>
+          )}
         </div>
 
         {/* Sección Crítica: Estudios Médicos que Realiza */}

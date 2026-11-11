@@ -1,5 +1,7 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { KanbanCard } from './KanbanCard';
+import { staggerItemVariants } from '../../../shared/motion';
 
 export const KanbanColumn = ({
   title,
@@ -12,11 +14,11 @@ export const KanbanColumn = ({
   emptyMessage = 'No hay pacientes en esta etapa',
   onMarkArrived,
   onStartAttention,
-  onFinishAttention,
+  onMarkAbsent,
   onCancel,
 }) => {
   return (
-    <div className="flex flex-col min-w-[280px] w-full max-w-sm bg-slate-50/50 rounded-2xl p-4">
+    <div className="flex flex-col w-full bg-slate-50/60 rounded-2xl p-4 border border-slate-200/70 shadow-2xs">
       {/* Cabecera Sutil sin bordes duros */}
       <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-200/60">
         <div className="flex items-center gap-2">
@@ -26,13 +28,23 @@ export const KanbanColumn = ({
           </h3>
         </div>
 
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
+        <span
+          className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {count}
         </span>
       </div>
 
-      {/* Lista de Tarjetas */}
-      <div className="flex-1 space-y-3 overflow-y-auto max-h-[calc(100vh-260px)] min-h-[380px] pr-1 scrollbar-thin">
+      {/* Lista de Tarjetas con región viva para lectores de pantalla */}
+      <div
+        role="region"
+        aria-label={`Columna ${title}, ${count} pacientes`}
+        aria-live="polite"
+        aria-atomic="false"
+        className="flex-1 space-y-3 overflow-y-auto max-h-[calc(100vh-260px)] min-h-[380px] pr-1 scrollbar-thin"
+      >
         {isLoading ? (
           /* Skeletons limpios sin saltos de interfaz */
           <div className="space-y-3">
@@ -56,18 +68,28 @@ export const KanbanColumn = ({
             </p>
           </div>
         ) : (
-          items.map((item) => (
-            <KanbanCard
-              key={item.id}
-              item={item}
-              columnType={columnType}
-              onMarkArrived={onMarkArrived}
-              onStartAttention={onStartAttention}
-              onFinishAttention={onFinishAttention}
-              onCancel={onCancel}
-              isActionLoading={isActionLoading}
-            />
-          ))
+          <AnimatePresence mode="popLayout" initial={false}>
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                variants={staggerItemVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.15 } }}
+              >
+                <KanbanCard
+                  item={item}
+                  columnType={columnType}
+                  onMarkArrived={onMarkArrived}
+                  onStartAttention={onStartAttention}
+                  onMarkAbsent={onMarkAbsent}
+                  onCancel={onCancel}
+                  isActionLoading={isActionLoading}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
     </div>

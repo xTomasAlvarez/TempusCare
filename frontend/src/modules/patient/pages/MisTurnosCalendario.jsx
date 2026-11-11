@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useMyAppointments } from '../hooks/useMyAppointments';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
+import { pageTransitionVariants } from '../../../shared/motion';
 import {
   CalendarDays,
   Calendar as CalendarIcon,
@@ -70,7 +72,8 @@ export const MisTurnosCalendario = () => {
   const filteredAppointments = useMemo(() => {
     if (statusFilter === 'future') {
       return appointments.filter(
-        (c) => c.estado === 1 || c.estado === 2 || c.estado === 'Solicitada' || c.estado === 'Confirmada'
+        (c) => c.estado === 1 || c.estado === 2 || c.estado === 6 || c.estado === 7 ||
+               c.estado === 'Solicitada' || c.estado === 'Confirmada' || c.estado === 'EnSalaDeEspera' || c.estado === 'EnAtencion'
       );
     }
     if (statusFilter === 'history') {
@@ -200,6 +203,22 @@ export const MisTurnosCalendario = () => {
       };
     }
 
+    if (estado === 6 || estado === 'EnSalaDeEspera') {
+      return {
+        pill: 'bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100 font-medium shadow-2xs',
+        dot: 'bg-indigo-500',
+        label: 'En Sala de Espera',
+      };
+    }
+
+    if (estado === 7 || estado === 'EnAtencion') {
+      return {
+        pill: 'bg-purple-50 text-purple-800 border-purple-300 hover:bg-purple-100 font-medium shadow-2xs',
+        dot: 'bg-purple-500',
+        label: 'En Atención',
+      };
+    }
+
     // Futuras: Color primario (Azul / Verde)
     if (estado === 2 || estado === 'Confirmada') {
       return {
@@ -247,7 +266,7 @@ export const MisTurnosCalendario = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="space-y-6 w-full">
       {/* Toast Notificación */}
       {toastMessage && (
         <Toast
@@ -428,7 +447,7 @@ export const MisTurnosCalendario = () => {
                         key={cita.id}
                         type="button"
                         onClick={() => setSelectedAppointment(cita)}
-                        className={`w-full text-left p-1 sm:p-1.5 rounded-lg border text-[11px] leading-tight transition-all duration-150 flex items-start gap-1.5 ${style.pill}`}
+                        className={`w-full text-left p-1 sm:p-1.5 rounded-lg border text-[11px] leading-tight transition-transform duration-75 active:scale-[0.98] cursor-pointer flex items-start gap-1.5 ${style.pill}`}
                         title={`Click para ver detalles: Dr. ${cita.profesionalNombre} - ${horaFormatted} hs`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1 ${style.dot}`} />
@@ -624,6 +643,6 @@ export const MisTurnosCalendario = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </motion.div>
   );
 };

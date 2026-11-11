@@ -221,11 +221,22 @@ public class AsistenteService : IAsistenteService
     {
         _logger.LogInformation("Asignando permiso de agenda ID {AgendaId} al asistente CUIL {Cuil}", agendaId, asistenteCuil);
 
-        if (!await _db.Asistentes.AnyAsync(a => a.Cuil == asistenteCuil))
+        var asistente = await _db.Asistentes.FirstOrDefaultAsync(a => a.Cuil == asistenteCuil);
+        if (asistente == null)
             throw new AsistenteNotFoundException(asistenteCuil);
 
-        if (!await _db.Agendas.AnyAsync(a => a.Id == agendaId))
+        var agenda = await _db.Agendas.FirstOrDefaultAsync(a => a.Id == agendaId);
+        if (agenda == null)
             throw new AgendaNotFoundException(agendaId);
+
+        // RF-ASI-02: La agenda asignada debe pertenecer al mismo consultorio donde trabaja el asistente
+        if (!string.IsNullOrEmpty(asistente.ConsultorioCuit) &&
+            !string.IsNullOrEmpty(agenda.ConsultorioCuit) &&
+            asistente.ConsultorioCuit != agenda.ConsultorioCuit)
+        {
+            _logger.LogWarning("Intento de asignar agenda de sede {AgendaCuit} a asistente de sede {AsistenteCuit}", agenda.ConsultorioCuit, asistente.ConsultorioCuit);
+            throw new BusinessException("La agenda asignada no pertenece al mismo consultorio o sede donde trabaja el asistente.", 400);
+        }
 
         bool existe = await _db.AsistenteAgendas.AnyAsync(aa => aa.AsistenteCuil == asistenteCuil && aa.AgendaId == agendaId);
         if (!existe)

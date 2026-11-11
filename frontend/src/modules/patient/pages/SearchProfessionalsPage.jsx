@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useSearchProfessionals } from '../hooks/useSearchProfessionals';
 import { SearchFilters } from '../components/SearchFilters';
 import { DoctorCard } from '../components/DoctorCard';
@@ -7,12 +8,14 @@ import { BookingModal } from '../components/BookingModal';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { MapPin, Stethoscope, AlertCircle, Sparkles, Map } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
+import { staggerContainerVariants, staggerItemVariants, pageTransitionVariants } from '../../../shared/motion';
 
 export const SearchProfessionalsPage = () => {
   const {
     professionals,
     specialties,
     healthInsurances,
+    consultorios,
     filters,
     isLoading,
     error,
@@ -36,7 +39,12 @@ export const SearchProfessionalsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Toast Notificación */}
       {toastMessage && (
         <Toast
@@ -58,25 +66,26 @@ export const SearchProfessionalsPage = () => {
           </p>
         </div>
 
-        {/* Botón de alternar mapa en móviles para no bloquear scroll */}
+        {/* Botón de alternar mapa en móviles (RI-USR-03, RNF-USA-01) */}
         <div className="lg:hidden">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowMobileMap(!showMobileMap)}
-            className="w-full sm:w-auto gap-2 text-xs"
+            className="w-full sm:w-auto gap-2 text-xs font-semibold"
           >
             <Map className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
-            <span>{showMobileMap ? 'Ocultar Mapa' : 'Ver en Mapa'}</span>
+            <span>{showMobileMap ? 'Ocultar mapa' : 'Ver mapa de consultorios'}</span>
           </Button>
         </div>
       </div>
 
-      {/* Barra de Filtros */}
+      {/* Barra de Filtros (con selector de Consultorio RF-PAC-02) */}
       <SearchFilters
         filters={filters}
         specialties={specialties}
         healthInsurances={healthInsurances}
+        consultorios={consultorios}
         onFilterChange={updateFilter}
         onReset={resetFilters}
         totalResults={professionals.length}
@@ -84,12 +93,15 @@ export const SearchProfessionalsPage = () => {
 
       {/* Mapa en móviles si está activo */}
       {showMobileMap && (
-        <div className="lg:hidden mb-6">
-          <InteractiveMapPlaceholder
-            doctors={professionals}
-            highlightedDoctorCuil={highlightedDoctorCuil}
-            onSelectDoctor={(doc) => setSelectedDoctorForBooking(doc)}
-          />
+        <div className="lg:hidden mb-6 animate-in fade-in-0 duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-sm">
+            <InteractiveMapPlaceholder
+              doctors={professionals}
+              consultorios={consultorios}
+              highlightedDoctorCuil={highlightedDoctorCuil}
+              onSelectDoctor={(doc) => setSelectedDoctorForBooking(doc)}
+            />
+          </div>
         </div>
       )}
 
@@ -147,15 +159,24 @@ export const SearchProfessionalsPage = () => {
               </Button>
             </div>
           ) : (
-            professionals.map((doctor) => (
-              <DoctorCard
-                key={doctor.cuil}
-                doctor={doctor}
-                isHighlighted={highlightedDoctorCuil === doctor.cuil}
-                onHover={(cuil) => setHighlightedDoctorCuil(cuil)}
-                onBook={(doc) => setSelectedDoctorForBooking(doc)}
-              />
-            ))
+            <motion.div
+              key={String(filters.especialidadId) + '_' + String(filters.obraSocialId) + '_' + (filters.nombre || '')}
+              variants={staggerContainerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-4"
+            >
+              {professionals.map((doctor) => (
+                <motion.div key={doctor.cuil} variants={staggerItemVariants}>
+                  <DoctorCard
+                    doctor={doctor}
+                    isHighlighted={highlightedDoctorCuil === doctor.cuil}
+                    onHover={(cuil) => setHighlightedDoctorCuil(cuil)}
+                    onBook={(doc) => setSelectedDoctorForBooking(doc)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
           )}
         </section>
 
@@ -163,6 +184,7 @@ export const SearchProfessionalsPage = () => {
         <aside className="hidden lg:block lg:col-span-5 sticky top-24" aria-label="Mapa de consultorios">
           <InteractiveMapPlaceholder
             doctors={professionals}
+            consultorios={consultorios}
             highlightedDoctorCuil={highlightedDoctorCuil}
             onSelectDoctor={(doc) => setSelectedDoctorForBooking(doc)}
           />
@@ -176,6 +198,6 @@ export const SearchProfessionalsPage = () => {
         doctor={selectedDoctorForBooking}
         onBookingSuccess={handleBookingSuccess}
       />
-    </div>
+    </motion.div>
   );
 };

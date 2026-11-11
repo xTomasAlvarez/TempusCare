@@ -1,10 +1,12 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useClinicalRecord } from '../hooks/useClinicalRecord';
 import { PatientTimeline } from './PatientTimeline';
 import { ClinicalEvolutionEditor } from './ClinicalEvolutionEditor';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
 import { ArrowLeft, UserRound, Clock, CalendarHeart, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { pageTransitionVariants } from '../../../shared/motion';
 
 /**
  * Ficha Clínica Unificada (Atención Médica):
@@ -50,7 +52,12 @@ export const UnifiedClinicalRecord = ({
     isSaved;
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Barra de Navegación y Encabezado del Paciente */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -135,6 +142,6 @@ export const UnifiedClinicalRecord = ({
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

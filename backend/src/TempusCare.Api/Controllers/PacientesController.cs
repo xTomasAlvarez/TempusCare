@@ -39,6 +39,17 @@ public class PacientesController : ControllerBase
         if (cuil != dto.Cuil)
             return BadRequest("El CUIL de la URL no coincide con el cuerpo de la solicitud.");
 
+        if (User.IsInRole("Paciente"))
+        {
+            var authenticatedUsername = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(authenticatedUsername) &&
+                authenticatedUsername != "Usuario" &&
+                !string.Equals(authenticatedUsername, cuil, StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "Acceso denegado (RNF-SEG-03): Un paciente solo puede modificar su propio perfil." });
+            }
+        }
+
         var res = await _pacienteService.ModificarPerfilAsync(dto);
         return Ok(res);
     }
@@ -47,6 +58,17 @@ public class PacientesController : ControllerBase
     [Authorize(Roles = "Paciente,SuperAdmin")]
     public async Task<IActionResult> Baja(string cuil)
     {
+        if (User.IsInRole("Paciente"))
+        {
+            var authenticatedUsername = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(authenticatedUsername) &&
+                authenticatedUsername != "Usuario" &&
+                !string.Equals(authenticatedUsername, cuil, StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "Acceso denegado (RNF-SEG-03): Un paciente solo puede dar de baja su propio perfil." });
+            }
+        }
+
         await _pacienteService.BajaPerfilAsync(cuil);
         return NoContent();
     }
@@ -63,6 +85,17 @@ public class PacientesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> ObtenerPerfil(string cuil)
     {
+        if (User.IsInRole("Paciente"))
+        {
+            var authenticatedUsername = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(authenticatedUsername) &&
+                authenticatedUsername != "Usuario" &&
+                !string.Equals(authenticatedUsername, cuil, StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "Acceso denegado (RNF-SEG-03): Un paciente solo puede consultar su propio perfil." });
+            }
+        }
+
         var res = await _pacienteService.ObtenerPerfilAsync(cuil);
         return Ok(res);
     }

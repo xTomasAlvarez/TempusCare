@@ -7,7 +7,7 @@ import { useAuth } from '../../../core/context/AuthContext';
  * Carga citas del día, permite seleccionar un paciente para consulta y buscar por nombre/CUIL.
  */
 export const useDailyAgenda = (initialDate = new Date()) => {
-  const { user } = useAuth();
+  const { user, activeConsultorio } = useAuth();
   const [selectedDate, setSelectedDate] = useState(
     initialDate instanceof Date ? initialDate.toISOString().split('T')[0] : initialDate
   );
@@ -18,8 +18,10 @@ export const useDailyAgenda = (initialDate = new Date()) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // El CUIL del profesional autenticado
+  // El CUIL del profesional autenticado y la sede activa seleccionada
   const profesionalCuil = user?.cuil || '20123456789';
+  const activeConsultorioCuit =
+    typeof activeConsultorio === 'string' ? activeConsultorio : activeConsultorio?.cuit || null;
 
   const fetchDailyAppointments = useCallback(async () => {
     if (!profesionalCuil) return;
@@ -27,7 +29,11 @@ export const useDailyAgenda = (initialDate = new Date()) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await professionalService.getDailyAppointments(profesionalCuil, selectedDate);
+      const data = await professionalService.getDailyAppointments(
+        profesionalCuil,
+        selectedDate,
+        activeConsultorioCuit
+      );
       setAppointments(data);
 
       // Si el turno seleccionado se actualizó en la lista, sincronizarlo
@@ -42,7 +48,7 @@ export const useDailyAgenda = (initialDate = new Date()) => {
     } finally {
       setIsLoading(false);
     }
-  }, [profesionalCuil, selectedDate, selectedAppointment?.id]);
+  }, [profesionalCuil, selectedDate, activeConsultorioCuit, selectedAppointment?.id]);
 
   useEffect(() => {
     fetchDailyAppointments();

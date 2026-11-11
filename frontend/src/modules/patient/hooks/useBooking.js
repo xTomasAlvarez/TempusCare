@@ -3,12 +3,32 @@ import { patientService } from '../services/patientService';
 import { useAuth } from '../../../core/context/AuthContext';
 import { parseBackendError } from '../../../shared/validation/validateForm';
 
-export const useBooking = (doctor, onSuccess) => {
+export const useBooking = (doctor, onSuccess, customPatientCuil = null) => {
   const { user } = useAuth();
+  const [patientCuil, setPatientCuil] = useState(customPatientCuil || user?.cuil || '');
+
+  useEffect(() => {
+    if (customPatientCuil) {
+      setPatientCuil(customPatientCuil);
+    }
+  }, [customPatientCuil]);
+  
 
   // Fecha en formato local YYYY-MM-DD
   const getTodayStr = () => {
     const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Primer día hábil (Lunes a Viernes) en formato YYYY-MM-DD
+  const getNextBusinessDayStr = () => {
+    const d = new Date();
+    while (d.getDay() === 0 || d.getDay() === 6) {
+      d.setDate(d.getDate() + 1);
+    }
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -35,7 +55,7 @@ export const useBooking = (doctor, onSuccess) => {
     return false;
   };
 
-  const [selectedDate, setSelectedDate] = useState(getTodayStr());
+  const [selectedDate, setSelectedDate] = useState(getNextBusinessDayStr());
   const [availableSlots, setAvailableSlots] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState(null);
@@ -76,13 +96,28 @@ export const useBooking = (doctor, onSuccess) => {
       return false;
     }
 
+    const parsedDate = new Date(`${selectedDate}T00:00:00`);
+    if (parsedDate.getDay() === 0 || parsedDate.getDay() === 6) {
+      setSubmitError('No se pueden reservar turnos los días sábados ni domingos.');
+      return false;
+    }
+
+    const maxAllowedDate = new Date();
+    maxAllowedDate.setMonth(maxAllowedDate.getMonth() + 6);
+    maxAllowedDate.setHours(23, 59, 59, 999);
+    if (parsedDate > maxAllowedDate) {
+      setSubmitError('Solo se permiten reservas con una antelación máxima de 6 meses.');
+      return false;
+    }
+
     if (isSlotPast(selectedSlot, selectedDate)) {
       setSubmitError('No es posible reservar un turno en un horario que ya ha transcurrido.');
       return false;
     }
 
-    if (!user?.cuil) {
-      setSubmitError('Debes tener un perfil de paciente activo con CUIL para reservar.');
+    const effectiveCuil = patientCuil || user?.cuil;
+    if (!effectiveCuil) {
+      setSubmitError('Debes ingresar o especificar el CUIL del paciente para reservar.');
       return false;
     }
 
@@ -91,7 +126,7 @@ export const useBooking = (doctor, onSuccess) => {
 
     try {
       const result = await patientService.bookAppointment({
-        pacienteCuil: user.cuil,
+        pacienteCuil: effectiveCuil,
         profesionalCuil: doctor.cuil,
         turnoId: selectedSlot.id,
         tipo: Number(tipoCita),
@@ -140,6 +175,8 @@ export const useBooking = (doctor, onSuccess) => {
     isSubmitting,
     submitError,
     confirmBooking,
+    patientCuil,
+    setPatientCuil,
     refreshSlots: fetchSlots,
     isSlotPast,
     getTodayStr,

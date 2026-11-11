@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, CalendarPlus, RotateCcw, UserRoundPlus } from 'lucide-react';
+import { Stethoscope, CalendarHeart, CalendarPlus, RotateCcw, UserRoundPlus } from 'lucide-react';
 import { Button } from '../../../shared/components/ui/Button';
 
 export const ReceptionFilters = ({
@@ -10,6 +10,7 @@ export const ReceptionFilters = ({
   onDateChange,
   onOpenCreateAgenda,
   onOpenCreateWalkInPatient,
+  onOpenAssignAppointment,
   onRefresh,
   isLoading = false,
 }) => {
@@ -17,6 +18,11 @@ export const ReceptionFilters = ({
   const getTomorrowStr = () => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+  const getSixMonthsFromNowStr = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
     return d.toISOString().split('T')[0];
   };
 
@@ -59,9 +65,11 @@ export const ReceptionFilters = ({
             <input
               id="filter-reception-date"
               type="date"
+              min={getTodayStr()}
+              max={getSixMonthsFromNowStr()}
               value={selectedDate}
               onChange={(e) => onDateChange(e.target.value)}
-              aria-label="Seleccionar fecha de atención"
+              aria-label="Seleccionar fecha de atención (hasta 6 meses)"
               className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
             />
           </div>
@@ -105,6 +113,18 @@ export const ReceptionFilters = ({
 
       {/* Botones de Acción de Recepción */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+        {onOpenAssignAppointment && (
+          <Button
+            variant="outline"
+            size="md"
+            onClick={onOpenAssignAppointment}
+            className="w-full sm:w-auto gap-2 rounded-xl shadow-xs font-semibold border-primary-300 text-primary-800 hover:bg-primary-50"
+          >
+            <CalendarHeart className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
+            <span>+ Asignar Turno</span>
+          </Button>
+        )}
+
         <Button
           variant="outline"
           size="md"

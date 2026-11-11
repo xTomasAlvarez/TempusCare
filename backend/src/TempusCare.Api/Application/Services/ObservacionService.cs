@@ -87,23 +87,42 @@ public class ObservacionService : IObservacionService
                     _db.Observaciones.Add(observacion);
                 }
 
-                // RF-MED-06 & RN-04: Al guardar la evolución clínica, actualizar atómicamente la Cita a Atendida y los turnos asociados a Atendido
+                // RF-MED-06 & RN-04: Al guardar la evolución clínica, actualizar atómicamente la Cita a Atendida
                 cita.Estado = EstadoCita.Atendida;
-
-                if (cita.Turno != null)
-                {
-                    cita.Turno.Estado = EstadoTurno.Atendido;
-                    cita.Turno.RowVersion = Guid.NewGuid();
-                }
 
                 var turnosAsociados = await _db.Turnos
                     .Where(t => t.CitaId == cita.Id || t.Id == cita.TurnoId)
                     .ToListAsync();
 
-                foreach (var t in turnosAsociados)
+                // Regla de Negocio: Si el paciente es atendido previo a su horario agendado,
+                // el sistema deberá actualizar el horario futuro como disponible
+                bool atencionAnticipada = cita.Fecha.Date == DateTime.Today &&
+                                          cita.Turno != null &&
+                                          DateTime.Now.TimeOfDay < cita.Turno.HoraInicio;
+
+                if (atencionAnticipada)
                 {
-                    t.Estado = EstadoTurno.Atendido;
-                    t.RowVersion = Guid.NewGuid();
+                    _logger.LogInformation("Guardado de evolución para atención anticipada (Cita ID {CitaId}). Liberando turno original a Disponible", cita.Id);
+                    foreach (var t in turnosAsociados)
+                    {
+                        t.Estado = EstadoTurno.Disponible;
+                        t.CitaId = null;
+                        t.RowVersion = Guid.NewGuid();
+                    }
+                }
+                else
+                {
+                    if (cita.Turno != null)
+                    {
+                        cita.Turno.Estado = EstadoTurno.Atendido;
+                        cita.Turno.RowVersion = Guid.NewGuid();
+                    }
+
+                    foreach (var t in turnosAsociados)
+                    {
+                        t.Estado = EstadoTurno.Atendido;
+                        t.RowVersion = Guid.NewGuid();
+                    }
                 }
             }
             else

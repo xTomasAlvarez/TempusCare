@@ -4,9 +4,9 @@ using TempusCare.Api.Domain.Enums;
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaCitaDto(
-    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del paciente debe ser exactamente una cadena numérica de 11 dígitos.")]
+    [Required, RegularExpression(@"^\d{7,11}$", ErrorMessage = "El CUIL o DNI del paciente debe ser una cadena numérica de entre 7 y 11 dígitos.")]
     string PacienteCuil,
-    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIL del profesional debe ser exactamente una cadena numérica de 11 dígitos.")]
+    [Required, RegularExpression(@"^\d{7,11}$", ErrorMessage = "El CUIL del profesional debe ser una cadena numérica de entre 7 y 11 dígitos.")]
     string ProfesionalCuil,
     int TurnoId,
     TipoCita Tipo,
@@ -15,7 +15,11 @@ public record AltaCitaDto(
     string? DocumentoPedidoMedico = null
 );
 
-public record ModificarCitaEstadoDto(int CitaId, EstadoCita Estado);
+public record ModificarCitaEstadoDto(
+    int CitaId, 
+    EstadoCita Estado, 
+    bool ForzarAtencionFueraDeHorario = false
+);
 
 public record CitaResponseDto(
     int Id,

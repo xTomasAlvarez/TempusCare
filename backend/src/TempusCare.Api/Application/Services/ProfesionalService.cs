@@ -233,7 +233,13 @@ public class ProfesionalService : IProfesionalService
         _logger.LogInformation("Profesional CUIL {Cuil} marcado como Inactivo", cuil);
     }
 
-    public async Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(string? nombre, int? especialidadId, int? obraSocialId, string? consultorioCuit)
+    public async Task<List<ProfesionalResponseDto>> ConsultarProfesionalesAsync(
+        string? nombre = null,
+        int? especialidadId = null,
+        int? obraSocialId = null,
+        string? consultorioCuit = null,
+        double? minRating = null,
+        bool? sortByRating = null)
     {
         _logger.LogInformation("Consultando profesionales con filtros: Nombre={Nombre}, Esp={Esp}, OS={OS}, Cons={Cons}",
             nombre, especialidadId, obraSocialId, consultorioCuit);
@@ -288,6 +294,16 @@ public class ProfesionalService : IProfesionalService
         {
             double punt = await CalcularPuntuacionDinamicaAsync(p.Cuil);
             result.Add(MapToResponseDto(p, punt));
+        }
+
+        if (minRating.HasValue && minRating.Value > 0)
+        {
+            result = result.Where(p => p.Puntuacion >= minRating.Value).ToList();
+        }
+
+        if (sortByRating == true)
+        {
+            result = result.OrderByDescending(p => p.Puntuacion).ToList();
         }
 
         return result;

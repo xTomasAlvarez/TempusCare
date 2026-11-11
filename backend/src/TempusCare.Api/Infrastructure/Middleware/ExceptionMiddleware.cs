@@ -36,8 +36,8 @@ public class ExceptionMiddleware
                 Application.Exceptions.ValidationException => HttpStatusCode.BadRequest,
                 Application.Exceptions.ArgumentOutOfRangeException => HttpStatusCode.BadRequest,
                 ArgumentException => HttpStatusCode.BadRequest,
-                InvalidOperationException => HttpStatusCode.BadRequest,
                 Application.Exceptions.NoContentException => HttpStatusCode.BadRequest,
+                Application.Exceptions.BusinessException be => (HttpStatusCode)be.StatusCode,
                 _ => HttpStatusCode.InternalServerError
             };
 
@@ -54,6 +54,7 @@ public class ExceptionMiddleware
                 Application.Exceptions.NoContentException => "05",
                 UnauthorizedAccessException => "06",
                 Application.Exceptions.NotAuthenticatedException => "07",
+                Application.Exceptions.BusinessException => "02",
                 System.ApplicationException => "99",
                 _ => "00"
             };
@@ -86,9 +87,11 @@ public class ExceptionMiddleware
             internalErrorCode = $"{source}-{internalErrorCode}";
 
             context.Response.StatusCode = (int)statusCode;
-            var detailMessage = e is Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException
-                ? "Conflicto de concurrencia optimista: el recurso o turno fue modificado simultáneamente por otra operación."
-                : e.Message;
+            var detailMessage = statusCode == HttpStatusCode.InternalServerError
+                ? "Ocurrió un error inesperado en el servidor. Por favor, intente nuevamente."
+                : (e is Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException
+                    ? "Conflicto de concurrencia optimista: el recurso o turno fue modificado simultáneamente por otra operación."
+                    : e.Message);
 
             var errorResponse = new
             {

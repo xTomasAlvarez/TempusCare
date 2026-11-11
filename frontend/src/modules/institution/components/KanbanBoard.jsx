@@ -11,12 +11,12 @@ export const KanbanBoard = ({
   isActionLoading = false,
   onMarkArrived,
   onStartAttention,
-  onFinishAttention,
+  onMarkAbsent,
   onCancel,
 }) => {
   return (
     <div className="w-full overflow-x-auto pb-4 scrollbar-thin">
-      <div className="flex gap-4 min-w-[1140px] items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full min-w-[1100px] items-start">
         {/* Columna 1: Disponibles */}
         <KanbanColumn
           title="Disponibles"
@@ -41,10 +41,11 @@ export const KanbanBoard = ({
           emptyMessage="No hay pacientes en esta etapa"
           onMarkArrived={onMarkArrived}
           onStartAttention={onStartAttention}
+          onMarkAbsent={onMarkAbsent}
           onCancel={onCancel}
         />
 
-        {/* Columna 3: Atendiéndose */}
+        {/* Columna 3: Atendiéndose (Solo el médico finaliza al evolucionar) */}
         <KanbanColumn
           title="Atendiéndose"
           count={columnAtendiendose.length}
@@ -54,7 +55,6 @@ export const KanbanBoard = ({
           isLoading={isLoading}
           isActionLoading={isActionLoading}
           emptyMessage="No hay pacientes en consulta activa"
-          onFinishAttention={onFinishAttention}
         />
 
         {/* Columna 4: Finalizados */}

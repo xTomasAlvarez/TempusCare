@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useVitalityInstitutions } from '../hooks/useVitalityInstitutions';
 import { CreateInstitutionModal } from '../components/CreateInstitutionModal';
 import { EditInstitutionModal } from '../components/EditInstitutionModal';
@@ -17,6 +18,11 @@ import {
   TrendingUp,
   Sparkles,
 } from 'lucide-react';
+import {
+  staggerContainerVariants,
+  staggerItemVariants,
+  pageTransitionVariants,
+} from '../../../shared/motion';
 
 /**
  * Vista de Gestión de Clientes B2B para el Super Administrador de Vitality.
@@ -143,7 +149,7 @@ export const VitalityClientsPage = () => {
             onClick={() => openEditModal(row)}
             aria-label={`Editar institución ${row.nombre}`}
             title="Editar Institución"
-            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-transform duration-75 active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Pencil className="w-4 h-4" strokeWidth={2} />
           </button>
@@ -152,7 +158,7 @@ export const VitalityClientsPage = () => {
             onClick={() => deleteInstitution(row.id, row.nombre)}
             aria-label={`Desvincular institución ${row.nombre}`}
             title="Dar de baja Institución"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-transform duration-75 active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500"
           >
             <Trash2 className="w-4 h-4" strokeWidth={2} />
           </button>
@@ -162,7 +168,7 @@ export const VitalityClientsPage = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="space-y-6">
       {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -185,9 +191,17 @@ export const VitalityClientsPage = () => {
         </Button>
       </div>
 
-      {/* Tarjetas de Métricas de Alto Nivel */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+      {/* Tarjetas de Métricas de Alto Nivel con Entrada en Cascada */}
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      >
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Instituciones</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalClients}</p>
@@ -198,9 +212,12 @@ export const VitalityClientsPage = () => {
           <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
             <Hospital className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sedes Desplegadas</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalConsultorios}</p>
@@ -209,9 +226,12 @@ export const VitalityClientsPage = () => {
           <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
             <Layers className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Personal Operativo</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalAsistentes}</p>
@@ -220,8 +240,8 @@ export const VitalityClientsPage = () => {
           <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
             <Users className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Data Table de Instituciones */}
       <DataTable
@@ -250,7 +270,7 @@ export const VitalityClientsPage = () => {
         onSubmit={updateInstitution}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </motion.div>
   );
 };
 

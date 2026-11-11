@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useConsultorioAdmin } from '../hooks/useConsultorioAdmin';
 import { DataTable } from '../components/DataTable';
@@ -20,8 +21,18 @@ import {
   Pencil,
   UserRoundPlus,
   Link2,
+  UserCheck,
+  Star,
+  Eye,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
+import {
+  snappySpring,
+  staggerContainerVariants,
+  staggerItemVariants,
+  tabContentVariants,
+  pageTransitionVariants,
+} from '../../../shared/motion';
 
 /**
  * Panel de Administración de Sede (Administrador de Sede).
@@ -33,6 +44,7 @@ export const ConsultorioAdminPage = () => {
 
   const {
     consultorio,
+    metricas,
     asistentes,
     profesionales,
     allProfesionales,
@@ -229,7 +241,7 @@ export const ConsultorioAdminPage = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="space-y-6">
       {/* Tarjeta Superior de Identidad de la Sede Física */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -286,22 +298,98 @@ export const ConsultorioAdminPage = () => {
         </div>
       </div>
 
-      {/* Selector de Pestañas: Gestión de Médicos y Gestión de Asistentes */}
+      {/* Tarjetas Métricas de Sede en Cascada */}
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      >
+        {/* Pacientes Atendidos */}
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4 transition-transform duration-75 active:scale-[0.98]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+            <UserCheck className="w-6 h-6" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Pacientes Atendidos
+            </p>
+            <p className="text-2xl font-bold font-heading text-slate-900 mt-0.5">
+              {metricas?.pacientesAtendidos ?? 0}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Consultas finalizadas en la sede
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Calificación Promedio */}
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4 transition-transform duration-75 active:scale-[0.98]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0">
+            <Star className="w-6 h-6 fill-amber-400 text-amber-500" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Calificación Promedio
+            </p>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-2xl font-bold font-heading text-slate-900">
+                {metricas?.calificacionPromedio > 0 ? Number(metricas.calificacionPromedio).toFixed(1) : 'S/V'}
+              </span>
+              {metricas?.calificacionPromedio > 0 && (
+                <span className="text-xs font-semibold text-slate-400">/ 5.0</span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {metricas?.calificacionPromedio > 0 ? 'Satisfacción de pacientes' : 'Sin valoraciones aún'}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Visitas al Perfil */}
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4 transition-transform duration-75 active:scale-[0.98]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <Eye className="w-6 h-6" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Visitas al Perfil
+            </p>
+            <p className="text-2xl font-bold font-heading text-slate-900 mt-0.5">
+              {(metricas?.visitasPerfil ?? 0).toLocaleString()}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Vistas en el portal de pacientes
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Selector de Pestañas con Indicador Deslizante */}
       <div className="border-b border-slate-200/80">
         <nav
           role="tablist"
           aria-label="Gestión de Sede"
-          className="flex flex-wrap gap-2 -mb-px"
+          className="flex flex-wrap gap-2 -mb-px relative"
         >
           <button
             role="tab"
             aria-selected={activeTab === 'medicos'}
             onClick={() => setActiveTab('medicos')}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
+              'relative flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold transition-transform duration-75 active:scale-[0.98] cursor-pointer rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
               activeTab === 'medicos'
-                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+                ? 'text-primary-700 bg-white shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             )}
           >
             <Stethoscope className={cn('w-4 h-4', activeTab === 'medicos' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
@@ -314,6 +402,13 @@ export const ConsultorioAdminPage = () => {
             >
               {profesionales.length}
             </span>
+            {activeTab === 'medicos' && (
+              <motion.div
+                layoutId="consultorio-admin-tab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
+                transition={snappySpring}
+              />
+            )}
           </button>
 
           <button
@@ -321,10 +416,10 @@ export const ConsultorioAdminPage = () => {
             aria-selected={activeTab === 'asistentes'}
             onClick={() => setActiveTab('asistentes')}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
+              'relative flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold transition-transform duration-75 active:scale-[0.98] cursor-pointer rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
               activeTab === 'asistentes'
-                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+                ? 'text-primary-700 bg-white shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             )}
           >
             <Users className={cn('w-4 h-4', activeTab === 'asistentes' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
@@ -337,68 +432,85 @@ export const ConsultorioAdminPage = () => {
             >
               {asistentes.length}
             </span>
+            {activeTab === 'asistentes' && (
+              <motion.div
+                layoutId="consultorio-admin-tab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
+                transition={snappySpring}
+              />
+            )}
           </button>
         </nav>
       </div>
 
-      {/* Contenido Pestaña 1: Gestión de Médicos */}
-      {activeTab === 'medicos' && (
-        <DataTable
-          title="Gestión de Médicos"
-          subtitle="Listado y administración de médicos registrados para la atención en esta sede."
-          data={profesionales}
-          columns={medicoColumns}
-          isLoading={isLoading}
-          searchPlaceholder="Buscar por nombre, apellido, especialidad o CUIL..."
-          filterKey="nombre"
-          actionButton={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsProfesionalModalOpen(true)}
-              >
-                <Link2 className="w-4 h-4 mr-1.5" strokeWidth={2} />
-                Vincular Existente
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={() => setIsCreateProfesionalModalOpen(true)}
-              >
-                <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
-                Nuevo Médico
-              </Button>
-            </div>
-          }
-        />
-      )}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          {/* Contenido Pestaña 1: Gestión de Médicos */}
+          {activeTab === 'medicos' && (
+            <DataTable
+              title="Gestión de Médicos"
+              subtitle="Listado y administración de médicos registrados para la atención en esta sede."
+              data={profesionales}
+              columns={medicoColumns}
+              isLoading={isLoading}
+              searchPlaceholder="Buscar por nombre, apellido, especialidad o CUIL..."
+              filterKey="nombre"
+              actionButton={
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsProfesionalModalOpen(true)}
+                  >
+                    <Link2 className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                    Vincular Existente
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setIsCreateProfesionalModalOpen(true)}
+                  >
+                    <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                    Nuevo Médico
+                  </Button>
+                </div>
+              }
+            />
+          )}
 
-      {/* Contenido Pestaña 2: Gestión de Asistentes */}
-      {activeTab === 'asistentes' && (
-        <DataTable
-          title="Gestión de Asistentes"
-          subtitle="Listado y administración de asistentes de recepción para esta sede."
-          data={asistentes}
-          columns={asistenteColumns}
-          isLoading={isLoading}
-          searchPlaceholder="Buscar por nombre, apellido o DNI/CUIL..."
-          filterKey="nombre"
-          actionButton={
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setIsAsistenteModalOpen(true)}
-            >
-              <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
-              Nuevo Asistente
-            </Button>
-          }
-        />
-      )}
+          {/* Contenido Pestaña 2: Gestión de Asistentes */}
+          {activeTab === 'asistentes' && (
+            <DataTable
+              title="Gestión de Asistentes"
+              subtitle="Listado y administración de asistentes de recepción para esta sede."
+              data={asistentes}
+              columns={asistenteColumns}
+              isLoading={isLoading}
+              searchPlaceholder="Buscar por nombre, apellido o DNI/CUIL..."
+              filterKey="nombre"
+              actionButton={
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsAsistenteModalOpen(true)}
+                >
+                  <UserRoundPlus className="w-4 h-4 mr-1.5" strokeWidth={2} />
+                  Nuevo Asistente
+                </Button>
+              }
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Modal de Creación de Médico */}
       <CreateProfesionalModal
@@ -470,6 +582,6 @@ export const ConsultorioAdminPage = () => {
         especialidades={especialidades}
         sedeNombre={consultorio?.nombre || user?.sedeNombre || 'Sede Actual'}
       />
-    </div>
+    </motion.div>
   );
 };

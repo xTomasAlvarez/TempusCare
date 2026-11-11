@@ -31,11 +31,12 @@ public class BusinessRulesTests
         db.Consultorios.Add(new Consultorio { Cuit = "30999999999", Nombre = "Consultorio Central" });
         await db.SaveChangesAsync();
 
-        var dto1 = new AltaAgendaDto("20123456789", "30999999999", 15, 8, 2026, new TimeSpan(9, 0, 0), new TimeSpan(12, 0, 0));
+        var fSolap = DateTime.Today.AddDays(5);
+        var dto1 = new AltaAgendaDto("20123456789", "30999999999", fSolap.Day, fSolap.Month, fSolap.Year, new TimeSpan(9, 0, 0), new TimeSpan(12, 0, 0));
         await agendaService.AltaAgendaAsync(dto1);
 
         // Act & Assert (Solapamiento parcial)
-        var dtoOverlapping = new AltaAgendaDto("20123456789", "30999999999", 15, 8, 2026, new TimeSpan(11, 0, 0), new TimeSpan(13, 0, 0));
+        var dtoOverlapping = new AltaAgendaDto("20123456789", "30999999999", fSolap.Day, fSolap.Month, fSolap.Year, new TimeSpan(11, 0, 0), new TimeSpan(13, 0, 0));
         await Assert.ThrowsAsync<ConflictException>(() => agendaService.AltaAgendaAsync(dtoOverlapping));
     }
 
@@ -54,10 +55,10 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27333333333", Nombre = "Maria", Apellido = "Sosa" });
         await db.SaveChangesAsync();
 
-        var agendaDto = new AltaAgendaDto("20111111111", "30888888888", 20, 8, 2026, new TimeSpan(8, 0, 0), new TimeSpan(9, 0, 0), 30);
+        var agendaDto = new AltaAgendaDto("20111111111", "30888888888", DateTime.Today.AddDays(10).Day, DateTime.Today.AddDays(10).Month, DateTime.Today.AddDays(10).Year, new TimeSpan(8, 0, 0), new TimeSpan(9, 0, 0), 30);
         await agendaService.AltaAgendaAsync(agendaDto);
 
-        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20111111111", new DateTime(2026, 8, 20));
+        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20111111111", DateTime.Today.AddDays(10));
         int primerTurnoId = turnos.First().Id;
 
         // Primer reserva
@@ -90,8 +91,8 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27555555555", Nombre = "Pedro", Apellido = "Rios" });
         await db.SaveChangesAsync();
 
-        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20444444444", "30777777777", 22, 8, 2026, new TimeSpan(10, 0, 0), new TimeSpan(11, 0, 0), 30));
-        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20444444444", new DateTime(2026, 8, 22));
+        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20444444444", "30777777777", DateTime.Today.AddDays(12).Day, DateTime.Today.AddDays(12).Month, DateTime.Today.AddDays(12).Year, new TimeSpan(10, 0, 0), new TimeSpan(11, 0, 0), 30));
+        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20444444444", DateTime.Today.AddDays(12));
 
         // Reserva con obra social aceptada
         var cita1 = await citaService.AltaCitaAsync(new AltaCitaDto("27555555555", "20444444444", turnos[0].Id, TipoCita.Consulta, 1, null));
@@ -116,17 +117,17 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27666666666", Nombre = "Sofia", Apellido = "Diaz" });
         await db.SaveChangesAsync();
 
-        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20666666666", "30666666666", 25, 8, 2026, new TimeSpan(14, 0, 0), new TimeSpan(15, 0, 0), 30));
-        var turnosDisponibles = await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", new DateTime(2026, 8, 25));
+        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20666666666", "30666666666", DateTime.Today.AddDays(14).Day, DateTime.Today.AddDays(14).Month, DateTime.Today.AddDays(14).Year, new TimeSpan(14, 0, 0), new TimeSpan(15, 0, 0), 30));
+        var turnosDisponibles = await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", DateTime.Today.AddDays(14));
 
         var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27666666666", "20666666666", turnosDisponibles[0].Id, TipoCita.Consulta, null, null));
-        Assert.Single(await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", new DateTime(2026, 8, 25)));
+        Assert.Single(await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", DateTime.Today.AddDays(14)));
 
         // Cancelar Cita
         await citaService.BajaCitaAsync(cita.Id);
 
         // El turno debe haber vuelto a estar disponible
-        var turnosNuevamenteDisponibles = await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", new DateTime(2026, 8, 25));
+        var turnosNuevamenteDisponibles = await turnoService.ObtenerTurnosDisponiblesAsync("20666666666", DateTime.Today.AddDays(14));
         Assert.Equal(2, turnosNuevamenteDisponibles.Count);
     }
 
@@ -144,8 +145,8 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27777777777", Nombre = "Lucia", Apellido = "Roldan" });
         await db.SaveChangesAsync();
 
-        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20777777777", "30555555555", 28, 8, 2026, new TimeSpan(16, 0, 0), new TimeSpan(17, 0, 0), 30));
-        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20777777777", new DateTime(2026, 8, 28));
+        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20777777777", "30555555555", DateTime.Today.AddDays(16).Day, DateTime.Today.AddDays(16).Month, DateTime.Today.AddDays(16).Year, new TimeSpan(16, 0, 0), new TimeSpan(17, 0, 0), 30));
+        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20777777777", DateTime.Today.AddDays(16));
 
         var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27777777777", "20777777777", turnos[0].Id, TipoCita.Consulta, null, null));
 
@@ -173,8 +174,8 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27888888888", Nombre = "Martin", Apellido = "Paz" });
         await db.SaveChangesAsync();
 
-        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20888888888", "30444444444", 10, 9, 2026, new TimeSpan(9, 0, 0), new TimeSpan(10, 0, 0), 30));
-        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20888888888", new DateTime(2026, 9, 10));
+        await agendaService.AltaAgendaAsync(new AltaAgendaDto("20888888888", "30444444444", DateTime.Today.AddDays(18).Day, DateTime.Today.AddDays(18).Month, DateTime.Today.AddDays(18).Year, new TimeSpan(9, 0, 0), new TimeSpan(10, 0, 0), 30));
+        var turnos = await turnoService.ObtenerTurnosDisponiblesAsync("20888888888", DateTime.Today.AddDays(18));
 
         var cita1 = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20888888888", turnos[0].Id, TipoCita.Consulta, null, null));
         var cita2 = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20888888888", turnos[1].Id, TipoCita.Consulta, null, null));
@@ -490,11 +491,12 @@ public class BusinessRulesTests
         await db.SaveChangesAsync();
 
         // Agenda en Sede Norte de 08:00 a 12:00
-        var dtoSedeNorte = new AltaAgendaDto("20999888777", "30111111111", 10, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(12, 0, 0));
+        var fCruce = DateTime.Today.AddDays(7);
+        var dtoSedeNorte = new AltaAgendaDto("20999888777", "30111111111", fCruce.Day, fCruce.Month, fCruce.Year, new TimeSpan(8, 0, 0), new TimeSpan(12, 0, 0));
         await agendaService.AltaAgendaAsync(dtoSedeNorte);
 
         // Act & Assert: Intento de crear agenda para el mismo médico en Sede Sur de 10:00 a 14:00 (se cruza en día y hora)
-        var dtoSedeSur = new AltaAgendaDto("20999888777", "30222222222", 10, 10, 2026, new TimeSpan(10, 0, 0), new TimeSpan(14, 0, 0));
+        var dtoSedeSur = new AltaAgendaDto("20999888777", "30222222222", fCruce.Day, fCruce.Month, fCruce.Year, new TimeSpan(10, 0, 0), new TimeSpan(14, 0, 0));
         var ex = await Assert.ThrowsAsync<ConflictException>(() => agendaService.AltaAgendaAsync(dtoSedeSur));
         Assert.Contains("RN-05", ex.Message);
     }
@@ -517,7 +519,8 @@ public class BusinessRulesTests
         await db.SaveChangesAsync();
 
         // Agenda de 08:00 a 10:00 con turnos de 30 min (08:00, 08:30, 09:00, 09:30)
-        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20777888999", "30333444555", 5, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(10, 0, 0), 30));
+        var fFutura1 = DateTime.Today.AddDays(5);
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20777888999", "30333444555", fFutura1.Day, fFutura1.Month, fFutura1.Year, new TimeSpan(8, 0, 0), new TimeSpan(10, 0, 0), 30));
         var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
 
         // Act: Paciente Susana reserva cita para el estudio a las 08:00 (primer turno)
@@ -568,7 +571,8 @@ public class BusinessRulesTests
         db.Estudios.Add(estudio);
         await db.SaveChangesAsync();
 
-        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20121212121", "30555555555", 6, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
+        var fFutura2 = DateTime.Today.AddDays(5);
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20121212121", "30555555555", fFutura2.Day, fFutura2.Month, fFutura2.Year, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
         var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
 
         // Reservamos individualmente el turno de las 08:30 (turnos[1])
@@ -596,7 +600,8 @@ public class BusinessRulesTests
         db.Estudios.Add(estudio);
         await db.SaveChangesAsync();
 
-        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20666666666", "30777777777", 7, 11, 2026, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
+        var fFutura3 = DateTime.Today.AddDays(5);
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20666666666", "30777777777", fFutura3.Day, fFutura3.Month, fFutura3.Year, new TimeSpan(8, 0, 0), new TimeSpan(9, 30, 0), 30));
         var turnos = await db.Turnos.Where(t => t.AgendaId == agenda.Id).OrderBy(t => t.HoraInicio).ToListAsync();
 
         var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27888888888", "20666666666", turnos[0].Id, TipoCita.Estudio, null, estudio.Id));
@@ -738,7 +743,8 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27444444444", Nombre = "Camila", Apellido = "Reyes" });
         await db.SaveChangesAsync();
 
-        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20888888888", "30444444444", 15, 12, 2026, new TimeSpan(10, 0, 0), new TimeSpan(10, 30, 0), 30));
+        var fFutura4 = DateTime.Today.AddDays(15);
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20888888888", "30444444444", fFutura4.Day, fFutura4.Month, fFutura4.Year, new TimeSpan(10, 0, 0), new TimeSpan(10, 30, 0), 30));
         var turno = await db.Turnos.FirstAsync(t => t.AgendaId == agenda.Id);
         var rowVersionInicial = turno.RowVersion;
 
@@ -774,7 +780,7 @@ public class BusinessRulesTests
         db.Pacientes.Add(new Paciente { Cuil = "27101010101", Nombre = "Gabriel", Apellido = "Ruiz" });
         await db.SaveChangesAsync();
 
-        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20101010101", "30101010101", 12, 10, 2026, new TimeSpan(8, 0, 0), new TimeSpan(8, 30, 0), 30));
+        var agenda = await agendaService.AltaAgendaAsync(new AltaAgendaDto("20101010101", "30101010101", DateTime.Today.AddDays(22).Day, DateTime.Today.AddDays(22).Month, DateTime.Today.AddDays(22).Year, new TimeSpan(8, 0, 0), new TimeSpan(8, 30, 0), 30));
         var turno = await db.Turnos.FirstAsync(t => t.AgendaId == agenda.Id);
 
         var cita = await citaService.AltaCitaAsync(new AltaCitaDto("27101010101", "20101010101", turno.Id, TipoCita.Consulta, null, null));
@@ -885,6 +891,471 @@ public class BusinessRulesTests
         Assert.Equal("MN5555", profVinculado.Matricula);
         Assert.Contains("Neurología", profVinculado.Especialidades);
     }
+
+    [Fact]
+    public async Task RN_MedicoSoloPuedeAtenderUnPacienteALaVez_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RN_MedicoSoloPuedeAtenderUnPacienteALaVez_ShouldThrowBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20999888771", Nombre = "Doctor", Apellido = "Prueba", Matricula = "MP9988" };
+        var cons = new Consultorio { Cuit = "30999888771", Nombre = "Consultorio Test" };
+        var pac1 = new Paciente { Cuil = "27111222331", Nombre = "Paciente", Apellido = "Uno" };
+        var pac2 = new Paciente { Cuil = "27111222332", Nombre = "Paciente", Apellido = "Dos" };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.AddRange(pac1, pac2);
+
+        var agenda = new Agenda
+        {
+            ProfesionalCuil = prof.Cuil,
+            ConsultorioCuit = cons.Cuit,
+            Dia = DateTime.Today.Day,
+            Mes = DateTime.Today.Month,
+            Anio = DateTime.Today.Year,
+            HoraEntrada = new TimeSpan(8, 0, 0),
+            HoraSalida = new TimeSpan(12, 0, 0),
+            };
+        db.Agendas.Add(agenda);
+        await db.SaveChangesAsync();
+
+        var t1 = new Turno { AgendaId = agenda.Id, Fecha = DateTime.Today, HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Reservado };
+        var t2 = new Turno { AgendaId = agenda.Id, Fecha = DateTime.Today, HoraInicio = new TimeSpan(8, 30, 0), HoraFin = new TimeSpan(9, 0, 0), Estado = EstadoTurno.Reservado };
+        db.Turnos.AddRange(t1, t2);
+        await db.SaveChangesAsync();
+
+        var c1 = new Cita { TurnoId = t1.Id, PacienteCuil = pac1.Cuil, Fecha = DateTime.Today, Estado = EstadoCita.EnSalaDeEspera, Tipo = TipoCita.Consulta };
+        var c2 = new Cita { TurnoId = t2.Id, PacienteCuil = pac2.Cuil, Fecha = DateTime.Today, Estado = EstadoCita.EnSalaDeEspera, Tipo = TipoCita.Consulta };
+        db.Citas.AddRange(c1, c2);
+        await db.SaveChangesAsync();
+
+        t1.CitaId = c1.Id;
+        t2.CitaId = c2.Id;
+        await db.SaveChangesAsync();
+
+        // Poner primera cita en atención (forzando fuera de horario si la prueba corre fuera de las 08:00)
+        await citaService.ModificarCitaEstadoAsync(c1.Id, EstadoCita.EnAtencion, "Profesional", forzarAtencionFueraDeHorario: true);
+
+        // Act & Assert: Intentar poner segunda cita en atención con el mismo médico debe lanzar BusinessException
+        var ex = await Assert.ThrowsAsync<BusinessException>(() =>
+            citaService.ModificarCitaEstadoAsync(c2.Id, EstadoCita.EnAtencion, "Profesional", forzarAtencionFueraDeHorario: true));
+
+        Assert.Contains("El profesional ya se encuentra atendiendo a un paciente en este momento", ex.Message);
+    }
+
+    [Fact]
+    public async Task RN_LlamarPaciente_SinEstarEnSalaDeEspera_ThrowsBusinessException()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RN_LlamarPaciente_SinEstarEnSalaDeEspera_ThrowsBusinessException));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20121212121", Nombre = "Doctor", Apellido = "TestPresencia", Matricula = "MP1212" };
+        var cons = new Consultorio { Cuit = "30121212121", Nombre = "Consultorio Test Presencia" };
+        var pac = new Paciente { Cuil = "27121212121", Nombre = "Paciente", Apellido = "NoLlego" };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+
+        var agenda = new Agenda
+        {
+            ProfesionalCuil = prof.Cuil,
+            ConsultorioCuit = cons.Cuit,
+            Dia = DateTime.Today.Day,
+            Mes = DateTime.Today.Month,
+            Anio = DateTime.Today.Year,
+            HoraEntrada = new TimeSpan(8, 0, 0),
+            HoraSalida = new TimeSpan(20, 0, 0),
+        };
+        db.Agendas.Add(agenda);
+        await db.SaveChangesAsync();
+
+        var turno = new Turno
+        {
+            AgendaId = agenda.Id,
+            Fecha = DateTime.Today,
+            HoraInicio = DateTime.Now.TimeOfDay,
+            HoraFin = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMinutes(30)),
+            Estado = EstadoTurno.Reservado
+        };
+        db.Turnos.Add(turno);
+        await db.SaveChangesAsync();
+
+        // Cita en estado Confirmada (recepción nunca marcó que el paciente llegó a Sala de Espera)
+        var cita = new Cita
+        {
+            TurnoId = turno.Id,
+            PacienteCuil = pac.Cuil,
+            Fecha = DateTime.Today,
+            Estado = EstadoCita.Confirmada,
+            Tipo = TipoCita.Consulta
+        };
+        db.Citas.Add(cita);
+        await db.SaveChangesAsync();
+
+        turno.CitaId = cita.Id;
+        await db.SaveChangesAsync();
+
+        // Act & Assert: Debe ser rechazada inmediatamente
+        var ex = await Assert.ThrowsAsync<BusinessException>(() =>
+            citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.EnAtencion, "Profesional"));
+
+        Assert.Equal("No se puede llamar al paciente porque aún no ha sido marcado como presente en la Sala de Espera por recepción.", ex.Message);
+    }
+
+    [Fact]
+    public async Task RN_LlamarPaciente_FueraDeHorario_SinForzar_ThrowsAvisoHorario()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RN_LlamarPaciente_FueraDeHorario_SinForzar_ThrowsAvisoHorario));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20131313131", Nombre = "Doctor", Apellido = "TestHorario", Matricula = "MP1313" };
+        var cons = new Consultorio { Cuit = "30131313131", Nombre = "Consultorio Test Horario" };
+        var pac = new Paciente { Cuil = "27131313131", Nombre = "Paciente", Apellido = "HorarioLejano" };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+
+        var agenda = new Agenda
+        {
+            ProfesionalCuil = prof.Cuil,
+            ConsultorioCuit = cons.Cuit,
+            Dia = DateTime.Today.Day,
+            Mes = DateTime.Today.Month,
+            Anio = DateTime.Today.Year,
+            HoraEntrada = new TimeSpan(0, 0, 0),
+            HoraSalida = new TimeSpan(23, 59, 0),
+        };
+        db.Agendas.Add(agenda);
+        await db.SaveChangesAsync();
+
+        // Turno con horario alejado a más de 2 horas
+        var horaLejana = DateTime.Now.TimeOfDay > TimeSpan.FromHours(12)
+            ? TimeSpan.FromHours(2)
+            : TimeSpan.FromHours(22);
+
+        var turno = new Turno
+        {
+            AgendaId = agenda.Id,
+            Fecha = DateTime.Today,
+            HoraInicio = horaLejana,
+            HoraFin = horaLejana.Add(TimeSpan.FromMinutes(30)),
+            Estado = EstadoTurno.Reservado
+        };
+        db.Turnos.Add(turno);
+        await db.SaveChangesAsync();
+
+        // Cita en estado EnSalaDeEspera (el paciente ya llegó a recepción)
+        var cita = new Cita
+        {
+            TurnoId = turno.Id,
+            PacienteCuil = pac.Cuil,
+            Fecha = DateTime.Today,
+            Estado = EstadoCita.EnSalaDeEspera,
+            Tipo = TipoCita.Consulta
+        };
+        db.Citas.Add(cita);
+        await db.SaveChangesAsync();
+
+        turno.CitaId = cita.Id;
+        await db.SaveChangesAsync();
+
+        // Act & Assert 1: Sin flag forzarAtencionFueraDeHorario -> Lanza Aviso de Horario
+        var ex = await Assert.ThrowsAsync<BusinessException>(() =>
+            citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.EnAtencion, "Profesional", forzarAtencionFueraDeHorario: false));
+
+        Assert.Contains("Aviso de Horario", ex.Message);
+        Assert.Contains("¿Desea iniciar la atención fuera del horario estipulado?", ex.Message);
+
+        // Act & Assert 2: Con forzarAtencionFueraDeHorario = true -> Inicia atención con éxito
+        var res = await citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.EnAtencion, "Profesional", forzarAtencionFueraDeHorario: true);
+        Assert.Equal(EstadoCita.EnAtencion, res.Estado);
+    }
+
+    [Fact]
+    public async Task RN_AtencionAnticipada_LiberaTurnoOriginalADisponible()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RN_AtencionAnticipada_LiberaTurnoOriginalADisponible));
+        var citaService = new CitaService(db, NullLogger<CitaService>.Instance);
+
+        var prof = new Profesional { Cuil = "20777666551", Nombre = "Doctor", Apellido = "Anticipado", Matricula = "MP7766" };
+        var cons = new Consultorio { Cuit = "30777666551", Nombre = "Consultorio Test Anticipado" };
+        var pac = new Paciente { Cuil = "27777666551", Nombre = "Paciente", Apellido = "LlegadaTemprana" };
+
+        db.Profesionales.Add(prof);
+        db.Consultorios.Add(cons);
+        db.Pacientes.Add(pac);
+
+        var agenda = new Agenda
+        {
+            ProfesionalCuil = prof.Cuil,
+            ConsultorioCuit = cons.Cuit,
+            Dia = DateTime.Today.Day,
+            Mes = DateTime.Today.Month,
+            Anio = DateTime.Today.Year,
+            HoraEntrada = new TimeSpan(8, 0, 0),
+            HoraSalida = new TimeSpan(23, 59, 0),
+        };
+        db.Agendas.Add(agenda);
+        await db.SaveChangesAsync();
+
+        // Turno agendado en horario futuro del día de hoy (23:30 hs)
+        var turnoFuturo = new Turno
+        {
+            AgendaId = agenda.Id,
+            Fecha = DateTime.Today,
+            HoraInicio = new TimeSpan(23, 30, 0),
+            HoraFin = new TimeSpan(23, 59, 0),
+            Estado = EstadoTurno.Reservado
+        };
+        db.Turnos.Add(turnoFuturo);
+        await db.SaveChangesAsync();
+
+        // El paciente debe estar en Sala de Espera
+        var cita = new Cita
+        {
+            TurnoId = turnoFuturo.Id,
+            PacienteCuil = pac.Cuil,
+            Fecha = DateTime.Today,
+            Estado = EstadoCita.EnSalaDeEspera,
+            Tipo = TipoCita.Consulta
+        };
+        db.Citas.Add(cita);
+        await db.SaveChangesAsync();
+
+        turnoFuturo.CitaId = cita.Id;
+        await db.SaveChangesAsync();
+
+        // Act: El paciente llega antes, pasa a Sala de Espera y el médico lo pasa a EnAtencion con forzarAtencionFueraDeHorario
+        await citaService.ModificarCitaEstadoAsync(cita.Id, EstadoCita.EnAtencion, "Profesional", forzarAtencionFueraDeHorario: true);
+
+        // Assert: El turno original futuro debe haber quedado liberado a EstadoTurno.Disponible y CitaId null
+        var turnoDb = await db.Turnos.FindAsync(turnoFuturo.Id);
+        Assert.NotNull(turnoDb);
+        Assert.Equal(EstadoTurno.Disponible, turnoDb.Estado);
+        Assert.Null(turnoDb.CitaId);
+    }
+
+    [Fact]
+    public async Task Metricas_ConsultorioEInstitucion_CalculosCorrectosYProteccionDivisionCero()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(Metricas_ConsultorioEInstitucion_CalculosCorrectosYProteccionDivisionCero));
+        var consultorioService = new ConsultorioService(db, NullLogger<ConsultorioService>.Instance);
+        var institucionService = new InstitucionService(db, NullLogger<InstitucionService>.Instance);
+
+        var inst = new Institucion { Cuit = "30999888771", Nombre = "Sanatorio Test Metricas", VisitasPerfil = 100 };
+        db.Instituciones.Add(inst);
+        await db.SaveChangesAsync();
+
+        var cons = new Consultorio { Cuit = "30999888772", Nombre = "Sede Test Metricas", InstitucionId = inst.Id, VisitasPerfil = 50 };
+        db.Consultorios.Add(cons);
+        await db.SaveChangesAsync();
+
+        var prof = new Profesional { Cuil = "20999888771", Nombre = "Dr.", Apellido = "Metricas", Matricula = "MP999" };
+        db.Profesionales.Add(prof);
+        db.ProfesionalConsultorios.Add(new ProfesionalConsultorio { ConsultorioCuit = cons.Cuit, ProfesionalCuil = prof.Cuil });
+        await db.SaveChangesAsync();
+
+        // 1. Caso Base: 0 citas atendidas y 0 cuestionarios -> No divide por cero y devuelve 0.0
+        var metricasVaciasCons = await consultorioService.ObtenerMetricasAsync(cons.Cuit);
+        Assert.Equal(0, metricasVaciasCons.PacientesAtendidos);
+        Assert.Equal(0.0, metricasVaciasCons.CalificacionPromedio);
+        Assert.Equal(50, metricasVaciasCons.VisitasPerfil);
+
+        var metricasVaciasInst = await institucionService.ObtenerMetricasAsync(inst.Id);
+        Assert.Equal(0, metricasVaciasInst.PacientesAtendidos);
+        Assert.Equal(0.0, metricasVaciasInst.CalificacionPromedio);
+        Assert.Equal(100, metricasVaciasInst.VisitasPerfil);
+
+        // 2. Incrementar visitas
+        await consultorioService.RegistrarVisitaAsync(cons.Cuit);
+        await institucionService.RegistrarVisitaAsync(inst.Id);
+
+        var consDb = await db.Consultorios.FindAsync(cons.Cuit);
+        Assert.Equal(51, consDb!.VisitasPerfil);
+        var instDb = await db.Instituciones.FindAsync(inst.Id);
+        Assert.Equal(101, instDb!.VisitasPerfil);
+
+        // 3. Crear 2 citas Atendidas vinculadas al profesional y 1 cuestionario
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = 1, Mes = 1, Anio = 2026, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(12, 0, 0) };
+        db.Agendas.Add(agenda);
+        await db.SaveChangesAsync();
+
+        var turno1 = new Turno { AgendaId = agenda.Id, Fecha = DateTime.Today.AddDays(-1), HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Atendido };
+        var turno2 = new Turno { AgendaId = agenda.Id, Fecha = DateTime.Today.AddDays(-1), HoraInicio = new TimeSpan(8, 30, 0), HoraFin = new TimeSpan(9, 0, 0), Estado = EstadoTurno.Atendido };
+        db.Turnos.AddRange(turno1, turno2);
+        await db.SaveChangesAsync();
+
+        var cita1 = new Cita { TurnoId = turno1.Id, PacienteCuil = "27111222334", Fecha = DateTime.Today.AddDays(-1), Estado = EstadoCita.Atendida, Tipo = TipoCita.Consulta };
+        var cita2 = new Cita { TurnoId = turno2.Id, PacienteCuil = "27111222335", Fecha = DateTime.Today.AddDays(-1), Estado = EstadoCita.Atendida, Tipo = TipoCita.Consulta };
+        db.Citas.AddRange(cita1, cita2);
+        await db.SaveChangesAsync();
+
+        turno1.CitaId = cita1.Id;
+        turno2.CitaId = cita2.Id;
+        await db.SaveChangesAsync();
+
+        // Cuestionario con puntuaciones (5, 4, 3) -> promedio = 4.0
+        db.Cuestionarios.Add(new Cuestionario { CitaId = cita1.Id, Puntualidad = 5, Atencion = 4, Profesionalismo = 3 });
+        await db.SaveChangesAsync();
+
+        var metricasLlenas = await consultorioService.ObtenerMetricasAsync(cons.Cuit);
+        Assert.Equal(2, metricasLlenas.PacientesAtendidos);
+        Assert.Equal(4.0, metricasLlenas.CalificacionPromedio);
+        Assert.Equal(51, metricasLlenas.VisitasPerfil);
+
+        var metricasInstLlenas = await institucionService.ObtenerMetricasAsync(inst.Id);
+        Assert.Equal(2, metricasInstLlenas.PacientesAtendidos);
+        Assert.Equal(4.0, metricasInstLlenas.CalificacionPromedio);
+        Assert.Equal(101, metricasInstLlenas.VisitasPerfil);
+    }
+
+    [Fact]
+    public async Task BusquedaProfesionales_FiltroCalificacionYOrdenamiento()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(BusquedaProfesionales_FiltroCalificacionYOrdenamiento));
+        var profService = new ProfesionalService(db, NullLogger<ProfesionalService>.Instance);
+
+        var prof1 = new Profesional { Cuil = "20111111119", Nombre = "DrA", Apellido = "RatingCinco", Matricula = "MP119" };
+        var prof2 = new Profesional { Cuil = "20222222229", Nombre = "DrB", Apellido = "RatingCuatro", Matricula = "MP229" };
+        var prof3 = new Profesional { Cuil = "20333333339", Nombre = "DrC", Apellido = "SinRating", Matricula = "MP339" };
+        db.Profesionales.AddRange(prof1, prof2, prof3);
+
+        var cons = new Consultorio { Cuit = "30111111119", Nombre = "Sede Busqueda Rating" };
+        db.Consultorios.Add(cons);
+        await db.SaveChangesAsync();
+
+        var agenda1 = new Agenda { ProfesionalCuil = prof1.Cuil, ConsultorioCuit = cons.Cuit, Dia = 1, Mes = 1, Anio = 2026, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(12, 0, 0) };
+        var agenda2 = new Agenda { ProfesionalCuil = prof2.Cuil, ConsultorioCuit = cons.Cuit, Dia = 1, Mes = 1, Anio = 2026, HoraEntrada = new TimeSpan(8, 0, 0), HoraSalida = new TimeSpan(12, 0, 0) };
+        db.Agendas.AddRange(agenda1, agenda2);
+        await db.SaveChangesAsync();
+
+        var t1 = new Turno { AgendaId = agenda1.Id, Fecha = DateTime.Today.AddDays(-2), HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Atendido };
+        var t2 = new Turno { AgendaId = agenda2.Id, Fecha = DateTime.Today.AddDays(-2), HoraInicio = new TimeSpan(8, 0, 0), HoraFin = new TimeSpan(8, 30, 0), Estado = EstadoTurno.Atendido };
+        db.Turnos.AddRange(t1, t2);
+        await db.SaveChangesAsync();
+
+        var c1 = new Cita { TurnoId = t1.Id, PacienteCuil = "27111222339", Fecha = DateTime.Today.AddDays(-2), Estado = EstadoCita.Atendida, Tipo = TipoCita.Consulta };
+        var c2 = new Cita { TurnoId = t2.Id, PacienteCuil = "27111222339", Fecha = DateTime.Today.AddDays(-2), Estado = EstadoCita.Atendida, Tipo = TipoCita.Consulta };
+        db.Citas.AddRange(c1, c2);
+        await db.SaveChangesAsync();
+
+        t1.CitaId = c1.Id;
+        t2.CitaId = c2.Id;
+        await db.SaveChangesAsync();
+
+        // prof1 -> 5.0
+        db.Cuestionarios.Add(new Cuestionario { CitaId = c1.Id, Puntualidad = 5, Atencion = 5, Profesionalismo = 5 });
+        // prof2 -> 3.67
+        db.Cuestionarios.Add(new Cuestionario { CitaId = c2.Id, Puntualidad = 4, Atencion = 4, Profesionalismo = 3 });
+        await db.SaveChangesAsync();
+
+        // Act & Assert 1: minRating = 4.0 -> Solo prof1
+        var filtrados4 = await profService.ConsultarProfesionalesAsync(nombre: null, minRating: 4.0);
+        Assert.Single(filtrados4);
+        Assert.Equal(prof1.Cuil, filtrados4[0].Cuil);
+        Assert.Equal(5.0, filtrados4[0].Puntuacion);
+
+        // Act & Assert 2: minRating = 3.0 -> prof1 y prof2
+        var filtrados3 = await profService.ConsultarProfesionalesAsync(nombre: null, minRating: 3.0);
+        Assert.Equal(2, filtrados3.Count);
+
+        // Act & Assert 3: sortByRating = true -> prof1 (5.0), prof2 (3.67), prof3 (0.0)
+        var ordenados = await profService.ConsultarProfesionalesAsync(nombre: null, sortByRating: true);
+        Assert.Equal(3, ordenados.Count);
+        Assert.Equal(prof1.Cuil, ordenados[0].Cuil);
+        Assert.Equal(prof2.Cuil, ordenados[1].Cuil);
+        Assert.Equal(prof3.Cuil, ordenados[2].Cuil);
+    }
+
+    [Fact]
+    public async Task RecuperacionContrasena_FlujoExitoso()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RecuperacionContrasena_FlujoExitoso));
+        var authService = new AuthService(db, NullLogger<AuthService>.Instance);
+
+        var usuario = new Usuario
+        {
+            NombreUsuario = "usuario.recupero@vitality.com",
+            Mail = "usuario.recupero@vitality.com",
+            Contrasena = "PasswordVieja123!",
+            Rol = RolUsuario.Paciente
+        };
+        db.Usuarios.Add(usuario);
+        await db.SaveChangesAsync();
+
+        // 1. Solicitar recupero de contraseña
+        var forgotRes = await authService.ForgotPasswordAsync(new ForgotPasswordDto("usuario.recupero@vitality.com"));
+        Assert.NotNull(forgotRes.ResetToken);
+
+        // 2. Intentar restablecer con token incorrecto -> Lanza BusinessException
+        await Assert.ThrowsAsync<BusinessException>(() =>
+            authService.ResetPasswordAsync(new ResetPasswordDto("usuario.recupero@vitality.com", "TOKEN_FALSO", "NuevaPassword123!")));
+
+        // 3. Restablecer con token válido
+        var resetRes = await authService.ResetPasswordAsync(new ResetPasswordDto("usuario.recupero@vitality.com", forgotRes.ResetToken, "NuevaPassword123!"));
+        Assert.NotNull(resetRes.Message);
+
+        // Verificar que la contraseña cambió en la base de datos y se almacenó como hash seguro (RNF-SEG-01)
+        var userDb = await db.Usuarios.FirstOrDefaultAsync(u => u.Mail == "usuario.recupero@vitality.com");
+        Assert.NotNull(userDb);
+        Assert.True(TempusCare.Api.Infrastructure.Auth.PasswordSecurity.IsHashed(userDb.Contrasena));
+        Assert.True(TempusCare.Api.Infrastructure.Auth.PasswordSecurity.VerifyPassword("NuevaPassword123!", userDb.Contrasena));
+
+        // 4. Token ya fue consumido -> Segundo intento debe fallar
+        await Assert.ThrowsAsync<BusinessException>(() =>
+            authService.ResetPasswordAsync(new ResetPasswordDto("usuario.recupero@vitality.com", forgotRes.ResetToken, "OtraPassword123!")));
+    }
+
+    [Fact]
+    public async Task RecuperacionContrasena_PorCuilOTildes_RestableceCorrectamente()
+    {
+        // Arrange
+        var db = GetInMemoryDbContext(nameof(RecuperacionContrasena_PorCuilOTildes_RestableceCorrectamente));
+        var authService = new AuthService(db, NullLogger<AuthService>.Instance);
+
+        var usuario = new Usuario
+        {
+            NombreUsuario = "20123456789",
+            Mail = "carlos.pérez@tempuscare.com",
+            Contrasena = "PasswordVieja123!",
+            Rol = RolUsuario.Profesional,
+            Profesional = new Profesional
+            {
+                Cuil = "20123456789",
+                Nombre = "Carlos",
+                Apellido = "Pérez"
+            }
+        };
+        db.Usuarios.Add(usuario);
+        await db.SaveChangesAsync();
+
+        // 1. Solicitar recupero ingresando el CUIL
+        var forgotCuil = await authService.ForgotPasswordAsync(new ForgotPasswordDto("20123456789"));
+        Assert.True(forgotCuil.Success);
+        Assert.NotNull(forgotCuil.ResetToken);
+
+        // 2. Solicitar recupero ingresando el email sin tildes
+        var forgotSinAcento = await authService.ForgotPasswordAsync(new ForgotPasswordDto("carlos.perez@tempuscare.com"));
+        Assert.True(forgotSinAcento.Success);
+        Assert.NotNull(forgotSinAcento.ResetToken);
+
+        // 3. Restablecer con token válido y sin necesidad de email exacto
+        var resetRes = await authService.ResetPasswordAsync(new ResetPasswordDto(null, forgotSinAcento.ResetToken, "NuevaPassSegura2026!"));
+        Assert.NotNull(resetRes.Message);
+
+        var userDb = await db.Usuarios.FindAsync(usuario.Id);
+        Assert.NotNull(userDb);
+        Assert.True(TempusCare.Api.Infrastructure.Auth.PasswordSecurity.IsHashed(userDb.Contrasena));
+        Assert.True(TempusCare.Api.Infrastructure.Auth.PasswordSecurity.VerifyPassword("NuevaPassSegura2026!", userDb.Contrasena));
+    }
 }
-
-

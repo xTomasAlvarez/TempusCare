@@ -122,11 +122,11 @@ export const EditConsultorioModal = ({
       description={`Modifica los datos de identificación, contacto y dirección física de la sede ${consultorio?.nombre ? `"${consultorio.nombre}"` : ''}.`}
       maxWidth="max-w-2xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
+      <form onSubmit={handleSubmit} className="space-y-3 font-sans text-xs sm:text-sm">
         {/* Grilla Superior: CUIT (inmutable) y Nombre de Sede */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
           <div>
-            <label htmlFor="edit-sede-cuit" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+            <label htmlFor="edit-sede-cuit" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               CUIT de la Sede (Identificador)
             </label>
             <div className="relative">
@@ -138,16 +138,13 @@ export const EditConsultorioModal = ({
                 value={formData.cuit}
                 readOnly
                 aria-readonly="true"
-                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
+                className="w-full h-10 pl-9 pr-3.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
               />
-            </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              <span className="text-[11px] text-slate-400">Identificador fiscal inmutable</span>
             </div>
           </div>
 
           <div>
-            <label htmlFor="edit-sede-nombre" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+            <label htmlFor="edit-sede-nombre" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               Nombre de Sede / Consultorio <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -159,22 +156,20 @@ export const EditConsultorioModal = ({
                 value={formData.nombre}
                 onChange={handleChange}
                 placeholder="Ej: Sede Central - Consultorio 101"
-                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+                className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
                   errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
             </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-            </div>
+            {errors.nombre && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.nombre}</p>}
           </div>
         </div>
 
         {/* Contacto: Email y Teléfono */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
           <div>
-            <label htmlFor="edit-sede-email" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+            <label htmlFor="edit-sede-email" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               Email Institucional de la Sede <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -186,19 +181,17 @@ export const EditConsultorioModal = ({
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="sede@tempuscare.com"
-                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
                   errors.email ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
             </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.email && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.email}</p>}
-            </div>
+            {errors.email && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.email}</p>}
           </div>
 
           <div>
-            <label htmlFor="edit-sede-telefono" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+            <label htmlFor="edit-sede-telefono" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               Teléfono de Contacto <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -210,22 +203,20 @@ export const EditConsultorioModal = ({
                 value={formData.telefono}
                 onChange={handleChange}
                 placeholder="381-4001234"
-                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
+                className={`w-full h-10 pl-9 pr-3.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
                   errors.telefono ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
             </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.telefono && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.telefono}</p>}
-            </div>
+            {errors.telefono && <p className="text-[11px] text-rose-600 truncate mt-1">{errors.telefono}</p>}
           </div>
         </div>
 
         {/* Nivel de Accesibilidad */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
           <div>
-            <label htmlFor="edit-sede-accesibilidad" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+            <label htmlFor="edit-sede-accesibilidad" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               Nivel de Accesibilidad Universal
             </label>
             <div className="relative">
@@ -235,7 +226,7 @@ export const EditConsultorioModal = ({
                 name="nivelAccesibilidad"
                 value={formData.nivelAccesibilidad}
                 onChange={handleChange}
-                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+                className="w-full h-10 pl-9 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
                 disabled={isSubmitting}
               >
                 <option value="Total">Total (Rampas, Ascensor, Braille)</option>
@@ -244,13 +235,12 @@ export const EditConsultorioModal = ({
                 <option value="Especializada">Especializada (Neuro / Motriz)</option>
               </select>
             </div>
-            <div className="min-h-[20px] mt-0.5" />
           </div>
 
           {/* Institución Asociada (si aplica) */}
           {instituciones.length > 0 && (
             <div>
-              <label htmlFor="edit-sede-institucion" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+              <label htmlFor="edit-sede-institucion" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
                 Institución Sanitaria
               </label>
               <div className="relative">
@@ -260,7 +250,7 @@ export const EditConsultorioModal = ({
                   name="institucionId"
                   value={formData.institucionId}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+                  className="w-full h-10 pl-9 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
                   disabled={isSubmitting}
                 >
                   <option value="">Sin institución asignada</option>
@@ -271,14 +261,13 @@ export const EditConsultorioModal = ({
                   ))}
                 </select>
               </div>
-              <div className="min-h-[20px] mt-0.5" />
             </div>
           )}
         </div>
 
         {/* Sección de Dirección Física */}
-        <div className="pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-1.5 mb-2.5">
+        <div className="pt-2.5 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 mb-2">
             <MapPin className="w-4 h-4 text-primary-600" strokeWidth={2} />
             <h2 className="text-xs font-bold font-heading text-slate-800 uppercase tracking-wider">
               Dirección Física de la Sede
@@ -287,7 +276,7 @@ export const EditConsultorioModal = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-start">
             <div className="sm:col-span-2">
-              <label htmlFor="edit-sede-calle" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-calle" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Calle <span className="text-rose-500">*</span>
               </label>
               <input
@@ -297,18 +286,16 @@ export const EditConsultorioModal = ({
                 value={formData.calle}
                 onChange={handleChange}
                 placeholder="Ej: Av. San Martín"
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                className={`w-full h-9 px-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
                   errors.calle ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5 flex items-center">
-                {errors.calle && <p className="text-[10px] text-rose-600 truncate animate-in fade-in-0">{errors.calle}</p>}
-              </div>
+              {errors.calle && <p className="text-[10px] text-rose-600 truncate mt-0.5">{errors.calle}</p>}
             </div>
 
             <div>
-              <label htmlFor="edit-sede-nro" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-nro" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Número <span className="text-rose-500">*</span>
               </label>
               <input
@@ -318,18 +305,16 @@ export const EditConsultorioModal = ({
                 value={formData.nro}
                 onChange={handleChange}
                 placeholder="Ej: 450"
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
+                className={`w-full h-9 px-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono ${
                   errors.nro ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5 flex items-center">
-                {errors.nro && <p className="text-[10px] text-rose-600 truncate animate-in fade-in-0">{errors.nro}</p>}
-              </div>
+              {errors.nro && <p className="text-[10px] text-rose-600 truncate mt-0.5">{errors.nro}</p>}
             </div>
 
             <div>
-              <label htmlFor="edit-sede-depto" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-depto" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Depto / Piso
               </label>
               <input
@@ -339,16 +324,15 @@ export const EditConsultorioModal = ({
                 value={formData.depto}
                 onChange={handleChange}
                 placeholder="Ej: 2° B"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2.5 items-start">
             <div>
-              <label htmlFor="edit-sede-localidad" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-localidad" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Localidad <span className="text-rose-500">*</span>
               </label>
               <input
@@ -358,18 +342,16 @@ export const EditConsultorioModal = ({
                 value={formData.localidad}
                 onChange={handleChange}
                 placeholder="Ej: San Miguel de Tucumán"
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                className={`w-full h-9 px-3 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
                   errors.localidad ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5 flex items-center">
-                {errors.localidad && <p className="text-[10px] text-rose-600 truncate animate-in fade-in-0">{errors.localidad}</p>}
-              </div>
+              {errors.localidad && <p className="text-[10px] text-rose-600 truncate mt-0.5">{errors.localidad}</p>}
             </div>
 
             <div>
-              <label htmlFor="edit-sede-provincia" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-provincia" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Provincia
               </label>
               <input
@@ -379,14 +361,13 @@ export const EditConsultorioModal = ({
                 value={formData.provincia}
                 onChange={handleChange}
                 placeholder="Ej: Tucumán"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5" />
             </div>
 
             <div>
-              <label htmlFor="edit-sede-codPostal" className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label htmlFor="edit-sede-codPostal" className="block text-[11px] font-semibold text-slate-700 mb-1 truncate">
                 Código Postal
               </label>
               <input
@@ -396,17 +377,16 @@ export const EditConsultorioModal = ({
                 value={formData.codPostal}
                 onChange={handleChange}
                 placeholder="Ej: 4000"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono"
+                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-mono"
                 disabled={isSubmitting}
               />
-              <div className="min-h-[18px] mt-0.5" />
             </div>
           </div>
         </div>
 
         {/* Acciones y slot de error general */}
-        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
-          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+        <div className="pt-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div className="flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
             {serverError && (
               <span className="flex items-center gap-1 animate-in fade-in-0">
                 <span aria-hidden="true">⚠</span> {serverError}

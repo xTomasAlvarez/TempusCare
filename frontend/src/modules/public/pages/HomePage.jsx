@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { HeartPulse, LogIn, UserRoundPlus, Map, Calendar, ShieldCheck, Activity } from 'lucide-react';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useSearchProfessionals } from '../../patient/hooks/useSearchProfessionals';
@@ -11,6 +12,8 @@ import { AuthRequiredModal } from '../components/AuthRequiredModal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { UserDropdownMenu } from '../../../shared/components/ui/UserDropdownMenu';
+import { AccessibilityMenu } from '../../../shared/components/ui/AccessibilityMenu';
+import { staggerContainerVariants, staggerItemVariants, pageTransitionVariants } from '../../../shared/motion';
 
 export const HomePage = () => {
   const { user, isAuthenticated, getDashboardRoute, clearAuthData } = useAuth();
@@ -20,6 +23,7 @@ export const HomePage = () => {
     professionals,
     specialties,
     healthInsurances,
+    consultorios,
     filters,
     isLoading,
     error,
@@ -67,7 +71,20 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900"
+    >
+      {/* Enlace para saltar directamente al contenido principal (WCAG 2.1 AA - RNF-ACC-02) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-primary-800 focus:text-white focus:font-bold focus:rounded-xl focus:shadow-2xl focus:outline-none focus:ring-4 focus:ring-amber-400 focus:ring-offset-2 transition-all"
+      >
+        Saltar al contenido principal
+      </a>
+
       {/* Toast Notificación */}
       {toastMessage && (
         <Toast
@@ -80,7 +97,7 @@ export const HomePage = () => {
 
       {/* Encabezado Principal con Logo, Eslogan y Acciones Autenticadas */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/70 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
           <Link
             to="/"
@@ -103,8 +120,10 @@ export const HomePage = () => {
             </div>
           </Link>
 
-          {/* Acciones de Autenticación / Menú de Usuario */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Acciones de Autenticación / Accesibilidad / Menú de Usuario */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <AccessibilityMenu />
+
             {isAuthenticated ? (
               <UserDropdownMenu />
             ) : (
@@ -137,9 +156,9 @@ export const HomePage = () => {
       </header>
 
       {/* Contenido Principal: Buscador Abierto B2C y Mapa Interactivo */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      <main id="main-content" tabIndex="-1" className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 focus:outline-none">
         {/* Banner Hero Sutil */}
-        <div className="text-center sm:text-left max-w-3xl space-y-2.5 pt-1 sm:pt-2">
+        <div className="text-center sm:text-left max-w-4xl space-y-2.5 pt-1 sm:pt-2">
           <h1 className="text-2xl sm:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-tight">
             Encuentra a tu especialista y agenda tu turno en segundos
           </h1>
@@ -154,6 +173,7 @@ export const HomePage = () => {
             filters={filters}
             specialties={specialties}
             healthInsurances={healthInsurances}
+            consultorios={consultorios}
             onFilterChange={updateFilter}
             onReset={resetFilters}
             totalResults={professionals.length}
@@ -178,6 +198,7 @@ export const HomePage = () => {
           <div className="lg:hidden mb-4">
             <InteractiveMapPlaceholder
               doctors={professionals}
+              consultorios={consultorios}
               highlightedDoctorCuil={highlightedDoctorCuil}
               onSelectDoctor={(doc) => handleBookClick(doc)}
             />
@@ -232,15 +253,24 @@ export const HomePage = () => {
                 </Button>
               </div>
             ) : (
-              professionals.map((doctor) => (
-                <DoctorCard
-                  key={doctor.cuil}
-                  doctor={doctor}
-                  isHighlighted={highlightedDoctorCuil === doctor.cuil}
-                  onHover={(cuil) => setHighlightedDoctorCuil(cuil)}
-                  onBook={(doc) => handleBookClick(doc)}
-                />
-              ))
+              <motion.div
+                key={String(filters.especialidadId) + '_' + String(filters.obraSocialId) + '_' + (filters.nombre || '')}
+                variants={staggerContainerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-4"
+              >
+                {professionals.map((doctor) => (
+                  <motion.div key={doctor.cuil} variants={staggerItemVariants}>
+                    <DoctorCard
+                      doctor={doctor}
+                      isHighlighted={highlightedDoctorCuil === doctor.cuil}
+                      onHover={(cuil) => setHighlightedDoctorCuil(cuil)}
+                      onBook={(doc) => handleBookClick(doc)}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
             )}
           </section>
 
@@ -248,6 +278,7 @@ export const HomePage = () => {
           <aside className="hidden lg:block lg:col-span-5 sticky top-28" aria-label="Mapa de consultorios">
             <InteractiveMapPlaceholder
               doctors={professionals}
+              consultorios={consultorios}
               highlightedDoctorCuil={highlightedDoctorCuil}
               onSelectDoctor={(doc) => handleBookClick(doc)}
             />
@@ -273,14 +304,16 @@ export const HomePage = () => {
       )}
 
       {/* Pie de Página Público */}
-      <footer className="mt-12 bg-white/70 border-t border-slate-200/80 py-4 px-6 sm:px-8 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <p className="text-[11px]">© 2026 TempusCare — Vitality. Todos los derechos reservados.</p>
-        <p className="flex items-center gap-1 text-[11px]">
-          <ShieldCheck className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
-          Plataforma médica adaptada a pautas de accesibilidad WCAG & Ley 25.326
-        </p>
+      <footer className="mt-12 bg-white/70 border-t border-slate-200/80 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-[11px]">© 2026 TempusCare — Vitality. Todos los derechos reservados.</p>
+          <p className="flex items-center gap-1 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
+            Plataforma médica adaptada a pautas de accesibilidad WCAG & Ley 25.326
+          </p>
+        </div>
       </footer>
-    </div>
+    </motion.div>
   );
 };
 

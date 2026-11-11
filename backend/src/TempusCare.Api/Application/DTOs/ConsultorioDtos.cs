@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace TempusCare.Api.Application.DTOs;
 
 public record AltaConsultorioDto(
-    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT de la sede debe ser una cadena numérica de exactamente 11 dígitos.")]
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT de la sede debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuit,
     string Nombre,
     string Email,
@@ -22,7 +22,7 @@ public record AltaConsultorioDto(
 );
 
 public record ModificarConsultorioDto(
-    [property: Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT de la sede debe ser una cadena numérica de exactamente 11 dígitos.")]
+    [Required, RegularExpression(@"^\d{11}$", ErrorMessage = "El CUIT de la sede debe ser una cadena numérica de exactamente 11 dígitos.")]
     string Cuit,
     string Nombre,
     string Email,
@@ -79,4 +79,11 @@ public record ProfesionalVinculadoDto(
     string Matricula,
     string Telefono,
     List<string> Especialidades
+);
+
+
+public record MetricasSedeDto(
+    int PacientesAtendidos,
+    double CalificacionPromedio,
+    int VisitasPerfil
 );

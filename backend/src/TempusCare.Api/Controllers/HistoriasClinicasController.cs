@@ -7,7 +7,7 @@ namespace TempusCare.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Profesional,SuperAdmin")]
+[Authorize]
 public class HistoriasClinicasController : ControllerBase
 {
     private readonly IHistoriaClinicaService _historiaClinicaService;
@@ -18,6 +18,7 @@ public class HistoriasClinicasController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Profesional,SuperAdmin")]
     public async Task<IActionResult> Alta([FromBody] AltaHistoriaClinicaDto dto)
     {
         var res = await _historiaClinicaService.AltaHistoriaClinicaAsync(dto);
@@ -25,6 +26,7 @@ public class HistoriasClinicasController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Profesional,SuperAdmin")]
     public async Task<IActionResult> Modificar(int id, [FromBody] ModificarHistoriaClinicaDto dto)
     {
         if (id != dto.Id)
@@ -35,16 +37,42 @@ public class HistoriasClinicasController : ControllerBase
     }
 
     [HttpGet("paciente/{cuil}")]
+    [Authorize(Roles = "Paciente,Profesional,Asistente,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorPaciente(string cuil)
     {
+        // RNF-SEG-03 & RNF-SEG-06: Un paciente nunca puede acceder a la historia clínica de otro paciente
+        if (User.IsInRole("Paciente"))
+        {
+            var authenticatedUsername = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(authenticatedUsername) &&
+                authenticatedUsername != "Usuario" &&
+                !string.Equals(authenticatedUsername, cuil, StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "Acceso denegado (RNF-SEG-03 / Ley 25.326): Un paciente solo puede consultar su propia historia clínica." });
+            }
+        }
+
         var res = await _historiaClinicaService.ObtenerPorPacienteCuilAsync(cuil);
         return Ok(res);
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Paciente,Profesional,Asistente,SuperAdmin")]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
         var res = await _historiaClinicaService.ObtenerPorIdAsync(id);
+
+        if (User.IsInRole("Paciente"))
+        {
+            var authenticatedUsername = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(authenticatedUsername) &&
+                authenticatedUsername != "Usuario" &&
+                !string.Equals(authenticatedUsername, res.PacienteCuil, StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "Acceso denegado (RNF-SEG-03 / Ley 25.326): Un paciente solo puede consultar su propia historia clínica." });
+            }
+        }
+
         return Ok(res);
     }
 }

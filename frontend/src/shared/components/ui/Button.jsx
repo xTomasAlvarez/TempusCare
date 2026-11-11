@@ -1,6 +1,13 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
 
+const extractText = (node) => {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).filter(Boolean).join(' ').trim();
+  if (React.isValidElement(node) && node.props?.children) return extractText(node.props.children);
+  return '';
+};
+
 export const Button = React.forwardRef(({
   children,
   className,
@@ -9,9 +16,10 @@ export const Button = React.forwardRef(({
   isLoading = false,
   disabled = false,
   type = 'button',
+  title,
   ...props
 }, ref) => {
-  const baseStyles = "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 select-none";
+  const baseStyles = "inline-flex items-center justify-center font-medium rounded-xl transition-transform duration-75 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 select-none cursor-pointer";
 
   const variants = {
     primary: "bg-primary-600 hover:bg-primary-700 text-white shadow-sm hover:shadow",
@@ -27,12 +35,15 @@ export const Button = React.forwardRef(({
     lg: "px-6 py-3.5 text-base gap-2.5 font-semibold",
   };
 
+  const computedTitle = title || props['aria-label'] || extractText(children) || 'Acción del sistema';
+
   return (
     <button
       ref={ref}
       type={type}
       disabled={disabled || isLoading}
       aria-busy={isLoading}
+      title={computedTitle}
       className={cn(baseStyles, variants[variant], sizes[size], className)}
       {...props}
     >

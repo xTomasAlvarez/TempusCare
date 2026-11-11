@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../core/context/AuthContext';
 import { useReceptionDashboard } from '../hooks/useReceptionDashboard';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { ReceptionFilters } from '../components/ReceptionFilters';
 import { CreateAgendaModal } from '../components/CreateAgendaModal';
 import { CreateWalkInPatientModal } from '../components/CreateWalkInPatientModal';
+import { BookingModal } from '../../patient/components/BookingModal';
 import { CoverageParameterizationForm } from '../components/CoverageParameterizationForm';
 import { Toast } from '../../../shared/components/ui/Toast';
 import { Button } from '../../../shared/components/ui/Button';
+import { Modal } from '../../../shared/components/ui/Modal';
 import { useConfirmDelete } from '../../../shared/hooks/useConfirmDelete';
 import { AlertCircle, ShieldPlus, BriefcaseMedical } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
+import { snappySpring, tabContentVariants, pageTransitionVariants } from '../../../shared/motion';
 
 export const ReceptionDashboardPage = () => {
   const { user } = useAuth();
@@ -46,7 +50,14 @@ export const ReceptionDashboardPage = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+  const [isSecretaryBookingModalOpen, setIsSecretaryBookingModalOpen] = useState(false);
+  const [selectedPatientForBooking, setSelectedPatientForBooking] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  const handleOpenAssignAppointment = (patient = null) => {
+    setSelectedPatientForBooking(patient);
+    setIsSecretaryBookingModalOpen(true);
+  };
 
   const handleAgendaCreated = () => {
     setToastMessage({
@@ -60,7 +71,7 @@ export const ReceptionDashboardPage = () => {
   const handleCancelAppointment = async (citaId) => {
     const ok = await confirmDelete({
       title: '¿Confirmar cancelación de cita médica?',
-      message: '¿Estás seguro de que deseas cancelar la cita del paciente? El turno será liberado automáticamente en la agenda médica (RN-01).',
+      message: '¿Estás seguro de que deseas cancelar la cita del paciente? El turno será liberado automáticamente en la agenda médica.',
       confirmText: 'Sí, eliminar definitivamente',
       cancelText: 'Cancelar',
     });
@@ -87,8 +98,69 @@ export const ReceptionDashboardPage = () => {
     }
   };
 
+  const [scheduleWarningModal, setScheduleWarningModal] = useState(null);
+  const [cachedScheduleWarning, setCachedScheduleWarning] = useState(null);
+  useEffect(() => {
+    if (scheduleWarningModal) setCachedScheduleWarning(scheduleWarningModal);
+  }, [scheduleWarningModal]);
+  const activeWarning = scheduleWarningModal || cachedScheduleWarning;
+
+  const handleStartAttention = async (citaId, item = null) => {
+    const appointment = item || columnEspera.find((c) => c.id === citaId);
+
+    // Validación de horario: tolerancia razonable de ±45 min respecto a horaInicio / horaFin
+    if (appointment && appointment.horaInicio) {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const itemDateStr = (appointment.fecha || '').split('T')[0];
+      const isToday = itemDateStr === todayStr || !appointment.fecha;
+
+      const [hIni, mIni] = String(appointment.horaInicio).split(':').map(Number);
+      const [hFin, mFin] = String(appointment.horaFin || appointment.horaInicio).split(':').map(Number);
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+      const startMins = hIni * 60 + mIni;
+      const endMins = hFin * 60 + mFin;
+
+      const outOfWindow = !isToday || nowMins < startMins - 45 || nowMins > endMins + 45;
+      if (outOfWindow) {
+        setScheduleWarningModal({
+          citaId,
+          pacienteNombre: appointment.pacienteNombre || 'el paciente',
+          horaProgramada: String(appointment.horaInicio).substring(0, 5),
+          horaActual: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        });
+        return;
+      }
+    }
+
+    try {
+      await startAttention(citaId, false);
+    } catch (err) {
+      if (err.message && err.message.includes('Aviso de Horario')) {
+        const now = new Date();
+        setScheduleWarningModal({
+          citaId,
+          pacienteNombre: appointment?.pacienteNombre || 'el paciente',
+          horaProgramada: appointment?.horaInicio ? String(appointment.horaInicio).substring(0, 5) : '--:--',
+          horaActual: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        });
+      }
+    }
+  };
+
+  const handleConfirmOutOfScheduleAttention = async () => {
+    if (!scheduleWarningModal) return;
+    const { citaId } = scheduleWarningModal;
+    setScheduleWarningModal(null);
+    try {
+      await startAttention(citaId, true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="space-y-6 w-full">
       {/* Toast Notificación Accesible */}
       {toastMessage && (
         <Toast
@@ -107,7 +179,7 @@ export const ReceptionDashboardPage = () => {
           </h1>
           <p className="text-sm text-slate-500 mt-1 font-sans">
             {activeTab === 'configuracion'
-              ? 'Parametrización de estudios médicos y obras sociales aceptadas por los profesionales de la sede (RN-02).'
+              ? 'Configuración de estudios médicos y obras sociales aceptadas por los profesionales de la sede.'
               : 'Gestión operativa de sala de espera, llamado a consultorio y administración de agendas en tiempo real.'}
           </p>
         </div>
@@ -137,26 +209,33 @@ export const ReceptionDashboardPage = () => {
         )}
       </div>
 
-      {/* Selector de Pestañas del Panel de Asistente */}
+      {/* Selector de Pestañas del Panel de Asistente con Indicador Deslizante */}
       <div className="border-b border-slate-200/80">
         <nav
           role="tablist"
           aria-label="Secciones del Asistente"
-          className="flex flex-wrap gap-2 -mb-px"
+          className="flex flex-wrap gap-2 -mb-px relative"
         >
           <button
             role="tab"
             aria-selected={activeTab === 'mesa'}
             onClick={() => setActiveTab('mesa')}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
+              'relative flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold transition-transform duration-75 active:scale-[0.98] cursor-pointer rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
               activeTab === 'mesa'
-                ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+                ? 'text-primary-700 bg-white shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
             )}
           >
             <BriefcaseMedical className={cn('w-4 h-4', activeTab === 'mesa' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
             <span>Mesa de Recepción Diaria</span>
+            {activeTab === 'mesa' && (
+              <motion.div
+                layoutId="reception-active-tab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
+                transition={snappySpring}
+              />
+            )}
           </button>
 
           {(user?.rol === 'Asistente' || user?.rol === 'SuperAdmin') && (
@@ -165,28 +244,40 @@ export const ReceptionDashboardPage = () => {
               aria-selected={activeTab === 'configuracion'}
               onClick={() => setActiveTab('configuracion')}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 border-b-2 text-xs sm:text-sm font-semibold transition-all duration-200 rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'relative flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold transition-transform duration-75 active:scale-[0.98] cursor-pointer rounded-t-xl focus:outline-none focus:ring-2 focus:ring-primary-500',
                 activeTab === 'configuracion'
-                  ? 'border-primary-600 text-primary-700 bg-white shadow-xs'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+                  ? 'text-primary-700 bg-white shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
               )}
             >
               <ShieldPlus className={cn('w-4 h-4', activeTab === 'configuracion' ? 'text-primary-600' : 'text-slate-400')} strokeWidth={2} />
               <span>Configuración Médica</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5 bg-primary-100 text-primary-800">
-                RN-02
-              </span>
+              {activeTab === 'configuracion' && (
+                <motion.div
+                  layoutId="reception-active-tab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
+                  transition={snappySpring}
+                />
+              )}
             </button>
           )}
         </nav>
       </div>
 
-      {activeTab === 'configuracion' ? (
-        /* Sección Exclusiva de Parametrización Médica */
-        <section aria-label="Parametrización médica de estudios y coberturas" className="pt-2 animate-in fade-in-0 duration-200">
-          <CoverageParameterizationForm />
-        </section>
-      ) : (
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          {activeTab === 'configuracion' ? (
+            /* Sección Exclusiva de Parametrización Médica */
+            <section aria-label="Parametrización médica de estudios y coberturas" className="pt-2">
+              <CoverageParameterizationForm />
+            </section>
+          ) : (
         /* Sección de Mesa Diaria */
         <>
           {/* Toolbar Unificado de Controles */}
@@ -198,6 +289,7 @@ export const ReceptionDashboardPage = () => {
             onDateChange={setSelectedDate}
             onOpenCreateAgenda={() => setIsCreateModalOpen(true)}
             onOpenCreateWalkInPatient={() => setIsWalkInModalOpen(true)}
+            onOpenAssignAppointment={() => handleOpenAssignAppointment(null)}
             onRefresh={refreshDashboard}
             isLoading={isLoading}
           />
@@ -222,7 +314,7 @@ export const ReceptionDashboardPage = () => {
               isLoading={isLoading}
               isActionLoading={isActionLoading}
               onMarkArrived={markAsArrived}
-              onStartAttention={startAttention}
+              onStartAttention={handleStartAttention}
               onFinishAttention={handleFinishAttention}
               onCancel={handleCancelAppointment}
             />
@@ -248,9 +340,79 @@ export const ReceptionDashboardPage = () => {
                 message: `El paciente ${patient.nombre} ${patient.apellido} (DNI ${patient.dni}) fue registrado y está listo para recibir turnos.`,
               });
             }}
+            onAssignAppointment={(patient) => {
+              handleOpenAssignAppointment(patient);
+            }}
           />
+
+          {/* Modal Accesible de Reserva para Secretaría (RF-ASI-06) */}
+          <BookingModal
+            isOpen={isSecretaryBookingModalOpen}
+            onClose={() => {
+              setIsSecretaryBookingModalOpen(false);
+              setSelectedPatientForBooking(null);
+            }}
+            doctor={doctors.find((d) => d.cuil === selectedDoctorCuil) || doctors[0]}
+            patientCuil={selectedPatientForBooking?.cuil || selectedPatientForBooking?.dni}
+            patientName={selectedPatientForBooking ? `${selectedPatientForBooking.nombre} ${selectedPatientForBooking.apellido}` : null}
+            onBookingSuccess={(res) => {
+              setToastMessage({
+                type: 'success',
+                title: '¡Turno Asignado con Éxito!',
+                message: `Se ha reservado el turno médico para el paciente en la agenda de ${res.profesionalNombre || 'recepción'}.`,
+              });
+              refreshDashboard();
+            }}
+          />
+
+          {/* Modal de Advertencia y Confirmación por Horario */}
+          <Modal
+            isOpen={Boolean(scheduleWarningModal)}
+            onClose={() => setScheduleWarningModal(null)}
+            title="Aviso de Horario de Atención"
+            description="Verificación de horario programado de la cita médica"
+            maxWidth="max-w-md"
+          >
+            {activeWarning && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed space-y-1.5">
+                    <p className="text-sm">
+                      Aviso de Horario: Este turno de <strong>{activeWarning.pacienteNombre}</strong> está programado para las{' '}
+                      <strong>{activeWarning.horaProgramada} hs</strong> y actualmente son las{' '}
+                      <strong>{activeWarning.horaActual} hs</strong>.
+                    </p>
+                    <p className="font-semibold text-slate-900 pt-1">
+                      ¿Desea iniciar la atención fuera del horario estipulado?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setScheduleWarningModal(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={handleConfirmOutOfScheduleAttention}
+                  >
+                    Iniciar Atención
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Modal>
         </>
       )}
-    </div>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 };

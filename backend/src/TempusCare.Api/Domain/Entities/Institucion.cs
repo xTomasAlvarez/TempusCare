@@ -10,6 +10,7 @@ public class Institucion
     public string Cuit { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Plan { get; set; } = "Enterprise";
+    public int VisitasPerfil { get; set; } = 0;
 
     public ICollection<Consultorio> Consultorios { get; set; } = new List<Consultorio>();
     public ICollection<AdministradorInstitucion> Administradores { get; set; } = new List<AdministradorInstitucion>();

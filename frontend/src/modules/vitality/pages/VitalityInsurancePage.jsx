@@ -1,9 +1,11 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useVitalityInsurance } from '../hooks/useVitalityInsurance';
 import { InsuranceModal } from '../components/InsuranceModal';
 import { DataTable } from '../../institution/components/DataTable';
 import { Button } from '../../../shared/components/ui/Button';
 import { Badge } from '../../../shared/components/ui/Badge';
+import { pageTransitionVariants, staggerContainerVariants, staggerItemVariants } from '../../../shared/motion';
 import {
   ShieldPlus,
   Plus,
@@ -100,7 +102,12 @@ export const VitalityInsurancePage = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -124,8 +131,16 @@ export const VitalityInsurancePage = () => {
       </div>
 
       {/* Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      >
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Obras Sociales Registradas</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">{stats.totalInsurance}</p>
@@ -134,9 +149,12 @@ export const VitalityInsurancePage = () => {
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
             <ShieldPlus className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <motion.div
+          variants={staggerItemVariants}
+          className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-transform duration-75 active:scale-[0.98]"
+        >
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado de Convenios</p>
             <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 mt-1">Activo</p>
@@ -145,8 +163,8 @@ export const VitalityInsurancePage = () => {
           <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
             <ShieldCheck className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Data Table */}
       <DataTable
@@ -167,7 +185,7 @@ export const VitalityInsurancePage = () => {
         onSubmit={saveInsurance}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </motion.div>
   );
 };
 

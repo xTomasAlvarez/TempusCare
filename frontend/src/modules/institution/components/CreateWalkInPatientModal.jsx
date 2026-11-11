@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserRoundPlus, Phone, Mail, ShieldPlus, CheckCircle2, AlertCircle, Loader2, Copy, Check } from 'lucide-react';
+import { UserRoundPlus, CalendarPlus, Phone, Mail, ShieldPlus, CheckCircle2, AlertCircle, Loader2, Copy, Check } from 'lucide-react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { Button } from '../../../shared/components/ui/Button';
 import { Input } from '../../../shared/components/ui/Input';
@@ -11,6 +11,7 @@ export const CreateWalkInPatientModal = ({
   isOpen,
   onClose,
   onPatientCreated,
+  onAssignAppointment,
 }) => {
   const [formData, setFormData] = useState({
     dni: '',
@@ -179,26 +180,47 @@ export const CreateWalkInPatientModal = ({
             </p>
           </div>
 
-          <div className="flex justify-end pt-2">
-            <Button variant="primary" onClick={onClose} className="rounded-xl w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row justify-end gap-2.5 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-xl w-full sm:w-auto"
+            >
               Listo, Continuar a Recepción
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                onClose();
+                if (onAssignAppointment) {
+                  onAssignAppointment(createdPatient);
+                }
+              }}
+              className="rounded-xl w-full sm:w-auto gap-2 font-semibold"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              <span>Asignar Turno Inmediatamente</span>
             </Button>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <Input
                 label="DNI / Documento"
                 name="dni"
                 id="walkin-dni"
                 placeholder="Ej. 38123456"
+                title="Ingresa el DNI del paciente presencial (7 a 9 dígitos)"
                 value={formData.dni}
                 onChange={handleChange}
                 error={fieldErrors.dni}
                 required
                 maxLength={9}
+                className="py-1.5 text-sm"
               />
             </div>
             <div>
@@ -207,25 +229,31 @@ export const CreateWalkInPatientModal = ({
                 name="telefono"
                 id="walkin-telefono"
                 placeholder="Ej. 11-4567-8901"
+                title="Ingresa el teléfono de contacto del paciente"
                 value={formData.telefono}
                 onChange={handleChange}
                 error={fieldErrors.telefono}
                 required
+                maxLength={20}
+                className="py-1.5 text-sm"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <Input
                 label="Nombre"
                 name="nombre"
                 id="walkin-nombre"
                 placeholder="Ej. Carlos"
+                title="Ingresa el nombre del paciente"
                 value={formData.nombre}
                 onChange={handleChange}
                 error={fieldErrors.nombre}
                 required
+                maxLength={50}
+                className="py-1.5 text-sm"
               />
             </div>
             <div>
@@ -234,10 +262,13 @@ export const CreateWalkInPatientModal = ({
                 name="apellido"
                 id="walkin-apellido"
                 placeholder="Ej. Gómez"
+                title="Ingresa el apellido del paciente"
                 value={formData.apellido}
                 onChange={handleChange}
                 error={fieldErrors.apellido}
                 required
+                maxLength={50}
+                className="py-1.5 text-sm"
               />
             </div>
           </div>
@@ -249,26 +280,30 @@ export const CreateWalkInPatientModal = ({
               id="walkin-email"
               type="email"
               placeholder="correo@ejemplo.com (Opcional)"
+              title="Ingresa el correo electrónico del paciente (opcional)"
               value={formData.email}
               onChange={handleChange}
               error={fieldErrors.email}
+              maxLength={100}
+              className="py-1.5 text-sm"
               helperText="Si se omite, se generará una casilla provisional vinculada a su DNI."
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label htmlFor="walkin-obra-social" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="walkin-obra-social" title="Seleccionar obra social del paciente (opcional)" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 <ShieldPlus className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} />
                 Obra Social (Opcional)
               </label>
               <select
                 id="walkin-obra-social"
                 name="obraSocialId"
+                title="Seleccionar obra social o cobertura médica"
                 value={formData.obraSocialId}
                 onChange={handleChange}
                 disabled={loadingObrasSociales}
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full h-9.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Particular / Sin Cobertura</option>
                 {obrasSociales.map((os) => (
@@ -285,14 +320,17 @@ export const CreateWalkInPatientModal = ({
                 name="numeroAfiliado"
                 id="walkin-afiliado"
                 placeholder="Ej. 001-9876543-0"
+                title="Ingresa el número de credencial o afiliado de la obra social"
                 value={formData.numeroAfiliado}
                 onChange={handleChange}
                 disabled={!formData.obraSocialId}
+                maxLength={50}
+                className="py-1.5 text-sm"
               />
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
             <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
               {error && (
                 <span className="flex items-center gap-1 animate-in fade-in-0">

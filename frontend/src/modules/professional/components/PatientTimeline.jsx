@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Badge } from '../../../shared/components/ui/Badge';
 import {
   FileHeart,
@@ -13,6 +14,7 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
+import { fastStaggerContainerVariants, staggerItemVariants } from '../../../shared/motion';
 
 /**
  * Panel Lateral: Línea de Tiempo (Timeline) de la Historia Clínica Unificada (RN-04).
@@ -56,9 +58,10 @@ export const PatientTimeline = ({
             </div>
             <div>
               <h3 className="text-sm font-bold font-heading text-slate-900 leading-snug">
-                Historia Clínica Unificada
+                {clinicalHistory?.pacienteNombre ? `Historia Clínica: ${clinicalHistory.pacienteNombre}` : 'Historia Clínica Unificada'}
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
+                {clinicalHistory?.pacienteCuil ? `CUIL: ${clinicalHistory.pacienteCuil} • ` : ''}
                 {clinicalHistory?.id ? `Ficha N° ${clinicalHistory.id}` : 'Registro médico unificado'}
               </p>
             </div>
@@ -118,11 +121,16 @@ export const PatientTimeline = ({
 
       {/* Timeline Cronológico de Consultas y Diagnósticos */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-heading">
-            Línea de Tiempo Médica
-          </h4>
-          <span className="text-[11px] font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-heading">
+              Línea de Tiempo del Paciente
+            </h4>
+            <p className="text-[11px] text-slate-400">
+              Trayectoria clínica unificada a través de los profesionales de la red
+            </p>
+          </div>
+          <span className="text-[11px] font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full self-start sm:self-auto">
             {observaciones.length} Registros
           </span>
         </div>
@@ -136,10 +144,15 @@ export const PatientTimeline = ({
             </p>
           </div>
         ) : (
-          <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+          <motion.div
+            variants={fastStaggerContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200"
+          >
             {/* Observaciones registradas */}
             {observaciones.map((obs, idx) => (
-              <div key={obs.id || idx} className="relative group">
+              <motion.div key={obs.id || idx} variants={staggerItemVariants} className="relative group">
                 {/* Punto en el Timeline */}
                 <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-2 border-white bg-primary-600 shadow-xs flex items-center justify-center text-white" />
 
@@ -162,14 +175,14 @@ export const PatientTimeline = ({
                     <span>{obs.profesionalNombre || 'Profesional de la Red'}</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {/* Citas previas sin observación detallada aún */}
             {priorAppointments
               .filter((c) => !observaciones.some((o) => o.citaId === c.id))
               .map((cita) => (
-                <div key={cita.id} className="relative group">
+                <motion.div key={cita.id} variants={staggerItemVariants} className="relative group">
                   <div className="absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-2 border-white bg-slate-400 shadow-xs" />
 
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
@@ -185,9 +198,9 @@ export const PatientTimeline = ({
                       Atendido por {cita.profesionalNombre || 'Médico tratante'}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

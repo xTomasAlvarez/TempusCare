@@ -62,14 +62,45 @@ public class CitaService : ICitaService
                 throw new ConflictException("RN-02: El horario seleccionado ya no está disponible.");
             }
 
-            // RN-HorarioReal: Si el turno es para el día de hoy, no permitir horarios que ya hayan pasado.
-            var hoy = DateTime.Today;
-            var horaActual = DateTime.Now.TimeOfDay;
-            if (turno.Fecha.Date == hoy && turno.HoraInicio <= horaActual)
+            // RN-02, RF-PAC-07: Impedir reserva en fechas/horarios pasados
+            if (turno.Fecha.Date.Add(turno.HoraInicio) <= DateTime.Now)
             {
-                _logger.LogWarning("Intento de reserva en horario transcurrido ID {TurnoId} - Fecha: {Fecha:yyyy-MM-dd}, Hora: {HoraInicio}",
+                _logger.LogWarning("Intento de reserva en fecha/horario transcurrido ID {TurnoId} - Fecha: {Fecha:yyyy-MM-dd}, Hora: {HoraInicio}",
                     turno.Id, turno.Fecha.Date, turno.HoraInicio);
-                throw new ValidationException("No es posible reservar un turno en un horario que ya ha transcurrido.");
+                throw new BusinessException("No es posible reservar un turno en un horario que ya ha transcurrido.");
+            }
+
+            // Ventana máxima de 6 meses
+            if (turno.Fecha.Date > DateTime.Today.AddMonths(6))
+            {
+                _logger.LogWarning("Intento de reserva con más de 6 meses de antelación. Turno ID {TurnoId}, Fecha {Fecha:yyyy-MM-dd}", turno.Id, turno.Fecha);
+                throw new BusinessException("Solo se permiten reservas y agendas con una antelación máxima de 6 meses.");
+            }
+
+            // Evitar doble turno simultáneo del mismo paciente en la misma fecha y franja horaria superpuesta
+            var startOfDay = turno.Fecha.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            var citasActivasMismoDia = await _db.Citas
+                .Include(c => c.Turno)
+                .Include(c => c.Turnos)
+                .Where(c => c.PacienteCuil == paciente.Cuil &&
+                            c.Fecha >= startOfDay && c.Fecha < endOfDay &&
+                            (c.Estado == EstadoCita.Solicitada ||
+                             c.Estado == EstadoCita.Confirmada ||
+                             c.Estado == EstadoCita.EnSalaDeEspera ||
+                             c.Estado == EstadoCita.EnAtencion))
+                .ToListAsync();
+
+            bool solapadoConOtraCita = citasActivasMismoDia.Any(c =>
+            {
+                var turnosDeEstaCita = c.Turnos?.Count > 0 ? c.Turnos : (c.Turno != null ? new List<Turno> { c.Turno } : new List<Turno>());
+                return turnosDeEstaCita.Any(t => turno.HoraInicio < t.HoraFin && turno.HoraFin > t.HoraInicio);
+            });
+
+            if (solapadoConOtraCita)
+            {
+                _logger.LogWarning("El paciente {Cuil} ya posee otro turno activo superpuesto en fecha {Fecha:yyyy-MM-dd} y horario {Hora}", paciente.Cuil, turno.Fecha, turno.HoraInicio);
+                throw new BusinessException("El paciente ya posee otro turno reservado en ese mismo día y horario.");
             }
 
             // RN-04: Cobertura de Obra Social o Particular
@@ -200,9 +231,15 @@ public class CitaService : ICitaService
         }
     }
 
-    public async Task<CitaResponseDto> ModificarCitaEstadoAsync(int citaId, EstadoCita estado)
+    public async Task<CitaResponseDto> ModificarCitaEstadoAsync(int citaId, EstadoCita estado, string? userRol = null, bool forzarAtencionFueraDeHorario = false)
     {
-        _logger.LogInformation("Modificando estado de cita ID {CitaId} a {Estado}", citaId, estado);
+        _logger.LogInformation("Modificando estado de cita ID {CitaId} a {Estado} (Rol: {Rol}, ForzarHorario: {Forzar})", citaId, estado, userRol, forzarAtencionFueraDeHorario);
+
+        if (estado == EstadoCita.Atendida && string.Equals(userRol, "Asistente", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Intento indebido de asistente para finalizar cita {CitaId} a Atendida", citaId);
+            throw new BusinessException("Solo el profesional tratante puede finalizar la consulta mediante el registro de la evolución clínica.");
+        }
 
         using var tx = _db.Database.IsRelational() ? await _db.Database.BeginTransactionAsync() : null;
         try
@@ -223,6 +260,59 @@ public class CitaService : ICitaService
                 throw new CitaNotFoundException(citaId);
             }
 
+            if (estado == EstadoCita.EnAtencion)
+            {
+                // Si ya se encuentra en atención, retornar idéntico estado sin error
+                if (cita.Estado == EstadoCita.EnAtencion)
+                {
+                    return MapCitaDto(cita, cita.Turno!, cita.Paciente!, cita.Turno!.Agenda!.Profesional!);
+                }
+
+                // 1. Validación de Presencia: El paciente debe estar en Sala de Espera previamente
+                if (cita.Estado != EstadoCita.EnSalaDeEspera)
+                {
+                    _logger.LogWarning("Intento de llamar al paciente para cita {CitaId} en estado {EstadoActual} sin registro previo en Sala de Espera.", cita.Id, cita.Estado);
+                    throw new BusinessException("No se puede llamar al paciente porque aún no ha sido marcado como presente en la Sala de Espera por recepción.");
+                }
+
+                // 2. Validación de Horario / Rango de Tolerancia (±45 minutos)
+                var hoy = DateTime.Today;
+                var ahora = DateTime.Now;
+                var horaActual = ahora.TimeOfDay;
+
+                bool enHorarioValido = cita.Fecha.Date == hoy &&
+                                       cita.Turno != null &&
+                                       horaActual >= (cita.Turno.HoraInicio - TimeSpan.FromMinutes(45)) &&
+                                       horaActual <= (cita.Turno.HoraFin + TimeSpan.FromMinutes(45));
+
+                if (!enHorarioValido && !forzarAtencionFueraDeHorario)
+                {
+                    var horaTurnoStr = cita.Turno != null ? cita.Turno.HoraInicio.ToString(@"hh\:mm") : "el horario acordado";
+                    var horaActualStr = ahora.ToString("HH:mm");
+                    _logger.LogWarning("Intento de atención fuera de horario para cita {CitaId}. Turno: {HoraTurno}, Actual: {HoraActual}", cita.Id, horaTurnoStr, horaActualStr);
+                    throw new BusinessException($"Aviso de Horario: Este turno está programado para las {horaTurnoStr} hs y actualmente son las {horaActualStr} hs. ¿Desea iniciar la atención fuera del horario estipulado?");
+                }
+
+                // 3. Regla de Negocio: Un médico solo puede atender a un paciente a la vez
+                var profCuil = cita.Turno?.Agenda?.ProfesionalCuil;
+                if (!string.IsNullOrEmpty(profCuil))
+                {
+                    bool yaAtendiendo = await _db.Citas
+                        .Include(c => c.Turno).ThenInclude(t => t!.Agenda)
+                        .AnyAsync(c => c.Id != cita.Id &&
+                                       c.Estado == EstadoCita.EnAtencion &&
+                                       c.Turno != null &&
+                                       c.Turno.Agenda != null &&
+                                       c.Turno.Agenda.ProfesionalCuil == profCuil);
+
+                    if (yaAtendiendo)
+                    {
+                        _logger.LogWarning("Regla de negocio: El profesional {Cuil} ya se encuentra atendiendo a otro paciente.", profCuil);
+                        throw new BusinessException("El profesional ya se encuentra atendiendo a un paciente en este momento. Debe finalizar la consulta actual antes de iniciar una nueva.");
+                    }
+                }
+            }
+
             cita.Estado = estado;
 
             // Regla de Negocio RN-01: Si se cancela la cita, todos los turnos asociados pasan a estar Disponibles.
@@ -233,6 +323,23 @@ public class CitaService : ICitaService
             if (estado == EstadoCita.Cancelada)
             {
                 _logger.LogInformation("Cita cancelada: restableciendo {Cant} turnos a Disponible", turnosDeCita.Count);
+                foreach (var t in turnosDeCita)
+                {
+                    t.Estado = EstadoTurno.Disponible;
+                    t.CitaId = null;
+                    t.RowVersion = Guid.NewGuid();
+                }
+            }
+            // Regla de Negocio: Si un paciente llega antes y es atendido previo a su horario agendado,
+            // el sistema actualiza el horario futuro original como disponible para que otro paciente pueda reservarlo
+            else if ((estado == EstadoCita.EnAtencion || estado == EstadoCita.Atendida) &&
+                     cita.Fecha.Date == DateTime.Today &&
+                     cita.Turno != null &&
+                     DateTime.Now.TimeOfDay < cita.Turno.HoraInicio)
+            {
+                _logger.LogInformation("Atención anticipada para cita ID {CitaId}. Liberando turno original ID {TurnoId} ({Hora}) a Disponible",
+                    cita.Id, cita.Turno.Id, cita.Turno.HoraInicio);
+
                 foreach (var t in turnosDeCita)
                 {
                     t.Estado = EstadoTurno.Disponible;
@@ -276,6 +383,7 @@ public class CitaService : ICitaService
     public async Task<List<CitaResponseDto>> ObtenerCitasPacienteAsync(string pacienteCuil)
     {
         _logger.LogInformation("Obteniendo citas para paciente CUIL {Cuil}", pacienteCuil);
+        await ActualizarCitasVencidasAAusenteAsync();
 
         var citas = await _db.Citas
             .Include(c => c.Paciente)
@@ -294,6 +402,7 @@ public class CitaService : ICitaService
     public async Task<List<CitaResponseDto>> ObtenerCitasProfesionalAsync(string profesionalCuil, DateTime? fecha, string? consultorioCuit = null)
     {
         _logger.LogInformation("Obteniendo citas para profesional CUIL {Cuil} en fecha {Fecha} y consultorio {Cons}", profesionalCuil, fecha, consultorioCuit);
+        await ActualizarCitasVencidasAAusenteAsync();
 
         var query = _db.Citas
             .Include(c => c.Paciente)
@@ -325,6 +434,7 @@ public class CitaService : ICitaService
     public async Task<CitaResponseDto> ObtenerPorIdAsync(int citaId)
     {
         _logger.LogInformation("Obteniendo cita ID {CitaId}", citaId);
+        await ActualizarCitasVencidasAAusenteAsync();
 
         var cita = await _db.Citas
             .Include(c => c.Paciente)
@@ -343,6 +453,35 @@ public class CitaService : ICitaService
         }
 
         return MapCitaDto(cita, cita.Turno!, cita.Paciente!, cita.Turno!.Agenda!.Profesional!);
+    }
+
+    public async Task ActualizarCitasVencidasAAusenteAsync()
+    {
+        var hoy = DateTime.Today;
+        var ahora = DateTime.Now;
+        var limiteHoy = ahora.TimeOfDay - TimeSpan.FromHours(2);
+        var manana = hoy.AddDays(1);
+
+        // SQLite no traduce comparaciones de TimeSpan en SQL. Traemos candidatos con fecha <= hoy y evaluamos en memoria.
+        var candidatos = await _db.Citas
+            .Include(c => c.Turno)
+            .Where(c => (c.Estado == EstadoCita.Solicitada || c.Estado == EstadoCita.Confirmada) &&
+                        c.Fecha < manana)
+            .ToListAsync();
+
+        var citasVencidas = candidatos
+            .Where(c => c.Fecha.Date < hoy || (c.Fecha.Date == hoy && c.Turno != null && c.Turno.HoraFin <= limiteHoy))
+            .ToList();
+
+        if (citasVencidas.Any())
+        {
+            foreach (var c in citasVencidas)
+            {
+                c.Estado = EstadoCita.Ausente;
+            }
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Actualizadas automáticamente {Cant} citas vencidas a Ausente", citasVencidas.Count);
+        }
     }
 
     private static CitaResponseDto MapCitaDto(Cita c, Turno t, Paciente p, Profesional prof)

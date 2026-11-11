@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'DM Sans', 'sans-serif'],
-        heading: ['Ranade', 'Object Sans', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'Manrope', '"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', 'Inter', 'Manrope', '"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"Plus Jakarta Sans"', 'Inter', 'Manrope', '"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         primary: {

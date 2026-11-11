@@ -105,12 +105,12 @@ export const EditInstitutionModal = ({
       description={`Actualiza la configuración comercial, email y plan contratado para ${institution?.nombre || 'la institución'}.`}
       maxWidth="max-w-xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs sm:text-sm">
-        {/* Grilla de Campos Principales (Razón Social, CUIT, Correo) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5 font-sans text-xs sm:text-sm">
+        {/* Grilla de Campos Principales (Razón Social, CUIT, Correo) perfectamente alineados */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
           {/* Razón Social */}
-          <div className="col-span-1 md:col-span-2">
-            <label htmlFor="edit-nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
+          <div className="col-span-1 sm:col-span-2">
+            <label htmlFor="edit-nombre-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
               Razón Social / Nombre <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -122,21 +122,21 @@ export const EditInstitutionModal = ({
                 value={formData.nombre}
                 onChange={handleChange}
                 placeholder="Ej: Sanatorio Modelo S.A."
-                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
+                className={`w-full h-10 pl-9 pr-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all font-medium ${
                   errors.nombre ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
             </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.nombre && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.nombre}</p>}
-            </div>
+            {errors.nombre && (
+              <p className="text-[11px] text-rose-600 truncate mt-1 animate-in fade-in-0">{errors.nombre}</p>
+            )}
           </div>
 
           {/* CUIT (No editable) */}
           <div className="col-span-1">
-            <label htmlFor="edit-cuit-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              CUIT Institucional (Identificador)
+            <label htmlFor="edit-cuit-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
+              CUIT Institucional
             </label>
             <div className="relative">
               <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
@@ -146,18 +146,15 @@ export const EditInstitutionModal = ({
                 type="text"
                 value={formData.cuit}
                 readOnly
-                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
+                className="w-full h-10 pl-9 pr-3.5 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-xl font-mono cursor-not-allowed select-all"
               />
-            </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              <span className="text-[11px] text-slate-400">Identificador fiscal inmutable</span>
             </div>
           </div>
 
           {/* Correo de Contacto Crítico */}
           <div className="col-span-1">
-            <label htmlFor="edit-email-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1">
-              Email de Contacto / Admin <span className="text-rose-500">*</span>
+            <label htmlFor="edit-email-inst" className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-1 truncate">
+              Correo del Administrador <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} />
@@ -168,20 +165,20 @@ export const EditInstitutionModal = ({
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="admin@institucion.com"
-                className={`w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
+                className={`w-full h-10 pl-9 pr-3.5 py-2 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all ${
                   errors.email ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
                 }`}
                 disabled={isSubmitting}
               />
             </div>
-            <div className="min-h-[20px] mt-0.5 flex items-center">
-              {errors.email && <p className="text-[11px] text-rose-600 truncate animate-in fade-in-0">{errors.email}</p>}
-            </div>
+            {errors.email && (
+              <p className="text-[11px] text-rose-600 truncate mt-1 animate-in fade-in-0">{errors.email}</p>
+            )}
           </div>
         </div>
 
         {/* Plan de Suscripción Asignado */}
-        <div className="pt-2 border-t border-slate-100">
+        <div className="pt-2.5 border-t border-slate-100">
           <label className="block text-xs font-bold font-heading text-slate-800 uppercase tracking-wider mb-2">
             Plan de Suscripción Asignado <span className="text-rose-500">*</span>
           </label>
@@ -192,33 +189,33 @@ export const EditInstitutionModal = ({
               return (
                 <label
                   key={p.id}
-                  className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border cursor-pointer transition-all ${
                     isSelected
                       ? 'bg-primary-50/70 border-primary-400 ring-1 ring-primary-400 text-primary-950 shadow-xs'
                       : 'bg-slate-50 hover:bg-slate-100/70 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     <input
                       type="radio"
                       name="plan"
                       value={p.id}
                       checked={isSelected}
                       onChange={handleChange}
-                      className="w-4 h-4 text-primary-600 border-slate-300 focus:ring-primary-500 mt-0.5"
+                      className="w-4 h-4 text-primary-600 border-slate-300 focus:ring-primary-500 shrink-0"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold font-heading text-sm">{p.name}</span>
+                        <span className="font-bold font-heading text-xs sm:text-sm">{p.name}</span>
                         <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-700">
                           {p.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{p.description}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{p.description}</p>
                     </div>
                   </div>
                   {isSelected && (
-                    <CheckCircle2 className="w-4 h-4 text-primary-600 mt-0.5" strokeWidth={2} />
+                    <CheckCircle2 className="w-4 h-4 text-primary-600 shrink-0" strokeWidth={2} />
                   )}
                 </label>
               );
@@ -227,8 +224,8 @@ export const EditInstitutionModal = ({
         </div>
 
         {/* Acciones del formulario */}
-        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
-          <div className="min-h-[20px] flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
+        <div className="pt-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div className="flex items-center text-xs text-rose-600 font-medium w-full sm:w-auto">
             {(errors.general || serverError) && (
               <span className="flex items-center gap-1 animate-in fade-in-0">
                 <span aria-hidden="true">⚠</span> {errors.general || serverError}

@@ -1,0 +1,253 @@
+using Microsoft.EntityFrameworkCore;
+using TempusCare.Api.Application.DTOs;
+using TempusCare.Api.Application.Exceptions;
+using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Domain.Enums;
+using TempusCare.Api.Infrastructure.Data;
+
+namespace TempusCare.Api.Application.Services;
+
+public class AgendaService : IAgendaService
+{
+    private readonly TempusCareDbContext _db;
+    private readonly ILogger<AgendaService> _logger;
+
+    public AgendaService(TempusCareDbContext db, ILogger<AgendaService> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
+
+    public async Task<AgendaResponseDto> AltaAgendaAsync(AltaAgendaDto dto)
+    {
+        _logger.LogInformation("Iniciando creación de agenda para profesional {Cuil} en consultorio {Cons} para fecha {Dia}/{Mes}/{Anio}",
+            dto.ProfesionalCuil, dto.CuitConsultorio, dto.Dia, dto.Mes, dto.Anio);
+
+        var prof = await _db.Profesionales
+            .Include(p => p.Especialidades).ThenInclude(e => e.Especialidad)
+            .FirstOrDefaultAsync(p => p.Cuil == dto.ProfesionalCuil);
+
+        if (prof == null)
+        {
+            _logger.LogWarning("Profesional con CUIL {Cuil} no encontrado", dto.ProfesionalCuil);
+            throw new ProfesionalNotFoundException(dto.ProfesionalCuil);
+        }
+
+        var cons = await _db.Consultorios.FirstOrDefaultAsync(c => c.Cuit == dto.CuitConsultorio);
+        if (cons == null)
+        {
+            _logger.LogWarning("Consultorio con CUIT {Cuit} no encontrado", dto.CuitConsultorio);
+            throw new ConsultorioNotFoundException(dto.CuitConsultorio);
+        }
+
+        DateTime fechaBase = new DateTime(dto.Anio, dto.Mes, dto.Dia);
+        if (fechaBase.Date < DateTime.Today)
+        {
+            _logger.LogWarning("Intento de crear agenda en fecha pasada: {Fecha:yyyy-MM-dd}", fechaBase);
+            throw new BusinessException("No se pueden crear agendas en fechas pasadas.");
+        }
+        if (fechaBase.Date > DateTime.Today.AddMonths(6))
+        {
+            _logger.LogWarning("Intento de crear agenda con más de 6 meses de antelación: {Fecha:yyyy-MM-dd}", fechaBase);
+            throw new BusinessException("Solo se permiten reservas y agendas con una antelación máxima de 6 meses.");
+        }
+
+        // RN-01 / RN-05: Un profesional no puede tener dos turnos/agendas superpuestas en la misma franja horaria (incluso en distintos consultorios).
+        // 1. Traer de la base de datos las agendas de ese médico para ese día específico en memoria para evitar excepciones de traducción LINQ en EF Core
+        var agendasDelDia = await _db.Agendas
+            .Where(a => a.ProfesionalCuil == dto.ProfesionalCuil &&
+                        a.Dia == dto.Dia &&
+                        a.Mes == dto.Mes &&
+                        a.Anio == dto.Anio)
+            .ToListAsync();
+
+        // 2. Validación de superposición de horas en memoria con LINQ to Objects:
+        // (nuevaHoraInicio < agendaExistente.HoraSalida && nuevaHoraFin > agendaExistente.HoraEntrada)
+        bool solapado = agendasDelDia.Any(a =>
+            dto.HoraEntrada < a.HoraSalida && dto.HoraSalida > a.HoraEntrada);
+
+        if (solapado)
+        {
+            _logger.LogWarning("RN-05 violada: solapamiento de agenda para profesional {Cuil} en día {Dia}/{Mes}/{Anio}", dto.ProfesionalCuil, dto.Dia, dto.Mes, dto.Anio);
+            throw new ConflictException("RN-05: El profesional ya posee una agenda configurada que se solapa en esa franja horaria (no puede tener agendas que se crucen entre consultorios distintos en día y hora).");
+        }
+
+        var agenda = new Agenda
+        {
+            ProfesionalCuil = dto.ProfesionalCuil,
+            ConsultorioCuit = dto.CuitConsultorio,
+            Dia = dto.Dia,
+            Mes = dto.Mes,
+            Anio = dto.Anio,
+            HoraEntrada = dto.HoraEntrada,
+            HoraSalida = dto.HoraSalida
+        };
+
+        _db.Agendas.Add(agenda);
+        await _db.SaveChangesAsync();
+
+        // Generación automática de franjas horarias (Turnos con pausa de descanso / almuerzo humana)
+        TimeSpan tiempoActual = dto.HoraEntrada;
+        int duracion = dto.DuracionTurnoMinutos > 0 ? dto.DuracionTurnoMinutos : 30;
+
+        while (tiempoActual.Add(TimeSpan.FromMinutes(duracion)) <= dto.HoraSalida)
+        {
+            var finTurno = tiempoActual.Add(TimeSpan.FromMinutes(duracion));
+            bool enDescanso = false;
+
+            if (dto.HoraInicioDescanso.HasValue && dto.HoraFinDescanso.HasValue)
+            {
+                if (tiempoActual < dto.HoraFinDescanso.Value && finTurno > dto.HoraInicioDescanso.Value)
+                {
+                    enDescanso = true;
+                }
+            }
+            else if ((dto.HoraSalida - dto.HoraEntrada).TotalHours >= 6)
+            {
+                var defInicio = new TimeSpan(13, 0, 0);
+                var defFin = new TimeSpan(16, 0, 0);
+                if (tiempoActual < defFin && finTurno > defInicio)
+                {
+                    enDescanso = true;
+                }
+            }
+
+            if (!enDescanso)
+            {
+                var turno = new Turno
+                {
+                    AgendaId = agenda.Id,
+                    Fecha = fechaBase,
+                    HoraInicio = tiempoActual,
+                    HoraFin = finTurno,
+                    Estado = EstadoTurno.Disponible
+                };
+                _db.Turnos.Add(turno);
+            }
+            tiempoActual = finTurno;
+        }
+
+        await _db.SaveChangesAsync();
+
+        int totalTurnos = await _db.Turnos.CountAsync(t => t.AgendaId == agenda.Id);
+        _logger.LogInformation("Agenda ID {AgendaId} creada exitosamente con {TotalTurnos} turnos", agenda.Id, totalTurnos);
+
+        return new AgendaResponseDto(
+            agenda.Id,
+            prof.Cuil,
+            $"{prof.Nombre} {prof.Apellido}",
+            prof.Matricula,
+            cons.Cuit,
+            cons.Nombre,
+            agenda.Dia,
+            agenda.Mes,
+            agenda.Anio,
+            agenda.HoraEntrada,
+            agenda.HoraSalida,
+            totalTurnos
+        );
+    }
+
+    public async Task<AgendaResponseDto> ModificarAgendaAsync(ModificarAgendaDto dto)
+    {
+        _logger.LogInformation("Modificando agenda ID {IdAgenda}", dto.IdAgenda);
+
+        var agenda = await _db.Agendas
+            .Include(a => a.Profesional)
+            .Include(a => a.Consultorio)
+            .Include(a => a.Turnos)
+            .FirstOrDefaultAsync(a => a.Id == dto.IdAgenda);
+
+        if (agenda == null)
+        {
+            _logger.LogWarning("Agenda ID {IdAgenda} no encontrada", dto.IdAgenda);
+            throw new AgendaNotFoundException(dto.IdAgenda);
+        }
+
+        var agendasDelDia = await _db.Agendas
+            .Where(a => a.ProfesionalCuil == agenda.ProfesionalCuil &&
+                        a.Dia == agenda.Dia &&
+                        a.Mes == agenda.Mes &&
+                        a.Anio == agenda.Anio &&
+                        a.Id != agenda.Id)
+            .ToListAsync();
+
+        bool solapado = agendasDelDia.Any(a =>
+            dto.NuevaHoraEntrada < a.HoraSalida && dto.NuevaHoraSalida > a.HoraEntrada);
+
+        if (solapado)
+        {
+            _logger.LogWarning("RN-05 violada: solapamiento al modificar agenda {IdAgenda} para profesional {Cuil} en día {Dia}/{Mes}/{Anio}", agenda.Id, agenda.ProfesionalCuil, agenda.Dia, agenda.Mes, agenda.Anio);
+            throw new ConflictException("RN-05: La nueva franja horaria se solapa con otra agenda existente del profesional.");
+        }
+
+        agenda.HoraEntrada = dto.NuevaHoraEntrada;
+        agenda.HoraSalida = dto.NuevaHoraSalida;
+
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Agenda ID {IdAgenda} modificada correctamente", agenda.Id);
+
+        int cantTurnos = agenda.Turnos.Count;
+
+        return new AgendaResponseDto(
+            agenda.Id,
+            agenda.ProfesionalCuil,
+            $"{agenda.Profesional?.Nombre} {agenda.Profesional?.Apellido}",
+            agenda.Profesional?.Matricula ?? "",
+            agenda.ConsultorioCuit,
+            agenda.Consultorio?.Nombre ?? "",
+            agenda.Dia,
+            agenda.Mes,
+            agenda.Anio,
+            agenda.HoraEntrada,
+            agenda.HoraSalida,
+            cantTurnos
+        );
+    }
+
+    public async Task EliminarAgendaAsync(int idAgenda)
+    {
+        _logger.LogInformation("Eliminando agenda ID {IdAgenda}", idAgenda);
+
+        var agenda = await _db.Agendas
+            .Include(a => a.Turnos)
+            .FirstOrDefaultAsync(a => a.Id == idAgenda);
+
+        if (agenda == null)
+        {
+            _logger.LogWarning("Agenda ID {IdAgenda} no encontrada para eliminar", idAgenda);
+            throw new AgendaNotFoundException(idAgenda);
+        }
+
+        _db.Agendas.Remove(agenda);
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Agenda ID {IdAgenda} eliminada", idAgenda);
+    }
+
+    public async Task<List<AgendaResponseDto>> ObtenerAgendasPorProfesionalAsync(string profesionalCuil)
+    {
+        _logger.LogInformation("Buscando agendas para profesional por CUIL: {Cuil}", profesionalCuil);
+
+        var agendas = await _db.Agendas
+            .Include(a => a.Profesional)
+            .Include(a => a.Consultorio)
+            .Include(a => a.Turnos)
+            .Where(a => a.ProfesionalCuil == profesionalCuil)
+            .ToListAsync();
+
+        return agendas.Select(a => new AgendaResponseDto(
+            a.Id,
+            a.ProfesionalCuil,
+            $"{a.Profesional?.Nombre} {a.Profesional?.Apellido}",
+            a.Profesional?.Matricula ?? "",
+            a.ConsultorioCuit,
+            a.Consultorio?.Nombre ?? "",
+            a.Dia,
+            a.Mes,
+            a.Anio,
+            a.HoraEntrada,
+            a.HoraSalida,
+            a.Turnos.Count
+        )).ToList();
+    }
+}

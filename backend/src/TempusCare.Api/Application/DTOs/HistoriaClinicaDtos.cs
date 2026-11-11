@@ -1,0 +1,43 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace TempusCare.Api.Application.DTOs;
+
+public record AltaHistoriaClinicaDto(
+    [Required, RegularExpression(@"^\d{7,11}$", ErrorMessage = "El CUIL o DNI del paciente debe ser una cadena numérica de entre 7 y 11 dígitos.")]
+    string PacienteCuil,
+    string Discapacidad,
+    string GrupSang,
+    string Alergias,
+    string EnfermedadesCronicas,
+    string Medicamentos,
+    string NombreContacto,
+    string ApellidoContacto,
+    string TelefonoContacto
+);
+
+public record ModificarHistoriaClinicaDto(
+    int Id,
+    string Discapacidad,
+    string GrupSang,
+    string Alergias,
+    string EnfermedadesCronicas,
+    string Medicamentos,
+    string NombreContacto,
+    string ApellidoContacto,
+    string TelefonoContacto
+);
+
+public record HistoriaClinicaResponseDto(
+    int Id,
+    string PacienteCuil,
+    string PacienteNombreCompleto,
+    string Discapacidad,
+    string GrupSang,
+    string Alergias,
+    string EnfermedadesCronicas,
+    string Medicamentos,
+    string NombreContacto,
+    string ApellidoContacto,
+    string TelefonoContacto,
+    List<ObservacionResponseDto> Observaciones
+);

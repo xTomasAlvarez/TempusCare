@@ -1,0 +1,530 @@
+using Microsoft.EntityFrameworkCore;
+using TempusCare.Api.Domain.Entities;
+using TempusCare.Api.Infrastructure.Auth;
+using TempusCare.Api.Infrastructure.Security;
+
+namespace TempusCare.Api.Infrastructure.Data;
+
+public class TempusCareDbContext : DbContext
+{
+    public TempusCareDbContext(DbContextOptions<TempusCareDbContext> options) : base(options) { }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnsurePasswordsHashed();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnsurePasswordsHashed();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// RNF-SEG-01: Intercepta cualquier alta o modificación de Usuario para garantizar
+    /// que ninguna contraseña se almacene en texto plano en la base de datos.
+    /// </summary>
+    private void EnsurePasswordsHashed()
+    {
+        foreach (var entry in ChangeTracker.Entries<Usuario>())
+        {
+            if ((entry.State == EntityState.Added || entry.State == EntityState.Modified) &&
+                !string.IsNullOrWhiteSpace(entry.Entity.Contrasena) &&
+                !PasswordSecurity.IsHashed(entry.Entity.Contrasena))
+            {
+                entry.Entity.Contrasena = PasswordSecurity.HashPassword(entry.Entity.Contrasena);
+            }
+        }
+    }
+
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Asistente> Asistentes => Set<Asistente>();
+    public DbSet<Paciente> Pacientes => Set<Paciente>();
+    public DbSet<Profesional> Profesionales => Set<Profesional>();
+    public DbSet<Institucion> Instituciones => Set<Institucion>();
+    public DbSet<Consultorio> Consultorios => Set<Consultorio>();
+    public DbSet<Direccion> Direcciones => Set<Direccion>();
+    public DbSet<Especialidad> Especialidades => Set<Especialidad>();
+    public DbSet<Estudio> Estudios => Set<Estudio>();
+    public DbSet<ProfesionalEstudio> ProfesionalEstudios => Set<ProfesionalEstudio>();
+    public DbSet<Cobertura> Coberturas => Set<Cobertura>();
+    public DbSet<ObraSocial> ObrasSociales => Set<ObraSocial>();
+    public DbSet<Agenda> Agendas => Set<Agenda>();
+    public DbSet<Turno> Turnos => Set<Turno>();
+    public DbSet<Cita> Citas => Set<Cita>();
+    public DbSet<Observacion> Observaciones => Set<Observacion>();
+    public DbSet<Cuestionario> Cuestionarios => Set<Cuestionario>();
+    public DbSet<HistoriaClinica> HistoriasClinicas => Set<HistoriaClinica>();
+    public DbSet<AdministradorInstitucion> AdministradoresInstitucion => Set<AdministradorInstitucion>();
+    public DbSet<AdministradorConsultorio> AdministradoresConsultorio => Set<AdministradorConsultorio>();
+
+    public DbSet<ProfesionalConsultorio> ProfesionalConsultorios => Set<ProfesionalConsultorio>();
+    public DbSet<ProfesionalEspecialidad> ProfesionalEspecialidades => Set<ProfesionalEspecialidad>();
+    public DbSet<ProfesionalObraSocial> ProfesionalObrasSociales => Set<ProfesionalObraSocial>();
+    public DbSet<PacienteObraSocial> PacienteObrasSociales => Set<PacienteObraSocial>();
+    public DbSet<AsistenteAgenda> AsistenteAgendas => Set<AsistenteAgenda>();
+    public DbSet<SolicitudSuperAdmin> SolicitudesSuperAdmin => Set<SolicitudSuperAdmin>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // AdministradorInstitucion
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasKey(ai => ai.Cuil);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .Property(ai => ai.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasOne(ai => ai.Usuario)
+            .WithOne(u => u.AdministradorInstitucion)
+            .HasForeignKey<AdministradorInstitucion>(ai => ai.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AdministradorInstitucion>()
+            .HasOne(ai => ai.Institucion)
+            .WithMany(i => i.Administradores)
+            .HasForeignKey(ai => ai.InstitucionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // AdministradorConsultorio
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasKey(ac => ac.Cuil);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .Property(ac => ac.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .Property(ac => ac.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasOne(ac => ac.Usuario)
+            .WithOne(u => u.AdministradorConsultorio)
+            .HasForeignKey<AdministradorConsultorio>(ac => ac.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AdministradorConsultorio>()
+            .HasOne(ac => ac.Consultorio)
+            .WithMany(c => c.Administradores)
+            .HasForeignKey(ac => ac.ConsultorioCuit)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Asistente primary key: Cuil
+        modelBuilder.Entity<Asistente>()
+            .HasKey(a => a.Cuil);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Asistente>()
+            .Property(a => a.AdminConsultorioCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Usuario)
+            .WithOne(u => u.Asistente)
+            .HasForeignKey<Asistente>(a => a.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Direccion)
+            .WithMany()
+            .HasForeignKey(a => a.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Consultorio)
+            .WithMany(c => c.Asistentes)
+            .HasForeignKey(a => a.ConsultorioCuit)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.Institucion)
+            .WithMany(i => i.Asistentes)
+            .HasForeignKey(a => a.InstitucionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Asistente>()
+            .HasOne(a => a.AdminConsultorio)
+            .WithMany(ac => ac.Asistentes)
+            .HasForeignKey(a => a.AdminConsultorioCuil)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Paciente primary key: Cuil
+        modelBuilder.Entity<Paciente>()
+            .HasKey(p => p.Cuil);
+
+        modelBuilder.Entity<Paciente>()
+            .Property(p => p.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Paciente>()
+            .HasOne(p => p.Usuario)
+            .WithOne(u => u.Paciente)
+            .HasForeignKey<Paciente>(p => p.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Paciente>()
+            .HasOne(p => p.Direccion)
+            .WithMany()
+            .HasForeignKey(p => p.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Profesional primary key: Cuil
+        modelBuilder.Entity<Profesional>()
+            .HasKey(pr => pr.Cuil);
+
+        modelBuilder.Entity<Profesional>()
+            .Property(pr => pr.Cuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Profesional>()
+            .HasOne(pr => pr.Usuario)
+            .WithOne(u => u.Profesional)
+            .HasForeignKey<Profesional>(pr => pr.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Profesional>()
+            .HasOne(pr => pr.Direccion)
+            .WithMany()
+            .HasForeignKey(pr => pr.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Puntuacion no se mapea en BD
+        modelBuilder.Entity<Profesional>()
+            .Ignore(pr => pr.Puntuacion);
+
+        // Institucion primary key: Id
+        modelBuilder.Entity<Institucion>()
+            .HasKey(i => i.Id);
+
+        modelBuilder.Entity<Institucion>()
+            .Property(i => i.Cuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Institucion>()
+            .HasOne(i => i.Usuario)
+            .WithOne(u => u.Institucion)
+            .HasForeignKey<Institucion>(i => i.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Institucion>()
+            .HasMany(i => i.Consultorios)
+            .WithOne(c => c.Institucion)
+            .HasForeignKey(c => c.InstitucionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Consultorio primary key: Cuit
+        modelBuilder.Entity<Consultorio>()
+            .HasKey(c => c.Cuit);
+
+        modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Cuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Latitud)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<Consultorio>()
+            .Property(c => c.Longitud)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<Consultorio>()
+            .HasOne(c => c.Direccion)
+            .WithMany()
+            .HasForeignKey(c => c.DireccionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Historia Clinica 1:1 Paciente (RNF-SEG-06: Confidencialidad y protección de datos médicos Ley 25.326)
+        var clinicalNonNullableConverter = ClinicalDataProtector.CreateNonNullableConverter();
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.PacienteCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Discapacidad)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Alergias)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.EnfermedadesCronicas)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .Property(hc => hc.Medicamentos)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<HistoriaClinica>()
+            .HasOne(hc => hc.Paciente)
+            .WithOne(p => p.HistoriaClinica)
+            .HasForeignKey<HistoriaClinica>(hc => hc.PacienteCuil)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Historia Clinica 1:N Observaciones (Preservación inalterable y cifrada del historial médico - Ley 25.326)
+        modelBuilder.Entity<HistoriaClinica>()
+            .HasMany(hc => hc.Observaciones)
+            .WithOne(o => o.HistoriaClinica)
+            .HasForeignKey(o => o.HistoriaClinicaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Profesional 1:N Observaciones
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.Motivo)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<Observacion>()
+            .Property(o => o.Detalle)
+            .HasConversion(clinicalNonNullableConverter);
+
+        modelBuilder.Entity<Observacion>()
+            .HasOne(o => o.Profesional)
+            .WithMany(p => p.Observaciones)
+            .HasForeignKey(o => o.ProfesionalCuil)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cita 1:0..1 Observacion (Protección de datos médicos Ley 25.326: sin borrado en cascada destructivo)
+        modelBuilder.Entity<Observacion>()
+            .HasOne(o => o.Cita)
+            .WithOne(c => c.Observacion)
+            .HasForeignKey<Observacion>(o => o.CitaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cita 1:0..1 Cuestionario
+        modelBuilder.Entity<Cuestionario>()
+            .HasOne(cu => cu.Cita)
+            .WithOne(c => c.Cuestionario)
+            .HasForeignKey<Cuestionario>(cu => cu.CitaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Turno <-> Cita (Turno principal de la cita)
+        modelBuilder.Entity<Cita>()
+            .Property(c => c.PacienteCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Cita>()
+            .HasOne(c => c.Turno)
+            .WithMany()
+            .HasForeignKey(c => c.TurnoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Prevención de Overbooking (RF-PAC-06): Solo una cita activa por turno principal
+        modelBuilder.Entity<Cita>()
+            .HasIndex(c => c.TurnoId)
+            .IsUnique()
+            .HasFilter("\"Estado\" != 5");
+
+        // Cita 1:N Turnos (turnos cubiertos por la cita en estudios multi-turno)
+        modelBuilder.Entity<Turno>()
+            .HasOne(t => t.Cita)
+            .WithMany(c => c.Turnos)
+            .HasForeignKey(t => t.CitaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Token de concurrencia optimista para Turno (Prevención Overbooking RF-PAC-06)
+        modelBuilder.Entity<Turno>()
+            .Property(t => t.RowVersion)
+            .IsConcurrencyToken();
+
+        // Cita 1:0..1 Estudio
+        modelBuilder.Entity<Cita>()
+            .HasOne(c => c.Estudio)
+            .WithMany()
+            .HasForeignKey(c => c.EstudioId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Especialidad 1:N Estudios
+        modelBuilder.Entity<Estudio>()
+            .HasOne(e => e.Especialidad)
+            .WithMany(esp => esp.Estudios)
+            .HasForeignKey(e => e.EspecialidadId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Estudio <-> ProfesionalEstudio (1:N)
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .HasKey(pe => pe.Id);
+
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .Property(pe => pe.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        // RN-02: Unicidad en la relación Profesional - Estudio
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .HasIndex(pe => new { pe.ProfesionalCuil, pe.EstudioId })
+            .IsUnique();
+
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .HasOne(pe => pe.Profesional)
+            .WithMany(p => p.Estudios)
+            .HasForeignKey(pe => pe.ProfesionalCuil)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProfesionalEstudio>()
+            .HasOne(pe => pe.Estudio)
+            .WithMany(e => e.ProfesionalEstudios)
+            .HasForeignKey(pe => pe.EstudioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Cobertura (Relación Ternaria ProfesionalEstudio <-> ObraSocial)
+        modelBuilder.Entity<Cobertura>()
+            .HasKey(cob => cob.Id);
+
+        // RN-02: Unicidad en la relación ProfesionalEstudio - ObraSocial
+        modelBuilder.Entity<Cobertura>()
+            .HasIndex(cob => new { cob.ProfesionalEstudioId, cob.ObraSocialId })
+            .IsUnique();
+
+        modelBuilder.Entity<Cobertura>()
+            .HasOne(cob => cob.ProfesionalEstudio)
+            .WithMany(pe => pe.Coberturas)
+            .HasForeignKey(cob => cob.ProfesionalEstudioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Cobertura>()
+            .HasOne(cob => cob.ObraSocial)
+            .WithMany(os => os.Coberturas)
+            .HasForeignKey(cob => cob.ObraSocialId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Junction: Profesional <-> Consultorio
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .HasKey(pc => new { pc.ProfesionalCuil, pc.ConsultorioCuit });
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .Property(pc => pc.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .Property(pc => pc.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .HasOne(pc => pc.Profesional)
+            .WithMany(p => p.Consultorios)
+            .HasForeignKey(pc => pc.ProfesionalCuil);
+
+        modelBuilder.Entity<ProfesionalConsultorio>()
+            .HasOne(pc => pc.Consultorio)
+            .WithMany(c => c.Profesionales)
+            .HasForeignKey(pc => pc.ConsultorioCuit);
+
+        // Junction: Profesional <-> Especialidad
+        modelBuilder.Entity<ProfesionalEspecialidad>()
+            .HasKey(pe => new { pe.ProfesionalCuil, pe.EspecialidadId });
+
+        modelBuilder.Entity<ProfesionalEspecialidad>()
+            .Property(pe => pe.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalEspecialidad>()
+            .HasOne(pe => pe.Profesional)
+            .WithMany(p => p.Especialidades)
+            .HasForeignKey(pe => pe.ProfesionalCuil);
+
+        modelBuilder.Entity<ProfesionalEspecialidad>()
+            .HasOne(pe => pe.Especialidad)
+            .WithMany(e => e.Profesionales)
+            .HasForeignKey(pe => pe.EspecialidadId);
+
+        // Junction: Profesional <-> ObraSocial
+        modelBuilder.Entity<ProfesionalObraSocial>()
+            .HasKey(po => new { po.ProfesionalCuil, po.ObraSocialId });
+
+        modelBuilder.Entity<ProfesionalObraSocial>()
+            .Property(po => po.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<ProfesionalObraSocial>()
+            .HasOne(po => po.Profesional)
+            .WithMany(p => p.ObrasSociales)
+            .HasForeignKey(po => po.ProfesionalCuil);
+
+        modelBuilder.Entity<ProfesionalObraSocial>()
+            .HasOne(po => po.ObraSocial)
+            .WithMany(o => o.Profesionales)
+            .HasForeignKey(po => po.ObraSocialId);
+
+        // Junction: Paciente <-> ObraSocial
+        modelBuilder.Entity<PacienteObraSocial>()
+            .HasKey(pao => new { pao.PacienteCuil, pao.ObraSocialId });
+
+        modelBuilder.Entity<PacienteObraSocial>()
+            .Property(pao => pao.PacienteCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<PacienteObraSocial>()
+            .HasOne(pao => pao.Paciente)
+            .WithMany(p => p.ObrasSociales)
+            .HasForeignKey(pao => pao.PacienteCuil);
+
+        modelBuilder.Entity<PacienteObraSocial>()
+            .HasOne(pao => pao.ObraSocial)
+            .WithMany(o => o.Pacientes)
+            .HasForeignKey(pao => pao.ObraSocialId);
+
+        // Junction: Asistente <-> Agenda
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasKey(aa => new { aa.AsistenteCuil, aa.AgendaId });
+
+        modelBuilder.Entity<AsistenteAgenda>()
+            .Property(aa => aa.AsistenteCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasOne(aa => aa.Asistente)
+            .WithMany(a => a.AgendasAsignadas)
+            .HasForeignKey(aa => aa.AsistenteCuil)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AsistenteAgenda>()
+            .HasOne(aa => aa.Agenda)
+            .WithMany(a => a.AsistentesAsignados)
+            .HasForeignKey(aa => aa.AgendaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Agenda
+        modelBuilder.Entity<Agenda>()
+            .Property(a => a.ProfesionalCuil)
+            .HasMaxLength(11);
+
+        modelBuilder.Entity<Agenda>()
+            .Property(a => a.ConsultorioCuit)
+            .HasMaxLength(11);
+
+        // SolicitudSuperAdmin (Consenso Multipartito)
+        modelBuilder.Entity<SolicitudSuperAdmin>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.EmailPropuesto).IsRequired().HasMaxLength(150);
+            entity.Property(s => s.Estado).IsRequired().HasMaxLength(30);
+
+            entity.HasOne(s => s.Proponente)
+                .WithMany()
+                .HasForeignKey(s => s.ProponenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.Aprobador)
+                .WithMany()
+                .HasForeignKey(s => s.AprobadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+}

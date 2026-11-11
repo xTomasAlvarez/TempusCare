@@ -1,0 +1,320 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { HeartPulse, LogIn, UserRoundPlus, Map, Calendar, ShieldCheck, Activity } from 'lucide-react';
+import { useAuth } from '../../../core/context/AuthContext';
+import { useSearchProfessionals } from '../../patient/hooks/useSearchProfessionals';
+import { SearchFilters } from '../../patient/components/SearchFilters';
+import { DoctorCard } from '../../patient/components/DoctorCard';
+import { InteractiveMapPlaceholder } from '../../patient/components/InteractiveMapPlaceholder';
+import { BookingModal } from '../../patient/components/BookingModal';
+import { AuthRequiredModal } from '../components/AuthRequiredModal';
+import { Button } from '../../../shared/components/ui/Button';
+import { Toast } from '../../../shared/components/ui/Toast';
+import { UserDropdownMenu } from '../../../shared/components/ui/UserDropdownMenu';
+import { AccessibilityMenu } from '../../../shared/components/ui/AccessibilityMenu';
+import { staggerContainerVariants, staggerItemVariants, pageTransitionVariants } from '../../../shared/motion';
+
+export const HomePage = () => {
+  const { user, isAuthenticated, getDashboardRoute, clearAuthData } = useAuth();
+  const navigate = useNavigate();
+
+  const {
+    professionals,
+    specialties,
+    healthInsurances,
+    consultorios,
+    filters,
+    isLoading,
+    error,
+    selectedDoctorForBooking,
+    setSelectedDoctorForBooking,
+    highlightedDoctorCuil,
+    setHighlightedDoctorCuil,
+    updateFilter,
+    resetFilters,
+  } = useSearchProfessionals();
+
+  // Estados para modales y navegación
+  const [authRequiredDoctor, setAuthRequiredDoctor] = useState(null);
+  const [showMobileMap, setShowMobileMap] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  /**
+   * Intercepción de reserva: Si no está logueado o no es paciente, abre el AuthRequiredModal
+   */
+  const handleBookClick = (doctor) => {
+    if (!isAuthenticated) {
+      setAuthRequiredDoctor(doctor);
+      return;
+    }
+
+    if (user?.rol !== 'Paciente') {
+      setToastMessage({
+        type: 'info',
+        title: 'Acceso Restringido',
+        message: 'Para agendar citas como paciente, debes iniciar sesión con una cuenta de Paciente.',
+      });
+      return;
+    }
+
+    // Usuario autenticado como Paciente: procede a la reserva directa
+    setSelectedDoctorForBooking(doctor);
+  };
+
+  const handleBookingSuccess = (bookingData) => {
+    setToastMessage({
+      type: 'success',
+      title: '¡Turno Confirmado!',
+      message: `Tu cita ha sido agendada con éxito para el Dr. ${bookingData.profesionalNombre || ''}.`,
+    });
+  };
+
+  return (
+    <motion.div
+      variants={pageTransitionVariants}
+      initial="hidden"
+      animate="visible"
+      className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900"
+    >
+      {/* Enlace para saltar directamente al contenido principal (WCAG 2.1 AA - RNF-ACC-02) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-primary-800 focus:text-white focus:font-bold focus:rounded-xl focus:shadow-2xl focus:outline-none focus:ring-4 focus:ring-amber-400 focus:ring-offset-2 transition-all"
+      >
+        Saltar al contenido principal
+      </a>
+
+      {/* Toast Notificación */}
+      {toastMessage && (
+        <Toast
+          type={toastMessage.type}
+          title={toastMessage.title}
+          message={toastMessage.message}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
+
+      {/* Encabezado Principal con Logo, Eslogan y Acciones Autenticadas */}
+      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/70 shadow-xs">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+          {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
+          <Link
+            to="/"
+            tabIndex={0}
+            aria-label="Inicio de TempusCare"
+            className="flex items-center gap-2.5 sm:gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group shrink-0"
+          >
+            <img
+              src="/tempuscare.png"
+              alt="TempusCare Logo"
+              className="w-9 h-9 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105"
+            />
+            <div className="flex flex-col">
+              <span className="text-lg sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+                Tempus<span className="text-primary-600">Care</span>
+              </span>
+              <span className="text-sm text-slate-500 font-medium leading-normal hidden sm:block">
+                Salud Inclusiva
+              </span>
+            </div>
+          </Link>
+
+          {/* Acciones de Autenticación / Accesibilidad / Menú de Usuario */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <AccessibilityMenu />
+
+            {isAuthenticated ? (
+              <UserDropdownMenu />
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs shadow-xs"
+                  >
+                    <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600" strokeWidth={2} />
+                    <span>Ingresar</span>
+                  </Button>
+                </Link>
+
+                <Link to="/register">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="shadow-sm font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs"
+                  >
+                    <UserRoundPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2} />
+                    <span>Registrarse</span>
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Contenido Principal: Buscador Abierto B2C y Mapa Interactivo */}
+      <main id="main-content" tabIndex="-1" className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 focus:outline-none">
+        {/* Banner Hero Sutil */}
+        <div className="text-center sm:text-left max-w-4xl space-y-2.5 pt-1 sm:pt-2">
+          <h1 className="text-2xl sm:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-tight">
+            Encuentra a tu especialista y agenda tu turno en segundos
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Explora profesionales médicos acreditados, consulta obras sociales aceptadas y ubica los consultorios en el mapa interactivo.
+          </p>
+        </div>
+
+        {/* Toolbar de Filtros y Búsqueda Abierta */}
+        <div className="space-y-4">
+          <SearchFilters
+            filters={filters}
+            specialties={specialties}
+            healthInsurances={healthInsurances}
+            consultorios={consultorios}
+            onFilterChange={updateFilter}
+            onReset={resetFilters}
+            totalResults={professionals.length}
+          />
+
+          {/* Botón de alternar mapa en móviles */}
+          <div className="lg:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMobileMap(!showMobileMap)}
+              className="w-full gap-2 text-xs bg-white/80 border-slate-200"
+            >
+              <Map className="w-4 h-4 text-primary-600" aria-hidden="true" />
+              <span>{showMobileMap ? 'Ocultar Mapa' : 'Explorar Consultorios en el Mapa'}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Mapa en móviles si está desplegado */}
+        {showMobileMap && (
+          <div className="lg:hidden mb-4">
+            <InteractiveMapPlaceholder
+              doctors={professionals}
+              consultorios={consultorios}
+              highlightedDoctorCuil={highlightedDoctorCuil}
+              onSelectDoctor={(doc) => handleBookClick(doc)}
+            />
+          </div>
+        )}
+
+        {/* Grilla Principal: Tarjetas de Médicos (Izq) y Mapa Interactivo (Der) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Lista de Profesionales */}
+          <section className="lg:col-span-7 space-y-4" aria-label="Lista de médicos disponibles">
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200 p-6 space-y-4 animate-pulse shadow-xs"
+                  >
+                    <div className="flex gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-slate-200 rounded-md w-1/3" />
+                        <div className="h-4 bg-slate-200 rounded-md w-1/4" />
+                        <div className="h-4 bg-slate-200 rounded-md w-1/2" />
+                      </div>
+                    </div>
+                    <div className="h-10 bg-slate-100 rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center text-rose-700">
+                <p className="font-semibold text-sm">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="mt-4"
+                >
+                  Restablecer filtros
+                </Button>
+              </div>
+            ) : professionals.length === 0 ? (
+              <div className="bg-white/80 backdrop-blur border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center space-y-3">
+                <h3 className="text-base font-bold font-heading text-slate-800">
+                  No se encontraron profesionales para este criterio
+                </h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Prueba cambiando la especialidad o seleccionando otra cobertura médica en los filtros.
+                </p>
+                <Button variant="outline" size="sm" onClick={resetFilters}>
+                  Limpiar Filtros
+                </Button>
+              </div>
+            ) : (
+              <motion.div
+                key={String(filters.especialidadId) + '_' + String(filters.obraSocialId) + '_' + (filters.nombre || '')}
+                variants={staggerContainerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-4"
+              >
+                {professionals.map((doctor) => (
+                  <motion.div key={doctor.cuil} variants={staggerItemVariants}>
+                    <DoctorCard
+                      doctor={doctor}
+                      isHighlighted={highlightedDoctorCuil === doctor.cuil}
+                      onHover={(cuil) => setHighlightedDoctorCuil(cuil)}
+                      onBook={(doc) => handleBookClick(doc)}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </section>
+
+          {/* Mapa Interactivo Fijo en Desktop */}
+          <aside className="hidden lg:block lg:col-span-5 sticky top-28" aria-label="Mapa de consultorios">
+            <InteractiveMapPlaceholder
+              doctors={professionals}
+              consultorios={consultorios}
+              highlightedDoctorCuil={highlightedDoctorCuil}
+              onSelectDoctor={(doc) => handleBookClick(doc)}
+            />
+          </aside>
+        </div>
+      </main>
+
+      {/* Modal de Intercepción Auth Guard para Usuarios No Logueados */}
+      <AuthRequiredModal
+        isOpen={Boolean(authRequiredDoctor)}
+        onClose={() => setAuthRequiredDoctor(null)}
+        doctor={authRequiredDoctor}
+      />
+
+      {/* Modal de Reserva para Pacientes Autenticados */}
+      {isAuthenticated && user?.rol === 'Paciente' && (
+        <BookingModal
+          isOpen={Boolean(selectedDoctorForBooking)}
+          onClose={() => setSelectedDoctorForBooking(null)}
+          doctor={selectedDoctorForBooking}
+          onBookingSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {/* Pie de Página Público */}
+      <footer className="mt-12 bg-white/70 border-t border-slate-200/80 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-[11px]">© 2026 TempusCare — Vitality. Todos los derechos reservados.</p>
+          <p className="flex items-center gap-1 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
+            Plataforma médica adaptada a pautas de accesibilidad WCAG & Ley 25.326
+          </p>
+        </div>
+      </footer>
+    </motion.div>
+  );
+};
+
+export default HomePage;

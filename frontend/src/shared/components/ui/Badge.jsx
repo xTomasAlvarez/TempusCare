@@ -1,0 +1,55 @@
+import React from 'react';
+import { cn } from '../../utils/cn';
+
+const extractBadgeText = (node) => {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractBadgeText).filter(Boolean).join(' ').trim();
+  if (React.isValidElement(node) && node.props?.children) return extractBadgeText(node.props.children);
+  return '';
+};
+
+export const Badge = ({
+  children,
+  variant = 'default',
+  size = 'md',
+  className,
+  title,
+  ...props
+}) => {
+  const variants = {
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+    primary: 'bg-primary-50 text-primary-700 border-primary-200',
+    secondary: 'bg-secondary-50 text-secondary-700 border-secondary-200',
+    teal: 'bg-secondary-50 text-secondary-700 border-secondary-200',
+    brand: 'bg-primary-50 text-primary-700 border-primary-200',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200',
+    danger: 'bg-rose-50 text-rose-700 border-rose-200',
+    info: 'bg-sky-50 text-sky-700 border-sky-200',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  };
+
+  const sizes = {
+    sm: 'text-[11px] px-2 py-0.5',
+    md: 'text-xs px-2.5 py-1',
+    lg: 'text-sm px-3 py-1.5',
+  };
+
+  const computedTitle = title || extractBadgeText(children) || 'Indicador de estado';
+
+  return (
+    <span
+      title={computedTitle}
+      className={cn(
+        'inline-flex items-center gap-1 font-medium rounded-full border transition-colors',
+        variants[variant] || variants.default,
+        sizes[size] || sizes.md,
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </span>
+  );
+};

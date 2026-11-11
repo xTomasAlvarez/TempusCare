@@ -1,0 +1,130 @@
+using Microsoft.EntityFrameworkCore;
+using TempusCare.Api.Application.DTOs;
+using TempusCare.Api.Application.Exceptions;
+using TempusCare.Api.Domain.Enums;
+using TempusCare.Api.Infrastructure.Data;
+
+namespace TempusCare.Api.Application.Services;
+
+public class TurnoService : ITurnoService
+{
+    private readonly TempusCareDbContext _db;
+    private readonly ILogger<TurnoService> _logger;
+
+    public TurnoService(TempusCareDbContext db, ILogger<TurnoService> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
+
+    public async Task<List<TurnoResponseDto>> ObtenerTurnosDisponiblesAsync(string profesionalCuil, DateTime? fecha, string? consultorioCuit = null)
+    {
+        _logger.LogInformation("Obteniendo turnos disponibles para profesional {Prof} en fecha {Fecha} y consultorio {Cons}", profesionalCuil, fecha, consultorioCuit);
+
+        var hoy = DateTime.Today;
+        var ahora = DateTime.Now;
+        var maxFecha = hoy.AddMonths(6);
+
+        var query = _db.Turnos
+            .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
+            .Where(t => t.Estado == EstadoTurno.Disponible &&
+                        t.Agenda!.ProfesionalCuil == profesionalCuil &&
+                        t.Fecha >= hoy &&
+                        t.Fecha <= maxFecha)
+            .AsQueryable();
+
+        if (fecha.HasValue)
+        {
+            var startOfDay = fecha.Value.Date;
+            var endOfDay = startOfDay.AddDays(1);
+            query = query.Where(t => t.Fecha >= startOfDay && t.Fecha < endOfDay);
+        }
+
+        if (!string.IsNullOrEmpty(consultorioCuit))
+        {
+            query = query.Where(t => t.Agenda!.ConsultorioCuit == consultorioCuit);
+        }
+
+        var lista = await query.ToListAsync();
+
+        // Filtrado en memoria: SQLite no traduce TimeSpan en cláusulas WHERE u ORDER BY en SQL.
+        // RN-02 y RF-PAC-07: solo devolver turnos cuya fecha y hora combinada sea posterior a ahora.
+        lista = lista
+            .Where(t => t.Fecha.Date > hoy || (t.Fecha.Date == hoy && t.HoraInicio > ahora.TimeOfDay))
+            .OrderBy(t => t.Fecha)
+            .ThenBy(t => t.HoraInicio)
+            .ToList();
+
+        _logger.LogInformation("Encontrados {Count} turnos disponibles", lista.Count);
+
+        return lista.Select(t => MapTurnoDto(t)).ToList();
+    }
+
+    public async Task<TurnoResponseDto> ModificarTurnoAsync(int turnoId, string? detalle, EstadoTurno? estado)
+    {
+        _logger.LogInformation("Modificando turno ID {TurnoId}. Nuevo estado: {Estado}", turnoId, estado);
+
+        var turno = await _db.Turnos
+            .Include(t => t.Cita)
+            .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
+            .FirstOrDefaultAsync(t => t.Id == turnoId);
+
+        if (turno == null)
+        {
+            _logger.LogWarning("Turno ID {TurnoId} no encontrado", turnoId);
+            throw new TurnoNotFoundException(turnoId);
+        }
+
+        if (estado.HasValue)
+        {
+            turno.Estado = estado.Value;
+
+            // Regla de Negocio: Si el médico cancela el turno, la cita se cancela automáticamente.
+            if (estado.Value == EstadoTurno.Cancelado && turno.Cita != null)
+            {
+                _logger.LogInformation("Cancelando automáticamente cita ID {CitaId} asociada al turno cancelado {TurnoId}", turno.Cita.Id, turno.Id);
+                turno.Cita.Estado = EstadoCita.Cancelada;
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Turno ID {TurnoId} modificado con éxito", turno.Id);
+
+        return MapTurnoDto(turno);
+    }
+
+    public async Task<TurnoResponseDto> ObtenerPorIdAsync(int turnoId)
+    {
+        _logger.LogInformation("Obteniendo turno ID {TurnoId}", turnoId);
+
+        var turno = await _db.Turnos
+            .Include(t => t.Agenda).ThenInclude(a => a!.Profesional)
+            .Include(t => t.Agenda).ThenInclude(a => a!.Consultorio)
+            .FirstOrDefaultAsync(t => t.Id == turnoId);
+
+        if (turno == null)
+        {
+            _logger.LogWarning("Turno ID {TurnoId} no encontrado", turnoId);
+            throw new TurnoNotFoundException(turnoId);
+        }
+
+        return MapTurnoDto(turno);
+    }
+
+    private static TurnoResponseDto MapTurnoDto(Domain.Entities.Turno t)
+    {
+        return new TurnoResponseDto(
+            t.Id,
+            t.AgendaId,
+            t.Fecha,
+            t.HoraInicio,
+            t.HoraFin,
+            t.Estado,
+            t.Agenda?.ProfesionalCuil ?? "",
+            $"{t.Agenda?.Profesional?.Nombre} {t.Agenda?.Profesional?.Apellido}",
+            t.Agenda?.Consultorio?.Nombre ?? ""
+        );
+    }
+}

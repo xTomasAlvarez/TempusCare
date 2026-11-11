@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@200..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-heading: 'Plus Jakarta Sans', 'Inter', 'Manrope', 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', 'Manrope', 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Plus Jakarta Sans', 'Inter', 'Manrope', 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Títulos, Encabezados, Modales y Métricas con tipografía armónica unificada */
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading) !important;
+    letter-spacing: -0.02em;
+  }
+
+  /* Datos tabulares y códigos usando la misma familia tipográfica del sistema (sin fuente Courier/Consolas) */
+  .font-mono, code, kbd, samp, pre {
+    font-family: var(--font-sans) !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Componentes UI, Tablas, Botones y Formularios */
+  button, input, optgroup, select, textarea, table, th, td, label, span, p, a, div {
+    font-family: var(--font-sans);
+  }
+
+  /* Garantizar alineación horizontal perfecta de inputs en grillas de múltiples columnas */
+  form .grid > div > label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Custom focus ring for accessibility (WCAG 2.1 AA) */
+*:focus-visible {
+  outline: 2px solid #1e4287 !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast mode support (WCAG 2.1 AAA - RNF-ACC-01 / RI-USR-07) */
+html.high-contrast {
+  color-scheme: light;
+}
+
+html.high-contrast body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6,
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast label,
+html.high-contrast div {
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+html.high-contrast a {
+  color: #0000ee !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+  font-weight: 700 !important;
+}
+
+html.high-contrast button {
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+html.high-contrast button:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast button[aria-pressed="true"],
+html.high-contrast .bg-primary-600,
+html.high-contrast .bg-primary-700 {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  font-weight: 600 !important;
+}
+
+html.high-contrast *:focus-visible {
+  outline: 3px solid #000000 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px #ffff00 !important;
+}
+
+html.high-contrast .border,
+html.high-contrast .border-slate-200,
+html.high-contrast .border-slate-100 {
+  border-color: #000000 !important;
+  border-width: 2px !important;
+}
+
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 3px solid Highlight !important;
+  }
+}
+
+/* Estilos de precisión milimétrica para Leaflet Map Pins */
+.leaflet-div-icon.tempuscare-map-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tempuscare-map-pin:hover > div {
+  transform: translateY(-2px) scale(1.05);
+}

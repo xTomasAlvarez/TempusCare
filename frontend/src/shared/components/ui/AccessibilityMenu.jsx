@@ -72,7 +72,7 @@ export const AccessibilityMenu = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white border border-slate-200/90 shadow-2xl p-4 z-50 text-slate-900 focus:outline-none"
+            className="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white border border-slate-200/90 shadow-2xl p-4 z-50 text-slate-900 focus:outline-none"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
               <div className="flex items-center gap-2">

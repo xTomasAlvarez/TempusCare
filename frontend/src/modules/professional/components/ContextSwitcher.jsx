@@ -114,7 +114,7 @@ export const ContextSwitcher = ({ className }) => {
           <Hospital className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         </div>
 
-        <div className="flex flex-col text-left max-w-[140px] sm:max-w-[200px] truncate">
+        <div className="flex flex-col text-left max-w-[105px] sm:max-w-[200px] truncate">
           <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase leading-none">
             Sede Activa
           </span>
@@ -143,7 +143,7 @@ export const ContextSwitcher = ({ className }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-72 sm:w-80 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200/80 z-50 focus:outline-none"
+            className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200/80 z-50 focus:outline-none"
           >
             <div className="px-3 py-2 border-b border-slate-100">
               <p className="text-xs font-semibold text-slate-900 font-heading">

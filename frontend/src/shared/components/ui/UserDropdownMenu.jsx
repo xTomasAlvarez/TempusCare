@@ -278,7 +278,7 @@ export const UserDropdownMenu = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200/90 p-2 z-50 focus:outline-none"
+            className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white shadow-xl border border-slate-200/90 p-2 z-50 focus:outline-none"
           >
             {/* Cabecera del Dropdown con información completa del usuario */}
             <div className="px-3 py-2.5 bg-slate-50/80 rounded-xl mb-1.5 border border-slate-100">

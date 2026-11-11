@@ -103,25 +103,25 @@ export const HomePage = () => {
             to="/"
             tabIndex={0}
             aria-label="Inicio de TempusCare"
-            className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
+            className="flex items-center gap-2.5 sm:gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group shrink-0"
           >
             <img
               src="/tempuscare.png"
               alt="TempusCare Logo"
-              className="w-10 h-10 object-contain transition-transform group-hover:scale-105"
+              className="w-9 h-9 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex flex-col">
-              <span className="text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+              <span className="text-lg sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
                 Tempus<span className="text-primary-600">Care</span>
               </span>
-              <span className="text-sm text-slate-500 font-medium leading-normal">
+              <span className="text-sm text-slate-500 font-medium leading-normal hidden sm:block">
                 Salud Inclusiva
               </span>
             </div>
           </Link>
 
           {/* Acciones de Autenticación / Accesibilidad / Menú de Usuario */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <AccessibilityMenu />
 
             {isAuthenticated ? (
@@ -132,10 +132,10 @@ export const HomePage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1.5 shadow-xs"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs shadow-xs"
                   >
-                    <LogIn className="w-4 h-4 text-primary-600" strokeWidth={2} />
-                    <span>Iniciar Sesión</span>
+                    <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600" strokeWidth={2} />
+                    <span>Ingresar</span>
                   </Button>
                 </Link>
 
@@ -143,9 +143,9 @@ export const HomePage = () => {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="shadow-sm font-semibold gap-1.5"
+                    className="shadow-sm font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs"
                   >
-                    <UserRoundPlus className="w-4 h-4" strokeWidth={2} />
+                    <UserRoundPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2} />
                     <span>Registrarse</span>
                   </Button>
                 </Link>

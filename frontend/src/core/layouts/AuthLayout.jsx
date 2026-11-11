@@ -3,7 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 
 export const AuthLayout = () => {
   return (
-    <div className="min-h-screen h-screen max-h-screen overflow-hidden bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative">
+    <div className="min-h-dvh sm:h-screen sm:max-h-screen overflow-y-auto sm:overflow-hidden bg-slate-50 flex flex-col text-slate-900 font-sans selection:bg-primary-100 selection:text-primary-900 relative">
       {/* Elementos ambientales de diseño sutil Clean Health encapsulados sin generar scroll */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div 
@@ -15,7 +15,7 @@ export const AuthLayout = () => {
       </div>
 
       {/* Header Accesible de Autenticación alineado a la izquierda */}
-      <header className="w-full px-6 sm:px-8 py-2 sm:py-2.5 flex items-center justify-between relative z-10 flex-shrink-0">
+      <header className="w-full px-4 sm:px-8 py-2 sm:py-2.5 flex items-center justify-between relative z-10 flex-shrink-0">
         <Link 
           to="/" 
           tabIndex={0}
@@ -40,8 +40,8 @@ export const AuthLayout = () => {
         </Link>
       </header>
 
-      {/* Contenido Principal centrado vertical y horizontalmente sin scroll */}
-      <main id="main-content" className="flex-1 w-full flex flex-col justify-center items-center px-4 py-1 sm:py-2 overflow-hidden relative z-10 min-h-0">
+      {/* Contenido Principal centrado vertical y horizontalmente sin scroll en tablet/desktop y adaptable en móvil */}
+      <main id="main-content" className="flex-1 w-full flex flex-col justify-center items-center px-3 sm:px-4 py-2 sm:py-2 sm:overflow-hidden relative z-10 min-h-0">
         <Outlet />
       </main>
     </div>

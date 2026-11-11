@@ -16,7 +16,7 @@ export const KanbanBoard = ({
 }) => {
   return (
     <div className="w-full overflow-x-auto pb-4 scrollbar-thin">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full min-w-[1100px] items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full xl:min-w-[1100px] items-start">
         {/* Columna 1: Disponibles */}
         <KanbanColumn
           title="Disponibles"

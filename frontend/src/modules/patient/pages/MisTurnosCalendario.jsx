@@ -385,26 +385,28 @@ export const MisTurnosCalendario = () => {
 
       {/* Grilla Mensual del Calendario */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        {/* Cabecera de Días de la Semana */}
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/75 text-center">
-          {DAY_NAMES.map((day, idx) => (
-            <div
-              key={idx}
-              className="py-3 text-xs font-semibold uppercase tracking-wider text-slate-600"
-            >
-              {day}
+        <div className="overflow-x-auto scrollbar-thin">
+          <div className="min-w-[640px] sm:min-w-0">
+            {/* Cabecera de Días de la Semana */}
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/75 text-center">
+              {DAY_NAMES.map((day, idx) => (
+                <div
+                  key={idx}
+                  className="py-3 text-xs font-semibold uppercase tracking-wider text-slate-600"
+                >
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Celdas de los Días */}
-        {isLoading ? (
-          <div className="py-24 text-center">
-            <div className="w-8 h-8 border-3 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-slate-500 font-medium">Cargando tus citas médicas...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[580px]">
+            {/* Celdas de los Días */}
+            {isLoading ? (
+              <div className="py-24 text-center">
+                <div className="w-8 h-8 border-3 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-slate-500 font-medium">Cargando tus citas médicas...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[520px] sm:min-h-[580px]">
             {calendarCells.map((cell, idx) => (
               <div
                 key={idx}
@@ -463,8 +465,10 @@ export const MisTurnosCalendario = () => {
                 </div>
               </div>
             ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Modal de Detalle de Cita Médica (Al hacer clic en un turno del calendario) */}

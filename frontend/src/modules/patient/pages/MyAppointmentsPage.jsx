@@ -150,12 +150,12 @@ export const MyAppointmentsPage = () => {
       </div>
 
       {/* Selector de Pestañas (Tabs) con Indicador Deslizante de Alto Rendimiento */}
-      <div className="flex border-b border-slate-200 relative">
+      <div className="flex border-b border-slate-200 relative overflow-x-auto scrollbar-none whitespace-nowrap">
         <button
           type="button"
           onClick={() => setActiveTab('future')}
           tabIndex={0}
-          className={`relative pb-3 px-4 text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
+          className={`shrink-0 relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
             activeTab === 'future'
               ? 'text-primary-700'
               : 'text-slate-500 hover:text-slate-700'
@@ -179,7 +179,7 @@ export const MyAppointmentsPage = () => {
           type="button"
           onClick={() => setActiveTab('history')}
           tabIndex={0}
-          className={`relative pb-3 px-4 text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
+          className={`shrink-0 relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
             activeTab === 'history'
               ? 'text-primary-700'
               : 'text-slate-500 hover:text-slate-700'
@@ -203,7 +203,7 @@ export const MyAppointmentsPage = () => {
           type="button"
           onClick={() => setActiveTab('timeline')}
           tabIndex={0}
-          className={`relative pb-3 px-4 text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
+          className={`shrink-0 relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.98] duration-75 cursor-pointer ${
             activeTab === 'timeline'
               ? 'text-primary-700'
               : 'text-slate-500 hover:text-slate-700'

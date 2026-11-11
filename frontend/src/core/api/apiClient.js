@@ -1,4 +1,16 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  'http://localhost:5000/api'
+).trim();
+
+const normalizeApiBaseUrl = (url) => {
+  const withProtocol = /^https?:\/\//i.test(url) || url.startsWith('/') ? url : `https://${url}`;
+  const cleanUrl = withProtocol.replace(/\/+$/, '');
+  return cleanUrl.toLowerCase().endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+};
+
+export const API_BASE_URL = normalizeApiBaseUrl(rawApiUrl);
 
 const PASSWORD_KEYS = new Set([
   'contra',
@@ -120,8 +132,8 @@ class ApiClient {
 
       return data;
     } catch (err) {
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        throw new Error('No se pudo conectar con el servidor backend. Verifica que la API esté en ejecución en el puerto 5000.');
+      if (err instanceof TypeError) {
+        throw new Error('No se pudo conectar con el servidor. Por favor, verifica tu conexión o intenta nuevamente más tarde.');
       }
       throw err;
     }

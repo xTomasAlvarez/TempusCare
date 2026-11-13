@@ -104,7 +104,7 @@ export const ContextSwitcher = ({ className }) => {
         aria-expanded={isOpen}
         aria-label="Seleccionar sede o consultorio de atención"
         className={cn(
-          'flex items-center gap-2.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-xl border transition-transform duration-75 active:scale-[0.98] cursor-pointer',
+          'flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-xl border transition-transform duration-75 active:scale-[0.98] cursor-pointer',
           'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs',
           'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
           isOpen && 'border-primary-500 ring-2 ring-primary-500/20'
@@ -114,7 +114,7 @@ export const ContextSwitcher = ({ className }) => {
           <Hospital className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         </div>
 
-        <div className="flex flex-col text-left max-w-[105px] sm:max-w-[200px] truncate">
+        <div className="flex flex-col text-left max-w-[82px] min-[380px]:max-w-[115px] sm:max-w-[200px] truncate">
           <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase leading-none">
             Sede Activa
           </span>

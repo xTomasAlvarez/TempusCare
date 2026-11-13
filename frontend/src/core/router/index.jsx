@@ -28,7 +28,7 @@ import { useAuth } from '../context/AuthContext';
 const RouteErrorFallback = () => {
   const error = useRouteError();
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-lg p-6 text-center space-y-4">
         <h1 className="text-xl font-bold font-heading text-slate-900" title="Aviso del sistema">
           Se produjo un inconveniente al cargar la vista

@@ -53,7 +53,7 @@ export const VitalityLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
+    <div className="min-h-screen w-full overflow-x-hidden bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Enlace para saltar directamente al contenido principal (WCAG 2.1 AA - RNF-ACC-02) */}
       <a
         href="#main-content"
@@ -64,7 +64,7 @@ export const VitalityLayout = () => {
 
       {/* Barra de Navegación Ejecutiva Minimalista */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
           {/* Marca / Identidad Vitality */}
           <div className="flex items-center gap-6 sm:gap-8">
             <Link

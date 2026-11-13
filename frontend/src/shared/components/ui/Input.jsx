@@ -39,7 +39,7 @@ export const Input = React.forwardRef(({
       : undefined;
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full min-w-0 flex flex-col">
       {label && (
         <label
           htmlFor={inputId}

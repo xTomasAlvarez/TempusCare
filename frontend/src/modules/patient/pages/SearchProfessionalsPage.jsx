@@ -108,7 +108,7 @@ export const SearchProfessionalsPage = () => {
       {/* Grid Principal Dividido: Izquierda Médicos / Derecha Mapa (Desktop) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Columna Izquierda: Lista de Médicos (7 cols en desktop) */}
-        <section className="lg:col-span-7 space-y-4" aria-label="Lista de profesionales médicos">
+        <section className="lg:col-span-7 space-y-4 min-w-0" aria-label="Lista de profesionales médicos">
           {isLoading ? (
             /* Skeleton Loader de Tarjetas de Médicos */
             <div className="space-y-4">
@@ -181,7 +181,7 @@ export const SearchProfessionalsPage = () => {
         </section>
 
         {/* Columna Derecha: Placeholder Mapa Interactivo (5 cols en desktop, sticky) */}
-        <aside className="hidden lg:block lg:col-span-5 sticky top-24" aria-label="Mapa de consultorios">
+        <aside className="hidden lg:block lg:col-span-5 sticky top-24 min-w-0" aria-label="Mapa de consultorios">
           <InteractiveMapPlaceholder
             doctors={professionals}
             consultorios={consultorios}

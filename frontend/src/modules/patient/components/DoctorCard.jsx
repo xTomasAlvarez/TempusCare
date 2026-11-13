@@ -98,16 +98,16 @@ export const DoctorCard = ({
             handleCardClick(e);
           }
         }}
-        className={`group transition-transform duration-75 active:scale-[0.98] hover:shadow-md hover:border-primary-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+        className={`group overflow-hidden transition-transform duration-75 active:scale-[0.98] hover:shadow-md hover:border-primary-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
           isHighlighted ? 'ring-2 ring-primary-500 border-primary-500 shadow-md' : 'border-slate-200/80'
         }`}
       >
-        <CardContent className="p-5 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 min-w-0">
             {/* Avatar e Información Principal */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
               <div className="relative shrink-0">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 text-white flex items-center justify-center font-heading font-bold text-xl sm:text-2xl shadow-sm">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 text-white flex items-center justify-center font-heading font-bold text-lg sm:text-2xl shadow-sm">
                   {nombre?.[0] || 'D'}{apellido?.[0] || 'M'}
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-xs">
@@ -115,9 +115,9 @@ export const DoctorCard = ({
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-lg sm:text-xl font-bold font-heading text-slate-900 group-hover:text-primary-700 transition-colors">
+                  <h3 className="text-base sm:text-xl font-bold font-heading text-slate-900 group-hover:text-primary-700 transition-colors break-words">
                     {fullName}
                   </h3>
                   <span className="text-xs text-slate-400 font-mono">
@@ -178,15 +178,15 @@ export const DoctorCard = ({
           </div>
 
           {/* Detalles Adicionales: Consultorios y Obras Sociales */}
-          <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="mt-4 sm:mt-5 pt-3.5 sm:pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs min-w-0">
             {/* Consultorios / Ubicaciones */}
-            <div className="flex items-start gap-2 text-slate-600">
+            <div className="flex items-start gap-2 text-slate-600 min-w-0">
               <Hospital className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" strokeWidth={2} aria-hidden="true" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="font-semibold text-slate-700 block">Atención en Sede:</span>
-                <div className="text-slate-600">
+                <div className="text-slate-600 min-w-0">
                   {instituciones.length > 0 && (
-                    <span className="font-semibold text-primary-700 block">
+                    <span className="font-semibold text-primary-700 block break-words">
                       {instituciones.join(', ')}
                     </span>
                   )}
@@ -198,9 +198,9 @@ export const DoctorCard = ({
             </div>
 
             {/* Obras Sociales Aceptadas */}
-            <div className="flex items-start gap-2 text-slate-600">
+            <div className="flex items-start gap-2 text-slate-600 min-w-0">
               <ShieldPlus className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" strokeWidth={2} aria-hidden="true" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="font-semibold text-slate-700 block mb-1">Obras Sociales / Prepagas:</span>
                 <div className="flex flex-wrap gap-1">
                   {obrasSociales.length > 0 ? (
@@ -224,11 +224,11 @@ export const DoctorCard = ({
           </div>
 
           {/* Vista previa de Estudios Médicos y Llamado a la Acción para abrir detalle */}
-          <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-slate-600 truncate">
+          <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs min-w-0">
+            <div className="flex items-center gap-2 text-slate-600 min-w-0 flex-1">
               <Microscope className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className="font-medium text-slate-700 shrink-0">Estudios disponibles:</span>
-              <span className="text-slate-500 truncate">
+              <span className="text-slate-500 truncate min-w-0 flex-1">
                 {estudios && estudios.length > 0
                   ? estudios.map((e) => e.estudioNombre).join(' • ')
                   : 'Consultas clínicas y evaluaciones'}

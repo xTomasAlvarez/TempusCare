@@ -75,7 +75,7 @@ export const HomePage = () => {
       variants={pageTransitionVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900"
+      className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200/90 text-slate-900 font-sans flex flex-col selection:bg-primary-100 selection:text-primary-900"
     >
       {/* Enlace para saltar directamente al contenido principal (WCAG 2.1 AA - RNF-ACC-02) */}
       <a
@@ -97,21 +97,21 @@ export const HomePage = () => {
 
       {/* Encabezado Principal con Logo, Eslogan y Acciones Autenticadas */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/70 shadow-xs">
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-4">
           {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
           <Link
             to="/"
             tabIndex={0}
             aria-label="Inicio de TempusCare"
-            className="flex items-center gap-2.5 sm:gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group shrink-0"
+            className="flex items-center gap-1.5 sm:gap-3 rounded-xl p-0.5 sm:p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group shrink-0 min-w-0"
           >
             <img
               src="/tempuscare.png"
               alt="TempusCare Logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105"
+              className="w-7 h-7 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105 shrink-0"
             />
-            <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm min-[360px]:text-base sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight whitespace-nowrap">
                 Tempus<span className="text-primary-600">Care</span>
               </span>
               <span className="text-sm text-slate-500 font-medium leading-normal hidden sm:block">
@@ -121,31 +121,31 @@ export const HomePage = () => {
           </Link>
 
           {/* Acciones de Autenticación / Accesibilidad / Menú de Usuario */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <AccessibilityMenu />
 
             {isAuthenticated ? (
               <UserDropdownMenu />
             ) : (
               <>
-                <Link to="/login">
+                <Link to="/login" className="shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs shadow-xs"
+                    className="h-8 sm:h-9 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold gap-1 sm:gap-1.5 px-2 min-[380px]:px-2.5 sm:px-3.5 text-[11px] sm:text-xs shadow-xs whitespace-nowrap"
                   >
-                    <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600" strokeWidth={2} />
+                    <LogIn className="hidden min-[380px]:inline-block w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600 shrink-0" strokeWidth={2} />
                     <span>Ingresar</span>
                   </Button>
                 </Link>
 
-                <Link to="/register">
+                <Link to="/register" className="shrink-0">
                   <Button
                     variant="primary"
                     size="sm"
-                    className="shadow-sm font-semibold gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-xs"
+                    className="h-8 sm:h-9 shadow-sm font-semibold gap-1 sm:gap-1.5 px-2 min-[380px]:px-2.5 sm:px-3.5 text-[11px] sm:text-xs whitespace-nowrap"
                   >
-                    <UserRoundPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2} />
+                    <UserRoundPlus className="hidden min-[380px]:inline-block w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" strokeWidth={2} />
                     <span>Registrarse</span>
                   </Button>
                 </Link>
@@ -208,7 +208,7 @@ export const HomePage = () => {
         {/* Grilla Principal: Tarjetas de Médicos (Izq) y Mapa Interactivo (Der) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Lista de Profesionales */}
-          <section className="lg:col-span-7 space-y-4" aria-label="Lista de médicos disponibles">
+          <section className="lg:col-span-7 space-y-4 min-w-0" aria-label="Lista de médicos disponibles">
             {isLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((n) => (
@@ -275,7 +275,7 @@ export const HomePage = () => {
           </section>
 
           {/* Mapa Interactivo Fijo en Desktop */}
-          <aside className="hidden lg:block lg:col-span-5 sticky top-28" aria-label="Mapa de consultorios">
+          <aside className="hidden lg:block lg:col-span-5 sticky top-28 min-w-0" aria-label="Mapa de consultorios">
             <InteractiveMapPlaceholder
               doctors={professionals}
               consultorios={consultorios}

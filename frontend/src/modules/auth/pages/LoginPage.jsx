@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../shared/components/ui/Card';
 import { Input } from '../../../shared/components/ui/Input';
 import { Button } from '../../../shared/components/ui/Button';
@@ -11,21 +11,6 @@ import { pageTransitionVariants } from '../../../shared/motion';
 export const LoginPage = () => {
   const { formData, errors, isSubmitting, handleChange, handleSubmit } = useLoginForm();
   const [showPassword, setShowPassword] = useState(false);
-
-  // Perfiles de prueba rápida para testing del jurado y desarrollo
-  const testProfiles = [
-    { label: 'Super Admin', user: 'admin@vitality.com', pass: 'Admin123!', hint: 'Vitality' },
-    { label: 'Institución', user: '30546789123', pass: 'Institucion123!', hint: 'Sanatorio 9 de Julio' },
-    { label: 'Admin Sede', user: 'admin.sede25demayo', pass: 'AdminCons123!', hint: 'Consultorio' },
-    { label: 'Asistente', user: '27111111111', pass: 'Asistente123!', hint: 'Recepción' },
-    { label: 'Médico', user: '20123456789', pass: 'Medico123!', hint: 'Atención' },
-    { label: 'Paciente', user: '27000000001', pass: 'Paciente123!', hint: 'Turnos' },
-  ];
-
-  const fillQuickTest = (user, pass) => {
-    handleChange({ target: { name: 'usuario', value: user } });
-    handleChange({ target: { name: 'contra', value: pass } });
-  };
 
   return (
     <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-md mx-auto my-auto">
@@ -111,7 +96,7 @@ export const LoginPage = () => {
               </div>
             )}
 
-            <div className="pt-0.5">
+            <div className="pt-1 pb-2">
               <Button
                 type="submit"
                 variant="primary"
@@ -125,40 +110,6 @@ export const LoginPage = () => {
               </Button>
             </div>
           </form>
-
-          {/* Accesos rápidos de desarrollo en grilla compacta de 2 columnas */}
-          <div className="mt-2.5 pt-2 border-t border-slate-100">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
-              <span className="flex items-center gap-1.5" title="Perfiles preconfigurados para evaluación rápida del sistema">
-                <Sparkles className="w-3.5 h-3.5 text-primary-600" strokeWidth={2} aria-hidden="true" />
-                <span>Accesos rápidos de prueba:</span>
-              </span>
-              <span className="text-[11px] text-slate-400 font-normal">1-clic</span>
-            </div>
-            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-1.5">
-              {testProfiles.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => fillQuickTest(p.user, p.pass)}
-                  className="w-full min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-transform duration-75 active:scale-[0.98] cursor-pointer flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
-                  title={`Autocompletar credenciales de ${p.label} (${p.hint}): ${p.user}`}
-                >
-                  <div className="min-w-0 pr-1">
-                    <span className="text-xs font-semibold text-slate-800 block leading-tight truncate">
-                      {p.label}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-medium block leading-none mt-0.5">
-                      {p.hint}
-                    </span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/90 border border-slate-200 text-slate-400 group-hover:text-primary-700 group-hover:border-primary-200 font-mono flex-shrink-0">
-                    demo
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         </CardContent>
 
         <CardFooter className="flex-col gap-1 justify-center border-t border-slate-100 p-3 sm:p-3.5 bg-slate-50/40 rounded-b-2xl mt-2.5">

@@ -27,9 +27,9 @@ export const RegisterPage = () => {
 
   return (
     <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-xl mx-auto my-auto">
-      <Card className="border-slate-200/80 shadow-md" title="Formulario de registro de nuevo paciente">
+      <Card className="border-slate-200/80 shadow-md overflow-hidden" title="Formulario de registro de nuevo paciente">
         {/* Cabecera Compacta con Jerarquía Visual */}
-        <CardHeader className="text-center p-4 pb-1.5 sm:p-5 sm:pb-2">
+        <CardHeader className="text-center px-4 pt-4 pb-1.5 sm:px-6 sm:pt-5 sm:pb-2">
           <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1 shadow-xs" title="Registro de nuevo paciente">
             <UserRoundPlus className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>
@@ -41,10 +41,10 @@ export const RegisterPage = () => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-5 sm:px-6 py-0">
-          <form onSubmit={handleSubmit} noValidate className="space-y-2.5">
+        <CardContent className="px-4 sm:px-6 py-0">
+          <form onSubmit={handleSubmit} noValidate className="space-y-2.5 min-w-0 w-full">
             {/* Fila Nombre y Apellido */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 min-w-0">
               <Input
                 id="nombre"
                 name="nombre"
@@ -191,7 +191,7 @@ export const RegisterPage = () => {
             <PasswordRequirements password={formData.contrasena} />
 
             {/* Selector de Obra Social (Opcional) */}
-            <div className="w-full">
+            <div className="w-full min-w-0">
               <label
                 htmlFor="obraSocialId"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1"
@@ -199,7 +199,7 @@ export const RegisterPage = () => {
               >
                 Obra Social o Cobertura <span className="text-slate-400 text-[10px] font-normal lowercase">(opcional)</span>
               </label>
-              <div className="relative rounded-xl shadow-sm">
+              <div className="relative rounded-xl shadow-sm min-w-0">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                   <ShieldPlus className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
                 </div>
@@ -209,7 +209,7 @@ export const RegisterPage = () => {
                   value={formData.obraSocialId}
                   onChange={handleChange}
                   title="Seleccionar obra social o cobertura médica"
-                  className="block w-full rounded-xl border border-slate-200/80 bg-white pl-10 pr-4 py-1.5 text-sm text-slate-900 transition-all duration-200 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer"
+                  className="block w-full min-w-0 max-w-full truncate rounded-xl border border-slate-200/80 bg-white pl-10 pr-8 py-1.5 text-sm text-slate-900 transition-all duration-200 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer"
                 >
                   <option value="">Particular / Sin Obra Social seleccionada</option>
                   {obrasSociales.map((os) => (

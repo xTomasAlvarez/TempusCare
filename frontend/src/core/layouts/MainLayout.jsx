@@ -52,7 +52,7 @@ export const MainLayout = () => {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
+    <div className="min-h-screen w-full overflow-x-hidden bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Enlace para saltar directamente al contenido principal (WCAG 2.1 AA - RNF-ACC-02) */}
       <a
         href="#main-content"
@@ -64,24 +64,24 @@ export const MainLayout = () => {
 
       {/* Barra Superior de Navegación Accesible */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-6 sm:gap-8">
+        <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-8 min-w-0">
             {/* Identidad Visual: Logo del proyecto y Eslogan sutil */}
             <Link
               to="/"
               tabIndex={0}
               title="Ir a la página principal de TempusCare"
               aria-label="Ir al inicio de TempusCare"
-              className="flex items-center gap-3 rounded-xl p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
+              className="flex items-center gap-2 sm:gap-3 rounded-xl p-0.5 sm:p-1 focus:outline-none focus:ring-2 focus:ring-primary-500 group shrink-0"
             >
               <img
                 src={user?.rol === 'SuperAdmin' ? '/vitality.png' : '/tempuscare.png'}
                 alt={user?.rol === 'SuperAdmin' ? 'Vitality Logo' : 'TempusCare Logo'}
                 title={user?.rol === 'SuperAdmin' ? 'Logotipo de VitalityOS' : 'Logotipo de TempusCare'}
-                className="w-10 h-10 object-contain transition-transform group-hover:scale-105"
+                className="w-7 h-7 sm:w-10 sm:h-10 object-contain transition-transform group-hover:scale-105 shrink-0"
               />
-              <div className="flex flex-col">
-                <span className="text-lg sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight">
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm min-[360px]:text-base sm:text-xl font-bold font-heading tracking-tight text-slate-900 leading-tight whitespace-nowrap">
                   {user?.rol === 'SuperAdmin' ? (
                     <>Vitality<span className="text-primary-600">OS</span></>
                   ) : (
@@ -128,7 +128,7 @@ export const MainLayout = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Opciones de Accesibilidad Web (WCAG AAA) */}
             <AccessibilityMenu />
 
@@ -140,7 +140,9 @@ export const MainLayout = () => {
               <UserDropdownMenu />
             ) : (
               <Link to="/login" title="Ir a la pantalla de inicio de sesión">
-                <Button size="sm" title="Iniciar Sesión en TempusCare">Iniciar Sesión</Button>
+                <Button size="sm" title="Iniciar Sesión en TempusCare" className="h-8 sm:h-9 px-2.5 sm:px-3 whitespace-nowrap">
+                  Iniciar Sesión
+                </Button>
               </Link>
             )}
           </div>
@@ -148,7 +150,7 @@ export const MainLayout = () => {
       </header>
 
       {/* Área Central de Contenido */}
-      <main id="main-content" tabIndex="-1" className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 md:pb-8 focus:outline-none">
+      <main id="main-content" tabIndex="-1" className="flex-1 w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 pb-20 md:pb-8 focus:outline-none">
         <Outlet />
       </main>
 
@@ -156,7 +158,7 @@ export const MainLayout = () => {
       {navLinks.length > 0 && (
         <nav
           aria-label="Navegación inferior móvil"
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-around shadow-lg"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 flex items-center justify-around shadow-lg"
         >
           {navLinks.map((item) => {
             const isActive = location.pathname === item.path;

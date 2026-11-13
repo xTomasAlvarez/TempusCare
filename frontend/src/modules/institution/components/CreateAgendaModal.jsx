@@ -219,7 +219,7 @@ export const CreateAgendaModal = ({
           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
             Duración de Cada Slot (Minutos)
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 min-[380px]:grid-cols-4 gap-2">
             {durationOptions.map((mins) => {
               const isSelected = Number(formData.duracionTurnoMinutos) === mins;
               return (

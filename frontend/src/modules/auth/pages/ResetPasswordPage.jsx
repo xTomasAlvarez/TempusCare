@@ -98,8 +98,8 @@ export const ResetPasswordPage = () => {
 
   return (
     <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-md mx-auto my-auto">
-      <Card className="border-slate-200/80 shadow-md" title="Formulario para establecer nueva contraseña">
-        <CardHeader className="text-center p-4 pb-1.5 sm:p-5 sm:pb-2">
+      <Card className="border-slate-200/80 shadow-md overflow-hidden" title="Formulario para establecer nueva contraseña">
+        <CardHeader className="text-center px-4 pt-4 pb-1.5 sm:px-5 sm:pt-5 sm:pb-2">
           <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1.5 shadow-xs" title="Seguridad de cuenta">
             <ShieldCheck className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>

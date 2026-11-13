@@ -236,7 +236,7 @@ export const VitalitySystemPage = () => {
                 100.0% disponibilidad acumulada
               </span>
             </div>
-            <div className="grid grid-cols-15 sm:grid-cols-30 gap-1.5 pt-1">
+            <div className="grid grid-cols-10 sm:grid-cols-[repeat(15,minmax(0,1fr))] lg:grid-cols-[repeat(30,minmax(0,1fr))] gap-1.5 pt-1">
               {uptimeDays.map((item) => (
                 <div
                   key={item.day}

@@ -32,13 +32,13 @@ export const ReceptionFilters = ({
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
       {/* Grupo Izquierdo de Controles */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 flex-wrap min-w-0">
         {/* Selector de Médico */}
-        <div className="flex items-center gap-2 min-w-[260px]">
+        <div className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[260px] min-w-0">
           <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center shrink-0 border border-primary-100">
             <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label htmlFor="filter-reception-doctor" className="sr-only">
               Seleccionar Médico
             </label>
@@ -46,7 +46,7 @@ export const ReceptionFilters = ({
               id="filter-reception-doctor"
               value={selectedDoctorCuil}
               onChange={(e) => onDoctorChange(e.target.value)}
-              className="w-full h-10 px-3 pr-8 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
+              className="w-full min-w-0 truncate h-10 px-3 pr-8 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
             >
               {doctors.map((doc) => (
                 <option key={doc.cuil} value={doc.cuil}>
@@ -60,8 +60,8 @@ export const ReceptionFilters = ({
         <div className="hidden sm:block h-6 w-px bg-slate-200" aria-hidden="true" />
 
         {/* Date Picker con Accesos Rápidos */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex items-center">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex items-center flex-1 sm:flex-initial min-w-0">
             <input
               id="filter-reception-date"
               type="date"
@@ -70,7 +70,7 @@ export const ReceptionFilters = ({
               value={selectedDate}
               onChange={(e) => onDateChange(e.target.value)}
               aria-label="Seleccionar fecha de atención (hasta 6 meses)"
-              className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
+              className="w-full sm:w-auto h-10 px-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-colors cursor-pointer"
             />
           </div>
 

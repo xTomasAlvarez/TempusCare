@@ -63,8 +63,8 @@ export const ForgotPasswordPage = () => {
 
   return (
     <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-md mx-auto my-auto">
-      <Card className="border-slate-200/80 shadow-md" title="Formulario de recuperación de contraseña">
-        <CardHeader className="text-center p-4 pb-2 sm:p-6 sm:pb-3">
+      <Card className="border-slate-200/80 shadow-md overflow-hidden" title="Formulario de recuperación de contraseña">
+        <CardHeader className="text-center px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
           <div className="w-10 h-10 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-2 shadow-xs" title="Ícono de seguridad y recuperación de clave">
             <KeyRound className="w-5 h-5 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>

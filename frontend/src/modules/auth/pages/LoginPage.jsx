@@ -29,9 +29,9 @@ export const LoginPage = () => {
 
   return (
     <motion.div variants={pageTransitionVariants} initial="hidden" animate="visible" className="w-full max-w-md mx-auto my-auto">
-      <Card className="border-slate-200/80 shadow-md" title="Formulario de inicio de sesión">
+      <Card className="border-slate-200/80 shadow-md overflow-hidden" title="Formulario de inicio de sesión">
         {/* Cabecera compacta y jerárquica con dimensiones optimizadas */}
-        <CardHeader className="text-center p-4 pb-1 sm:p-5 sm:pb-2">
+        <CardHeader className="text-center px-4 pt-4 pb-1 sm:px-5 sm:pt-5 sm:pb-2">
           <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 mx-auto mb-1.5 shadow-xs" title="Acceso seguro a TempusCare">
             <LogIn className="w-4 h-4 text-primary-600" strokeWidth={2} aria-hidden="true" />
           </div>
@@ -43,8 +43,8 @@ export const LoginPage = () => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-5 sm:px-6 py-0">
-          <form onSubmit={handleSubmit} noValidate className="space-y-2.5">
+        <CardContent className="px-4 sm:px-6 py-0">
+          <form onSubmit={handleSubmit} noValidate className="space-y-2.5 min-w-0 w-full">
             <Input
               id="usuario"
               name="usuario"
@@ -135,13 +135,13 @@ export const LoginPage = () => {
               </span>
               <span className="text-[11px] text-slate-400 font-normal">1-clic</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-1.5">
               {testProfiles.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => fillQuickTest(p.user, p.pass)}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-transform duration-75 active:scale-[0.98] cursor-pointer flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
+                  className="w-full min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-primary-50/60 hover:border-primary-300 text-slate-700 transition-transform duration-75 active:scale-[0.98] cursor-pointer flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-primary-500 text-left"
                   title={`Autocompletar credenciales de ${p.label} (${p.hint}): ${p.user}`}
                 >
                   <div className="min-w-0 pr-1">

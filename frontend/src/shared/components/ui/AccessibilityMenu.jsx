@@ -46,7 +46,7 @@ export const AccessibilityMenu = () => {
         aria-haspopup="dialog"
         title="Opciones de Accesibilidad Web (Alto contraste y tamaño de texto)"
         aria-label="Abrir panel de opciones de accesibilidad (Alto contraste y tamaño de fuente)"
-        className={`h-9 px-2.5 sm:px-3 rounded-xl border flex items-center gap-1.5 text-xs font-semibold transition-transform duration-75 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer ${
+        className={`h-8 sm:h-9 px-2 sm:px-3 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-transform duration-75 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer ${
           isOpen || highContrast || fontScale !== FONT_SCALES.NORMAL
             ? 'bg-primary-50 text-primary-900 border-primary-300 shadow-xs'
             : 'bg-white text-slate-700 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-2xs'

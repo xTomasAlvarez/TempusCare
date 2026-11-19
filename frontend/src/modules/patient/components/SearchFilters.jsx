@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -9,10 +9,298 @@ import {
   Building2, 
   X, 
   Star,
-  Sparkles,
-  ArrowUpDown
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import { pillVariants } from '../../../shared/motion';
+
+const RATING_OPTIONS = [
+  { value: '', stars: 0, label: 'Todas las valoraciones', shortLabel: 'Todas las valoraciones' },
+  { value: '5', stars: 5, label: '5 estrellas', shortLabel: '5 estrellas' },
+  { value: '4', stars: 4, label: '4 o más estrellas', shortLabel: '4 o más' },
+  { value: '3', stars: 3, label: '3 o más estrellas', shortLabel: '3 o más' },
+  { value: '2', stars: 2, label: '2 o más estrellas', shortLabel: '2 o más' },
+  { value: '1', stars: 1, label: '1 o más estrellas', shortLabel: '1 o más' },
+];
+
+const StarIcons = ({ count }) => (
+  <span className="inline-flex items-center gap-0.5 shrink-0" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map((n) => (
+      <Star
+        key={n}
+        className={`w-3.5 h-3.5 ${
+          n <= count
+            ? 'fill-current text-amber-500'
+            : 'fill-none text-slate-300'
+        }`}
+        strokeWidth={2}
+      />
+    ))}
+  </span>
+);
+
+const RatingFilterSelect = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  const selectedOption =
+    RATING_OPTIONS.find((opt) => String(opt.value) === String(value || '')) || RATING_OPTIONS[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (optValue) => {
+    onChange(optValue);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const handleTriggerKeyDown = (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        setIsOpen(true);
+        return;
+      }
+      const idx = RATING_OPTIONS.findIndex((o) => String(o.value) === String(value || ''));
+      const nextIdx =
+        e.key === 'ArrowDown'
+          ? (idx + 1) % RATING_OPTIONS.length
+          : (idx - 1 + RATING_OPTIONS.length) % RATING_OPTIONS.length;
+      onChange(RATING_OPTIONS[nextIdx].value);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={triggerRef}
+        id="filter-rating"
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleTriggerKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`Calificación mínima: ${selectedOption.label}`}
+        title={`Filtrar por calificación mínima (${selectedOption.label})`}
+        className={`w-full h-10 px-3 rounded-xl border bg-white text-xs sm:text-sm text-slate-800 flex items-center justify-between gap-2 transition-all cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+          isOpen ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <span className="flex items-center gap-2 min-w-0 truncate">
+          {selectedOption.stars > 0 ? (
+            <>
+              <StarIcons count={selectedOption.stars} />
+              <span className="truncate text-slate-800 font-semibold">{selectedOption.shortLabel}</span>
+            </>
+          ) : (
+            <>
+              <Star className="w-4 h-4 fill-amber-400 text-amber-500 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <span className="truncate">{selectedOption.label}</span>
+            </>
+          )}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180 text-primary-600' : ''}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.ul
+            role="listbox"
+            aria-label="Seleccionar calificación mínima"
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 sm:left-0 mt-1.5 z-40 rounded-xl bg-white border border-slate-200/90 shadow-xl p-1.5 space-y-0.5 min-w-[235px] w-full"
+          >
+            {RATING_OPTIONS.map((opt) => {
+              const isSelected = String(opt.value) === String(value || '');
+              return (
+                <li key={opt.value || 'all'} role="option" aria-selected={isSelected}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(opt.value)}
+                    className={`w-full px-2.5 py-2 rounded-lg text-xs sm:text-sm flex items-center justify-between gap-2 transition-colors cursor-pointer text-left ${
+                      isSelected
+                        ? 'bg-primary-50 text-primary-800 font-bold'
+                        : 'text-slate-700 hover:bg-slate-50 font-medium'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      {opt.stars > 0 ? (
+                        <>
+                          <StarIcons count={opt.stars} />
+                          <span className="truncate">{opt.label}</span>
+                        </>
+                      ) : (
+                        <span className="truncate">{opt.label}</span>
+                      )}
+                    </span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary-600 shrink-0" aria-hidden="true" />}
+                  </button>
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const CustomFilterSelect = ({
+  id,
+  label,
+  icon: Icon,
+  value,
+  options = [],
+  placeholder = 'Seleccionar...',
+  onChange,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  const allOptions = [{ value: '', label: placeholder }, ...options];
+  const selectedOption =
+    allOptions.find((opt) => String(opt.value) === String(value || '')) || allOptions[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (optValue) => {
+    onChange(optValue);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const handleTriggerKeyDown = (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        setIsOpen(true);
+        return;
+      }
+      const idx = allOptions.findIndex((o) => String(o.value) === String(value || ''));
+      const nextIdx =
+        e.key === 'ArrowDown'
+          ? (idx + 1) % allOptions.length
+          : (idx - 1 + allOptions.length) % allOptions.length;
+      onChange(allOptions[nextIdx].value);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative min-w-0">
+      <button
+        ref={triggerRef}
+        id={id}
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleTriggerKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`${label}: ${selectedOption.label}`}
+        title={`${label}: ${selectedOption.label}`}
+        className={`w-full h-10 px-3 rounded-xl border bg-white text-xs sm:text-sm text-slate-800 flex items-center justify-between gap-2 transition-all cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+          isOpen ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <span className="flex items-center gap-2 min-w-0 truncate">
+          {Icon && <Icon className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={2} aria-hidden="true" />}
+          <span className={`truncate ${value ? 'text-slate-900 font-semibold' : 'text-slate-800'}`}>
+            {selectedOption.label}
+          </span>
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180 text-primary-600' : ''}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.ul
+            role="listbox"
+            aria-label={`Seleccionar ${label}`}
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.12 }}
+            className="absolute left-0 right-0 mt-1.5 z-40 rounded-xl bg-white border border-slate-200/90 shadow-xl p-1.5 space-y-0.5 max-h-60 overflow-y-auto"
+          >
+            {allOptions.map((opt) => {
+              const isSelected = String(opt.value) === String(value || '');
+              return (
+                <li key={String(opt.value) || 'all'} role="option" aria-selected={isSelected}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(opt.value)}
+                    className={`w-full px-2.5 py-2 rounded-lg text-xs sm:text-sm flex items-center justify-between gap-2 transition-colors cursor-pointer text-left ${
+                      isSelected
+                        ? 'bg-primary-50 text-primary-800 font-bold'
+                        : 'text-slate-700 hover:bg-slate-50 font-medium'
+                    }`}
+                  >
+                    <span className="truncate">{opt.label}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary-600 shrink-0" aria-hidden="true" />}
+                  </button>
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export const SearchFilters = ({
   filters,
@@ -68,116 +356,77 @@ export const SearchFilters = ({
         )}
       </div>
 
-      {/* 2. Cuadrícula de Filtros en 4 Columnas Espaciadas (Sin truncar textos) */}
+      {/* 2. Cuadrícula de Filtros en 4 Columnas Espaciadas (Alineación vertical uniforme) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Filtro por Especialidad */}
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="filter-specialty"
             className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
           >
             Especialidad
           </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <Stethoscope className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-            </div>
-            <select
-              id="filter-specialty"
-              value={filters.especialidadId || ''}
-              onChange={(e) => onFilterChange('especialidadId', e.target.value)}
-              className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer font-medium"
-            >
-              <option value="">Todas las especialidades</option>
-              {specialties.map((esp) => (
-                <option key={esp.id} value={esp.id}>
-                  {esp.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomFilterSelect
+            id="filter-specialty"
+            label="Especialidad"
+            icon={Stethoscope}
+            value={filters.especialidadId || ''}
+            placeholder="Todas las especialidades"
+            options={specialties.map((esp) => ({ value: esp.id, label: esp.nombre }))}
+            onChange={(val) => onFilterChange('especialidadId', val)}
+          />
         </div>
 
         {/* Filtro por Obra Social */}
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="filter-insurance"
             className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
           >
             Obra Social / Prepaga
           </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <ShieldPlus className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-            </div>
-            <select
-              id="filter-insurance"
-              value={filters.obraSocialId || ''}
-              onChange={(e) => onFilterChange('obraSocialId', e.target.value)}
-              className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer font-medium"
-            >
-              <option value="">Cualquier cobertura / Particular</option>
-              {healthInsurances.map((os) => (
-                <option key={os.id} value={os.id}>
-                  {os.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomFilterSelect
+            id="filter-insurance"
+            label="Obra Social / Prepaga"
+            icon={ShieldPlus}
+            value={filters.obraSocialId || ''}
+            placeholder="Cualquier cobertura / Particular"
+            options={healthInsurances.map((os) => ({ value: os.id, label: os.nombre }))}
+            onChange={(val) => onFilterChange('obraSocialId', val)}
+          />
         </div>
 
         {/* Filtro por Consultorio / Sede */}
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="filter-consultorio"
             className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
           >
             Consultorio / Sede
           </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <Building2 className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-            </div>
-            <select
-              id="filter-consultorio"
-              value={filters.consultorioCuit || ''}
-              onChange={(e) => onFilterChange('consultorioCuit', e.target.value)}
-              className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer font-medium"
-            >
-              <option value="">Todas las sedes</option>
-              {consultorios.map((c) => (
-                <option key={c.cuit} value={c.cuit}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomFilterSelect
+            id="filter-consultorio"
+            label="Consultorio / Sede"
+            icon={Building2}
+            value={filters.consultorioCuit || ''}
+            placeholder="Todas las sedes"
+            options={consultorios.map((c) => ({ value: c.cuit, label: c.nombre }))}
+            onChange={(val) => onFilterChange('consultorioCuit', val)}
+          />
         </div>
 
         {/* Filtro por Calificación Mínima */}
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="filter-rating"
             className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
           >
             Calificación Mínima
           </label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-amber-500">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-500" strokeWidth={2} aria-hidden="true" />
-            </div>
-            <select
-              id="filter-rating"
-              value={filters.minRating || ''}
-              onChange={(e) => onFilterChange('minRating', e.target.value)}
-              className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer font-medium"
-            >
-              <option value="">Todas las valoraciones</option>
-              <option value="3">⭐ 3 o más estrellas</option>
-              <option value="4">⭐⭐ 4 o más estrellas</option>
-              <option value="5">⭐⭐⭐ 5 estrellas</option>
-            </select>
-          </div>
+          <RatingFilterSelect
+            value={filters.minRating || ''}
+            onChange={(val) => onFilterChange('minRating', val)}
+          />
         </div>
       </div>
 
@@ -305,7 +554,12 @@ export const SearchFilters = ({
                   exit="exit"
                   className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/60 px-2 py-0.5 rounded-lg text-xs font-medium"
                 >
-                  <span>⭐ {filters.minRating}+ estrellas</span>
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" strokeWidth={2} aria-hidden="true" />
+                  <span>
+                    {Number(filters.minRating) === 5
+                      ? '5 estrellas'
+                      : `${filters.minRating} o más estrellas`}
+                  </span>
                   <button
                     type="button"
                     onClick={() => onFilterChange('minRating', '')}

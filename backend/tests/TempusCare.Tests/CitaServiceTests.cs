@@ -29,8 +29,9 @@ public class CitaServiceTests
         var prof = new Profesional { Cuil = "20111222999", Nombre = "Esteban", Apellido = "Quito" };
         var cons = new Consultorio { Cuit = "30111222999", Nombre = "Consultorio Central" };
         var pac = new Paciente { Cuil = "27111222999", Nombre = "Clara", Apellido = "Soria" };
-        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = 15, Mes = 11, Anio = 2026, HoraEntrada = new TimeSpan(9, 0, 0), HoraSalida = new TimeSpan(10, 0, 0) };
-        var turno = new Turno { Agenda = agenda, Fecha = new DateTime(2026, 11, 15, 9, 0, 0), HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(9, 30, 0), Estado = EstadoTurno.Disponible };
+        var fechaFutura = DateTime.Today.AddDays(5);
+        var agenda = new Agenda { ProfesionalCuil = prof.Cuil, ConsultorioCuit = cons.Cuit, Dia = fechaFutura.Day, Mes = fechaFutura.Month, Anio = fechaFutura.Year, HoraEntrada = new TimeSpan(9, 0, 0), HoraSalida = new TimeSpan(10, 0, 0) };
+        var turno = new Turno { Agenda = agenda, Fecha = fechaFutura.AddHours(9), HoraInicio = new TimeSpan(9, 0, 0), HoraFin = new TimeSpan(9, 30, 0), Estado = EstadoTurno.Disponible };
 
         db.Profesionales.Add(prof);
         db.Consultorios.Add(cons);

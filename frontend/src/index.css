@@ -56,7 +56,11 @@
   outline-offset: 2px !important;
 }
 
-/* High contrast mode support (WCAG 2.1 AAA - RNF-ACC-01 / RI-USR-07) */
+/* ========================================================================== */
+/* High contrast mode support (WCAG 2.1 AAA - RNF-ACC-01 / RI-USR-07)         */
+/* Garantiza contraste >= 7:1 (21:1 en superficies principales) en botones,   */
+/* banners, avatares, inputs, switches, tablas, modales y controles de mapa.  */
+/* ========================================================================== */
 html.high-contrast {
   color-scheme: light;
 }
@@ -66,6 +70,7 @@ html.high-contrast body {
   color: #000000 !important;
 }
 
+/* Superficies claras y fondos suaves a blanco puro con texto negro */
 html.high-contrast h1,
 html.high-contrast h2,
 html.high-contrast h3,
@@ -75,38 +80,222 @@ html.high-contrast h6,
 html.high-contrast p,
 html.high-contrast span,
 html.high-contrast label,
-html.high-contrast div {
+html.high-contrast div,
+html.high-contrast th,
+html.high-contrast td,
+html.high-contrast li,
+html.high-contrast strong,
+html.high-contrast small {
   color: #000000 !important;
   text-shadow: none !important;
 }
 
+/* Enlaces de texto con contraste AAA y subrayado claro */
 html.high-contrast a {
-  color: #0000ee !important;
+  color: #0000cc !important;
   text-decoration: underline !important;
   text-underline-offset: 3px !important;
   font-weight: 700 !important;
 }
 
+html.high-contrast a:has(button),
+html.high-contrast a button {
+  text-decoration: none !important;
+}
+
+/* Botones estándar (outline / ghost / secundarios claros): negro sobre blanco */
 html.high-contrast button {
   border: 2px solid #000000 !important;
   color: #000000 !important;
   background-color: #ffffff !important;
+  background-image: none !important;
   font-weight: 700 !important;
+  text-decoration: none !important;
 }
 
-html.high-contrast button:hover {
-  background-color: #000000 !important;
-  color: #ffffff !important;
+html.high-contrast button * {
+  color: #000000 !important;
 }
 
-html.high-contrast button[aria-pressed="true"],
-html.high-contrast .bg-primary-600,
-html.high-contrast .bg-primary-700 {
+/* Hover de botones estándar: inversión completa a blanco sobre negro */
+html.high-contrast button:not(:disabled):not([role="switch"]):hover {
   background-color: #000000 !important;
   color: #ffffff !important;
   border-color: #000000 !important;
 }
 
+html.high-contrast button:not(:disabled):not([role="switch"]):hover * {
+  color: #ffffff !important;
+}
+
+/* Punto indicador activo dentro del botón Accesibilidad en hover */
+html.high-contrast button:hover .rounded-full.bg-primary-600 {
+  background-color: #ffffff !important;
+}
+
+/* ========================================================================== */
+/* Superficies oscuras, botones sólidos, avatares, badges activos y banners   */
+/* Siempre texto e íconos BLANCO PURO (#ffffff) sobre fondo NEGRO (#000000)   */
+/* ========================================================================== */
+html.high-contrast button[aria-pressed="true"],
+html.high-contrast button.bg-primary-600,
+html.high-contrast button.bg-primary-700,
+html.high-contrast button.bg-secondary-600,
+html.high-contrast button.bg-secondary-700,
+html.high-contrast button.bg-rose-600,
+html.high-contrast button.bg-rose-700,
+html.high-contrast button.bg-emerald-600,
+html.high-contrast button.bg-emerald-700,
+html.high-contrast button.bg-amber-600,
+html.high-contrast button.bg-amber-700,
+html.high-contrast a.bg-primary-600,
+html.high-contrast .bg-primary-600,
+html.high-contrast .bg-primary-700,
+html.high-contrast .bg-primary-800,
+html.high-contrast .bg-secondary-600,
+html.high-contrast .bg-rose-600,
+html.high-contrast .bg-emerald-500,
+html.high-contrast .bg-emerald-600,
+html.high-contrast .bg-emerald-700,
+html.high-contrast .bg-amber-600,
+html.high-contrast .bg-slate-900,
+html.high-contrast .from-primary-600,
+html.high-contrast .from-primary-700,
+html.high-contrast .from-slate-900,
+html.high-contrast .from-emerald-600 {
+  background-image: none !important;
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+html.high-contrast button[aria-pressed="true"] *,
+html.high-contrast button.bg-primary-600 *,
+html.high-contrast button.bg-primary-700 *,
+html.high-contrast button.bg-secondary-600 *,
+html.high-contrast button.bg-secondary-700 *,
+html.high-contrast button.bg-rose-600 *,
+html.high-contrast button.bg-rose-700 *,
+html.high-contrast button.bg-emerald-600 *,
+html.high-contrast button.bg-emerald-700 *,
+html.high-contrast button.bg-amber-600 *,
+html.high-contrast button.bg-amber-700 *,
+html.high-contrast a.bg-primary-600 *,
+html.high-contrast .bg-primary-600 *,
+html.high-contrast .bg-primary-700 *,
+html.high-contrast .bg-primary-800 *,
+html.high-contrast .bg-secondary-600 *,
+html.high-contrast .bg-rose-600 *,
+html.high-contrast .bg-emerald-500 *,
+html.high-contrast .bg-emerald-600 *,
+html.high-contrast .bg-emerald-700 *,
+html.high-contrast .bg-amber-600 *,
+html.high-contrast .bg-slate-900 *,
+html.high-contrast .from-primary-600 *,
+html.high-contrast .from-primary-700 *,
+html.high-contrast .from-slate-900 *,
+html.high-contrast .from-emerald-600 * {
+  color: #ffffff !important;
+}
+
+/* Hover de botones sólidos: invierte a blanco con borde doble negro para feedback claro */
+html.high-contrast button[aria-pressed="true"]:not(:disabled):hover,
+html.high-contrast button.bg-primary-600:not(:disabled):hover,
+html.high-contrast button.bg-primary-700:not(:disabled):hover,
+html.high-contrast button.bg-secondary-600:not(:disabled):hover,
+html.high-contrast button.bg-secondary-700:not(:disabled):hover,
+html.high-contrast button.bg-rose-600:not(:disabled):hover,
+html.high-contrast button.bg-rose-700:not(:disabled):hover,
+html.high-contrast button.bg-emerald-600:not(:disabled):hover,
+html.high-contrast button.bg-emerald-700:not(:disabled):hover,
+html.high-contrast button.bg-amber-600:not(:disabled):hover,
+html.high-contrast button.bg-amber-700:not(:disabled):hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  box-shadow: inset 0 0 0 1px #000000 !important;
+}
+
+html.high-contrast button[aria-pressed="true"]:not(:disabled):hover *,
+html.high-contrast button.bg-primary-600:not(:disabled):hover *,
+html.high-contrast button.bg-primary-700:not(:disabled):hover *,
+html.high-contrast button.bg-secondary-600:not(:disabled):hover *,
+html.high-contrast button.bg-secondary-700:not(:disabled):hover *,
+html.high-contrast button.bg-rose-600:not(:disabled):hover *,
+html.high-contrast button.bg-rose-700:not(:disabled):hover *,
+html.high-contrast button.bg-emerald-600:not(:disabled):hover *,
+html.high-contrast button.bg-emerald-700:not(:disabled):hover *,
+html.high-contrast button.bg-amber-600:not(:disabled):hover *,
+html.high-contrast button.bg-amber-700:not(:disabled):hover * {
+  color: #000000 !important;
+}
+
+/* Botones dentro de banners/toasts oscuros (ej. "Ver Cita" o cerrar toast info) */
+html.high-contrast .from-primary-700 button,
+html.high-contrast .from-slate-900 button,
+html.high-contrast .from-emerald-600 button,
+html.high-contrast .bg-slate-900 button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+html.high-contrast .from-primary-700 button *,
+html.high-contrast .from-slate-900 button *,
+html.high-contrast .from-emerald-600 button *,
+html.high-contrast .bg-slate-900 button * {
+  color: #000000 !important;
+}
+
+html.high-contrast .from-primary-700 button:hover,
+html.high-contrast .from-slate-900 button:hover,
+html.high-contrast .from-emerald-600 button:hover,
+html.high-contrast .bg-slate-900 button:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+html.high-contrast .from-primary-700 button:hover *,
+html.high-contrast .from-slate-900 button:hover *,
+html.high-contrast .from-emerald-600 button:hover *,
+html.high-contrast .bg-slate-900 button:hover * {
+  color: #ffffff !important;
+}
+
+/* Botones deshabilitados claramente diferenciables pero legibles */
+html.high-contrast button:disabled {
+  background-color: #f3f4f6 !important;
+  color: #3f3f46 !important;
+  border: 2px dashed #3f3f46 !important;
+  opacity: 1 !important;
+}
+
+html.high-contrast button:disabled * {
+  color: #3f3f46 !important;
+}
+
+/* Interruptor Switch (ej. Modo Alto Contraste en AccessibilityMenu) */
+html.high-contrast button[role="switch"][aria-checked="true"] {
+  background-color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+html.high-contrast button[role="switch"][aria-checked="true"] > span {
+  background-color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+html.high-contrast button[role="switch"][aria-checked="false"] {
+  background-color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+html.high-contrast button[role="switch"][aria-checked="false"] > span {
+  background-color: #000000 !important;
+}
+
+/* Campos de formulario y placeholders con contraste AAA */
 html.high-contrast input,
 html.high-contrast select,
 html.high-contrast textarea {
@@ -116,17 +305,60 @@ html.high-contrast textarea {
   font-weight: 600 !important;
 }
 
+html.high-contrast input::placeholder,
+html.high-contrast textarea::placeholder {
+  color: #333333 !important;
+  opacity: 1 !important;
+}
+
+/* Foco de teclado de alta visibilidad (doble anillo negro + amarillo) */
 html.high-contrast *:focus-visible {
   outline: 3px solid #000000 !important;
-  outline-offset: 3px !important;
+  outline-offset: 2px !important;
   box-shadow: 0 0 0 5px #ffff00 !important;
 }
 
+/* Bordes definidos en tarjetas, separadores y tablas */
 html.high-contrast .border,
 html.high-contrast .border-slate-200,
 html.high-contrast .border-slate-100 {
   border-color: #000000 !important;
   border-width: 2px !important;
+}
+
+/* Controles, popups y pines de Leaflet en modo alto contraste */
+html.high-contrast .leaflet-control-zoom a {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  text-decoration: none !important;
+  font-weight: 800 !important;
+}
+
+html.high-contrast .leaflet-control-zoom a span {
+  color: #000000 !important;
+}
+
+html.high-contrast .leaflet-control-zoom a:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast .leaflet-control-zoom a:hover span {
+  color: #ffffff !important;
+}
+
+html.high-contrast .leaflet-popup-content-wrapper,
+html.high-contrast .leaflet-popup-tip {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+html.high-contrast .tempuscare-map-pin span {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
 }
 
 @media (forced-colors: active) {

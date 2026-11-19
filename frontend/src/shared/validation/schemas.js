@@ -282,6 +282,8 @@ export const consultorioSchema = z.object({
   localidad: z.string().trim().min(2, 'La localidad es obligatoria'),
   provincia: z.string().trim().optional(),
   codPostal: z.string().trim().optional(),
+  latitud: z.number().optional().nullable(),
+  longitud: z.number().optional().nullable(),
   institucionId: z.union([z.string(), z.number()]).optional().nullable(),
   adminConsultorio: z
     .object({
@@ -342,6 +344,8 @@ export const updateConsultorioSchema = z.object({
   localidad: z.string().trim().min(2, 'La localidad es obligatoria'),
   provincia: z.string().trim().optional().nullable(),
   codPostal: z.string().trim().optional().nullable(),
+  latitud: z.number().optional().nullable(),
+  longitud: z.number().optional().nullable(),
   institucionId: z.union([z.string(), z.number()]).optional().nullable(),
 });
 

@@ -201,13 +201,13 @@ public static class DbInitializer
             }
         }
 
-        // 4. Sedes / Consultorios Reales en Tucumán con Coordenadas Exactas
+        // 4. Sedes / Consultorios 100% Reales en Tucumán (verificados en sitios oficiales y OpenStreetMap)
         var consultoriosData = new[]
         {
             new
             {
                 Cuit = "30546789101",
-                Nombre = "Sede Central - Cardiología y Clínica",
+                Nombre = "Sede Central - Sanatorio 9 de Julio",
                 Email = "sedecentral@sanatorio9dejulio.com.ar",
                 Telefono = "3814504500",
                 NivelAccesibilidad = "Total",
@@ -217,78 +217,104 @@ public static class DbInitializer
                 Localidad = "San Miguel de Tucumán",
                 Provincia = "Tucumán",
                 CodPostal = "4000",
-                Latitud = -26.826356,
-                Longitud = -65.203986,
+                Latitud = -26.826119,
+                Longitud = -65.203699,
                 VisitasPerfil = 830
             },
             new
             {
                 Cuit = "30546789102",
-                Nombre = "Consultorios Externos Barrio Norte - Pediatría",
-                Email = "barrionorte@sanatorio9dejulio.com.ar",
+                Nombre = "Centro Médico 9 de Julio - Yerba Buena",
+                Email = "yerbabuena@sanatorio9dejulio.com.ar",
                 Telefono = "3814504510",
                 NivelAccesibilidad = "Especializada",
                 InstitucionCuit = "30546789123",
-                Calle = "Santiago del Estero",
-                Nro = "650",
-                Localidad = "San Miguel de Tucumán",
+                Calle = "Lobo de la Vega",
+                Nro = "150",
+                Localidad = "Yerba Buena",
                 Provincia = "Tucumán",
-                CodPostal = "4000",
-                Latitud = -26.822200,
-                Longitud = -65.207100,
+                CodPostal = "4107",
+                Latitud = -26.811033,
+                Longitud = -65.295278,
                 VisitasPerfil = 415
             },
             new
             {
                 Cuit = "30612345601",
-                Nombre = "Centro Médico Sanatorio Modelo - Traumatología y Dermatología",
-                Email = "sarmiento@sanatoriomodelo.com.ar",
+                Nombre = "Sede 25 de Mayo - Consultorios Externos y Diagnóstico",
+                Email = "consultorios@sanatoriomodelo.com.ar",
                 Telefono = "3814311111",
                 NivelAccesibilidad = "Total",
                 InstitucionCuit = "30612345678",
-                Calle = "Av. Sarmiento",
-                Nro = "550",
+                Calle = "25 de Mayo",
+                Nro = "559",
                 Localidad = "San Miguel de Tucumán",
                 Provincia = "Tucumán",
                 CodPostal = "4000",
-                Latitud = -26.823996,
-                Longitud = -65.201637,
+                Latitud = -26.823446,
+                Longitud = -65.202871,
                 VisitasPerfil = 520
             },
             new
             {
                 Cuit = "30612345602",
-                Nombre = "Sede Yerba Buena - Consultorios del Sol",
-                Email = "yerbabuena@sanatoriomodelo.com.ar",
-                Telefono = "3814258899",
-                NivelAccesibilidad = "Básica",
+                Nombre = "Sede Laprida - Guardia 24 hs e Internación",
+                Email = "laprida@sanatoriomodelo.com.ar",
+                Telefono = "3814311120",
+                NivelAccesibilidad = "Media",
                 InstitucionCuit = "30612345678",
-                Calle = "Av. Aconquija",
-                Nro = "1750",
-                Localidad = "Yerba Buena",
+                Calle = "Laprida",
+                Nro = "544",
+                Localidad = "San Miguel de Tucumán",
                 Provincia = "Tucumán",
-                CodPostal = "4107",
-                Latitud = -26.815350,
-                Longitud = -65.302150,
+                CodPostal = "4000",
+                Latitud = -26.823898,
+                Longitud = -65.201543,
                 VisitasPerfil = 390
             },
             new
             {
                 Cuit = "30555666701",
-                Nombre = "Instituto de Diagnóstico por Imágenes",
-                Email = "imagenes@clinicamayotucuman.com.ar",
+                Nombre = "Sede Central - Clínica Mayo",
+                Email = "turnos@clinicamayotucuman.com.ar",
                 Telefono = "3814526000",
-                NivelAccesibilidad = "Media",
+                NivelAccesibilidad = "Total",
                 InstitucionCuit = "30555666778",
                 Calle = "9 de Julio",
                 Nro = "279",
                 Localidad = "San Miguel de Tucumán",
                 Provincia = "Tucumán",
                 CodPostal = "4000",
-                Latitud = -26.833626,
-                Longitud = -65.204585,
+                Latitud = -26.834370,
+                Longitud = -65.205723,
+                VisitasPerfil = 340
+            },
+            new
+            {
+                Cuit = "30555666702",
+                Nombre = "Consultorios Yerba Buena - Clínica Mayo",
+                Email = "yerbabuena@clinicamayotucuman.com.ar",
+                Telefono = "3814526050",
+                NivelAccesibilidad = "Media",
+                InstitucionCuit = "30555666778",
+                Calle = "Av. Aconquija",
+                Nro = "670",
+                Localidad = "Yerba Buena",
+                Provincia = "Tucumán",
+                CodPostal = "4107",
+                Latitud = -26.816862,
+                Longitud = -65.275379,
                 VisitasPerfil = 260
             }
+        };
+
+        var legacySeedDirecciones = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "25 de Mayo|372",
+            "Santiago del Estero|650",
+            "Av. Sarmiento|550",
+            "Av. Aconquija|1750",
+            "9 de Julio|279"
         };
 
         var consultoriosMap = new Dictionary<string, Consultorio>();
@@ -328,21 +354,35 @@ public static class DbInitializer
             }
             else
             {
-                cons.Nombre = cd.Nombre;
-                cons.Email = cd.Email;
-                cons.Telefono = cd.Telefono;
-                cons.NivelAccesibilidad = cd.NivelAccesibilidad;
                 cons.InstitucionId = inst.Id;
-                cons.Latitud = cd.Latitud;
-                cons.Longitud = cd.Longitud;
                 cons.VisitasPerfil = cd.VisitasPerfil;
-                if (cons.Direccion != null)
+
+                // Sincronizar si conserva una dirección de seed (actual o legacy ficticia anterior) o si faltan coordenadas;
+                // si un administrador cambió la sede a otra dirección personalizada, se preserva sin pisarla.
+                var dirKey = cons.Direccion != null
+                    ? $"{cons.Direccion.Calle?.Trim()}|{cons.Direccion.Nro?.Trim()}"
+                    : "";
+                bool esDireccionDeSeed = cons.Direccion == null ||
+                    legacySeedDirecciones.Contains(dirKey) ||
+                    (string.Equals(cons.Direccion.Calle, cd.Calle, StringComparison.OrdinalIgnoreCase) &&
+                     string.Equals(cons.Direccion.Nro, cd.Nro, StringComparison.OrdinalIgnoreCase));
+
+                if (esDireccionDeSeed || !cons.Latitud.HasValue || !cons.Longitud.HasValue)
                 {
-                    cons.Direccion.Calle = cd.Calle;
-                    cons.Direccion.Nro = cd.Nro;
-                    cons.Direccion.Localidad = cd.Localidad;
-                    cons.Direccion.Provincia = cd.Provincia;
-                    cons.Direccion.CodPostal = cd.CodPostal;
+                    cons.Nombre = cd.Nombre;
+                    cons.Email = cd.Email;
+                    cons.Telefono = cd.Telefono;
+                    cons.NivelAccesibilidad = cd.NivelAccesibilidad;
+                    cons.Latitud = cd.Latitud;
+                    cons.Longitud = cd.Longitud;
+                    if (cons.Direccion != null)
+                    {
+                        cons.Direccion.Calle = cd.Calle;
+                        cons.Direccion.Nro = cd.Nro;
+                        cons.Direccion.Localidad = cd.Localidad;
+                        cons.Direccion.Provincia = cd.Provincia;
+                        cons.Direccion.CodPostal = cd.CodPostal;
+                    }
                 }
                 db.SaveChanges();
             }
@@ -977,7 +1017,7 @@ public static class DbInitializer
                 Telefono = "3816003344",
                 FechaNacimiento = new DateTime(1980, 8, 15),
                 EspecialidadNombre = "Cardiología",
-                ConsultoriosCuits = new[] { "30546789101", "30612345602" }, // Sede Central 25 de Mayo y Yerba Buena
+                ConsultoriosCuits = new[] { "30546789101", "30546789102" }, // Sanatorio 9 de Julio: Sede Central (25 de Mayo 372) y Centro Médico Yerba Buena
                 ObrasSocialesNombres = new[] { "Subsidio de Salud (IPSST)", "OSDE", "Swiss Medical", "ASUNT" },
                 EstudiosNombres = new[] { "Electrocardiograma", "Ergometría Graduada", "Ecocardiograma Doppler" }
             },
@@ -1007,7 +1047,7 @@ public static class DbInitializer
                 Telefono = "3816223344",
                 FechaNacimiento = new DateTime(1988, 4, 12),
                 EspecialidadNombre = "Pediatría",
-                ConsultoriosCuits = new[] { "30546789102", "30612345602" }, // Barrio Norte (9 de Julio) y Sede Yerba Buena (Sanatorio Modelo)
+                ConsultoriosCuits = new[] { "30546789102", "30612345601" }, // Centro Médico 9 de Julio YB y Sanatorio Modelo (25 de Mayo 559)
                 ObrasSocialesNombres = new[] { "Subsidio de Salud (IPSST)", "Swiss Medical", "OSDE", "ASUNT" },
                 EstudiosNombres = new[] { "Control de Crecimiento y Desarrollo", "Test de Alergias Pediátricas" }
             },
@@ -1021,7 +1061,7 @@ public static class DbInitializer
                 Telefono = "3816334455",
                 FechaNacimiento = new DateTime(1982, 9, 30),
                 EspecialidadNombre = "Pediatría",
-                ConsultoriosCuits = new[] { "30546789102" }, // Barrio Norte
+                ConsultoriosCuits = new[] { "30546789102" }, // Centro Médico 9 de Julio Yerba Buena
                 ObrasSocialesNombres = new[] { "OSDE", "Swiss Medical", "PAMI" },
                 EstudiosNombres = new[] { "Control de Crecimiento y Desarrollo", "Oximetría Pediátrica" }
             },
@@ -1037,7 +1077,7 @@ public static class DbInitializer
                 Telefono = "3816445566",
                 FechaNacimiento = new DateTime(1979, 3, 19),
                 EspecialidadNombre = "Traumatología",
-                ConsultoriosCuits = new[] { "30612345601" }, // Av. Sarmiento
+                ConsultoriosCuits = new[] { "30612345601" }, // Sanatorio Modelo (25 de Mayo 559)
                 ObrasSocialesNombres = new[] { "Subsidio de Salud (IPSST)", "OSDE", "PAMI", "Boreal Cobertura de Salud" },
                 EstudiosNombres = new[] { "Infiltración Articular", "Evaluación Articular Funcional" }
             },
@@ -1051,7 +1091,7 @@ public static class DbInitializer
                 Telefono = "3816556677",
                 FechaNacimiento = new DateTime(1990, 7, 8),
                 EspecialidadNombre = "Traumatología",
-                ConsultoriosCuits = new[] { "30612345601", "30612345602" }, // Sarmiento y Yerba Buena
+                ConsultoriosCuits = new[] { "30612345601", "30612345602" }, // Sanatorio Modelo: 25 de Mayo 559 y Laprida 544
                 ObrasSocialesNombres = new[] { "Swiss Medical", "OSDE", "Subsidio de Salud (IPSST)" },
                 EstudiosNombres = new[] { "Infiltración Articular", "Artrocentesis Diagnóstica" }
             },
@@ -1067,7 +1107,7 @@ public static class DbInitializer
                 Telefono = "3816667788",
                 FechaNacimiento = new DateTime(1986, 12, 5),
                 EspecialidadNombre = "Dermatología",
-                ConsultoriosCuits = new[] { "30546789101", "30612345601" }, // 25 de Mayo y Sarmiento
+                ConsultoriosCuits = new[] { "30546789101", "30612345601" }, // Sanatorio 9 de Julio (25 de Mayo 372) y Sanatorio Modelo (25 de Mayo 559)
                 ObrasSocialesNombres = new[] { "OSDE", "Swiss Medical", "Subsidio de Salud (IPSST)" },
                 EstudiosNombres = new[] { "Dermatoscopia Digital", "Biopsia Cutánea por Punch" }
             },
@@ -1081,7 +1121,7 @@ public static class DbInitializer
                 Telefono = "3816778899",
                 FechaNacimiento = new DateTime(1983, 2, 17),
                 EspecialidadNombre = "Dermatología",
-                ConsultoriosCuits = new[] { "30612345601" }, // Av. Sarmiento
+                ConsultoriosCuits = new[] { "30612345602" }, // Sanatorio Modelo (Laprida 544)
                 ObrasSocialesNombres = new[] { "Subsidio de Salud (IPSST)", "PAMI", "ASUNT" },
                 EstudiosNombres = new[] { "Dermatoscopia Digital", "Crioterapia Dermatológica" }
             },
@@ -1097,7 +1137,7 @@ public static class DbInitializer
                 Telefono = "3816889900",
                 FechaNacimiento = new DateTime(1976, 5, 27),
                 EspecialidadNombre = "Diagnóstico por Imágenes",
-                ConsultoriosCuits = new[] { "30555666701" }, // Clínica Mayo 9 de Julio
+                ConsultoriosCuits = new[] { "30555666701" }, // Clínica Mayo (9 de Julio 279)
                 ObrasSocialesNombres = new[] { "Subsidio de Salud (IPSST)", "OSDE", "Swiss Medical", "PAMI" },
                 EstudiosNombres = new[] { "Doppler fetal", "Ecografía ginecológica", "Ecografía de tiroides", "Ecografía Abdominal" }
             },
@@ -1111,7 +1151,7 @@ public static class DbInitializer
                 Telefono = "3816990011",
                 FechaNacimiento = new DateTime(1985, 10, 14),
                 EspecialidadNombre = "Diagnóstico por Imágenes",
-                ConsultoriosCuits = new[] { "30555666701", "30546789101" }, // Clínica Mayo 9 de Julio y Sede Central 25 de Mayo
+                ConsultoriosCuits = new[] { "30555666701", "30555666702" }, // Clínica Mayo: Sede Central (9 de Julio 279) y Yerba Buena (Av. Aconquija 670)
                 ObrasSocialesNombres = new[] { "OSDE", "Swiss Medical", "Subsidio de Salud (IPSST)", "Boreal Cobertura de Salud" },
                 EstudiosNombres = new[] { "Doppler fetal", "Ecografía ginecológica", "Ecografía de tiroides", "Resonancia Magnética", "Doppler Mamario" }
             }

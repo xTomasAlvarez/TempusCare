@@ -4,6 +4,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { Hospital, MapPin, Phone, Mail, Accessibility, AlertCircle } from 'lucide-react';
 import { consultorioSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
+import { geocodeAddress } from '../../../shared/utils/geocoding';
 
 /**
  * Modal para el registro de una nueva Sede / Consultorio.
@@ -86,9 +87,18 @@ export const CreateConsultorioModal = ({
     }
 
     try {
+      const coords = await geocodeAddress({
+        calle: sanitizedData.calle,
+        nro: sanitizedData.nro,
+        localidad: sanitizedData.localidad,
+        provincia: sanitizedData.provincia,
+      });
+
       const success = await onSubmit({
         ...formData,
         ...sanitizedData,
+        latitud: coords?.latitud ?? null,
+        longitud: coords?.longitud ?? null,
         institucionId: sanitizedData.institucionId ? Number(sanitizedData.institucionId) : null,
         adminConsultorio: sanitizedData.adminConsultorio?.cuil ? sanitizedData.adminConsultorio : null,
       });

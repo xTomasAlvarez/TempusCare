@@ -4,6 +4,7 @@ import { Button } from '../../../shared/components/ui/Button';
 import { Hospital, MapPin, Phone, Mail, Hash, Building2, Accessibility } from 'lucide-react';
 import { updateConsultorioSchema } from '../../../shared/validation/schemas';
 import { validateWithSchema, parseBackendError } from '../../../shared/validation/validateForm';
+import { geocodeAddress } from '../../../shared/utils/geocoding';
 
 /**
  * Modal para la Edición y Modificación de una Sede Física / Consultorio.
@@ -98,8 +99,37 @@ export const EditConsultorioModal = ({
     }
 
     try {
+      const norm = (val) => String(val || '').trim().toLowerCase();
+      const addressChanged =
+        norm(sanitizedData.calle) !== norm(consultorio?.calle) ||
+        norm(sanitizedData.nro) !== norm(consultorio?.nro) ||
+        norm(sanitizedData.localidad) !== norm(consultorio?.localidad) ||
+        norm(sanitizedData.provincia) !== norm(consultorio?.provincia);
+
+      let latitud = typeof consultorio?.latitud === 'number' ? consultorio.latitud : null;
+      let longitud = typeof consultorio?.longitud === 'number' ? consultorio.longitud : null;
+
+      if (addressChanged || latitud === null || longitud === null) {
+        const coords = await geocodeAddress({
+          calle: sanitizedData.calle,
+          nro: sanitizedData.nro,
+          localidad: sanitizedData.localidad,
+          provincia: sanitizedData.provincia,
+        });
+        if (coords) {
+          latitud = coords.latitud;
+          longitud = coords.longitud;
+        } else if (addressChanged) {
+          // Si cambió la dirección y el cliente no pudo geocodificar, enviar null para que el backend intente resolverla
+          latitud = null;
+          longitud = null;
+        }
+      }
+
       const payload = {
         ...sanitizedData,
+        latitud,
+        longitud,
         institucionId: sanitizedData.institucionId ? Number(sanitizedData.institucionId) : null,
       };
 

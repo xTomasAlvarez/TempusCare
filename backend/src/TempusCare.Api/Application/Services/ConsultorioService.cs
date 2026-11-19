@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TempusCare.Api.Application.DTOs;
 using TempusCare.Api.Application.Exceptions;
@@ -11,6 +13,18 @@ public class ConsultorioService : IConsultorioService
 {
     private readonly TempusCareDbContext _db;
     private readonly ILogger<ConsultorioService> _logger;
+
+    private static readonly HttpClient GeocodeHttpClient = CreateGeocodeHttpClient();
+
+    private static HttpClient CreateGeocodeHttpClient()
+    {
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(3)
+        };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("TempusCareGeocoder/1.0");
+        return client;
+    }
 
     public ConsultorioService(TempusCareDbContext db, ILogger<ConsultorioService> logger)
     {
@@ -26,6 +40,18 @@ public class ConsultorioService : IConsultorioService
         {
             _logger.LogWarning("Ya existe un consultorio con el CUIT {Cuit}", dto.Cuit);
             throw new ConflictException($"Ya existe un consultorio registrado con el CUIT {dto.Cuit}.");
+        }
+
+        double? latitud = dto.Latitud;
+        double? longitud = dto.Longitud;
+        if (!latitud.HasValue || !longitud.HasValue)
+        {
+            var geocoded = await TryGeocodeDireccionAsync(dto.Calle, dto.Nro, dto.Localidad, dto.Provincia);
+            if (geocoded.HasValue)
+            {
+                latitud = geocoded.Value.Lat;
+                longitud = geocoded.Value.Lon;
+            }
         }
 
         var dir = new Direccion
@@ -49,8 +75,8 @@ public class ConsultorioService : IConsultorioService
             NivelAccesibilidad = dto.NivelAccesibilidad,
             InstitucionId = dto.InstitucionId,
             DireccionId = dir.Id,
-            Latitud = dto.Latitud,
-            Longitud = dto.Longitud
+            Latitud = latitud,
+            Longitud = longitud
         };
         _db.Consultorios.Add(cons);
 
@@ -84,6 +110,12 @@ public class ConsultorioService : IConsultorioService
             throw new ConsultorioNotFoundException(dto.Cuit);
         }
 
+        bool direccionModificada = cons.Direccion == null ||
+            !string.Equals(cons.Direccion.Calle.Trim(), dto.Calle.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(cons.Direccion.Nro.Trim(), dto.Nro.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(cons.Direccion.Localidad.Trim(), dto.Localidad.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(cons.Direccion.Provincia.Trim(), dto.Provincia.Trim(), StringComparison.OrdinalIgnoreCase);
+
         cons.Nombre = dto.Nombre;
         cons.Email = dto.Email;
         cons.Telefono = dto.Telefono;
@@ -92,8 +124,21 @@ public class ConsultorioService : IConsultorioService
         {
             cons.InstitucionId = dto.InstitucionId;
         }
-        if (dto.Latitud.HasValue) cons.Latitud = dto.Latitud;
-        if (dto.Longitud.HasValue) cons.Longitud = dto.Longitud;
+
+        if (dto.Latitud.HasValue && dto.Longitud.HasValue)
+        {
+            cons.Latitud = dto.Latitud;
+            cons.Longitud = dto.Longitud;
+        }
+        else if (direccionModificada || !cons.Latitud.HasValue || !cons.Longitud.HasValue)
+        {
+            var geocoded = await TryGeocodeDireccionAsync(dto.Calle, dto.Nro, dto.Localidad, dto.Provincia);
+            if (geocoded.HasValue)
+            {
+                cons.Latitud = geocoded.Value.Lat;
+                cons.Longitud = geocoded.Value.Lon;
+            }
+        }
 
         if (cons.Direccion != null)
         {
@@ -388,5 +433,102 @@ public class ConsultorioService : IConsultorioService
             c.Direccion?.CodPostal,
             c.InstitucionId
         );
+    }
+
+    private async Task<(double Lat, double Lon)?> TryGeocodeDireccionAsync(
+        string? calle,
+        string? nro,
+        string? localidad,
+        string? provincia)
+    {
+        if (string.IsNullOrWhiteSpace(calle))
+            return null;
+
+        var parts = new List<string>();
+        var calleNro = $"{calle.Trim()} {nro?.Trim()}".Trim();
+        if (!string.IsNullOrWhiteSpace(calleNro)) parts.Add(calleNro);
+        if (!string.IsNullOrWhiteSpace(localidad)) parts.Add(localidad.Trim());
+        if (!string.IsNullOrWhiteSpace(provincia)) parts.Add(provincia.Trim());
+        parts.Add("Argentina");
+
+        var singleLine = string.Join(", ", parts);
+
+        static bool IsValidArgentinaCoords(double lat, double lon) =>
+            lat >= -56.0 && lat <= -21.0 && lon >= -74.0 && lon <= -53.0;
+
+        // 1. Geocodificador principal: ArcGIS World Geocoder (interpolación catastral de alturas en Argentina)
+        try
+        {
+            var arcgisUrl =
+                $"https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=1&countryCode=ARG&SingleLine={Uri.EscapeDataString(singleLine)}";
+            using var resp = await GeocodeHttpClient.GetAsync(arcgisUrl);
+            if (resp.IsSuccessStatusCode)
+            {
+                var json = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("candidates", out var candidates) &&
+                    candidates.ValueKind == JsonValueKind.Array &&
+                    candidates.GetArrayLength() > 0)
+                {
+                    var top = candidates[0];
+                    var score = top.TryGetProperty("score", out var scoreEl) ? scoreEl.GetDouble() : 0;
+                    if (score >= 70 &&
+                        top.TryGetProperty("location", out var loc) &&
+                        loc.TryGetProperty("y", out var yEl) &&
+                        loc.TryGetProperty("x", out var xEl))
+                    {
+                        var lat = Math.Round(yEl.GetDouble(), 6);
+                        var lon = Math.Round(xEl.GetDouble(), 6);
+                        if (IsValidArgentinaCoords(lat, lon))
+                        {
+                            _logger.LogInformation("Dirección geocodificada vía ArcGIS ({Address}) -> {Lat}, {Lon} (score {Score})",
+                                singleLine, lat, lon, score);
+                            return (lat, lon);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Geocodificación ArcGIS omitida o fuera de tiempo para {Address}", singleLine);
+        }
+
+        // 2. Fallback: OpenStreetMap Nominatim
+        try
+        {
+            var nominatimUrl =
+                $"https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q={Uri.EscapeDataString(singleLine)}";
+            using var resp = await GeocodeHttpClient.GetAsync(nominatimUrl);
+            if (resp.IsSuccessStatusCode)
+            {
+                var json = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                {
+                    var top = doc.RootElement[0];
+                    if (top.TryGetProperty("lat", out var latEl) &&
+                        top.TryGetProperty("lon", out var lonEl) &&
+                        double.TryParse(latEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var latRaw) &&
+                        double.TryParse(lonEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lonRaw))
+                    {
+                        var lat = Math.Round(latRaw, 6);
+                        var lon = Math.Round(lonRaw, 6);
+                        if (IsValidArgentinaCoords(lat, lon))
+                        {
+                            _logger.LogInformation("Dirección geocodificada vía Nominatim ({Address}) -> {Lat}, {Lon}",
+                                singleLine, lat, lon);
+                            return (lat, lon);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Geocodificación Nominatim omitida o fuera de tiempo para {Address}", singleLine);
+        }
+
+        return null;
     }
 }

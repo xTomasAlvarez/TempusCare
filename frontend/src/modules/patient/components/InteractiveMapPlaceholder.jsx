@@ -4,8 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import { MapPin, Navigation, Hospital, CalendarPlus, UserRound } from 'lucide-react';
 import { patientService } from '../services/patientService';
 
-// Coordenadas neurálgicas del área médica de San Miguel de Tucumán
-export const TUCUMAN_CENTER = [-26.8280, -65.2040];
+// Coordenadas neurálgicas del área médica de San Miguel de Tucumán (zona céntrica verificada)
+export const TUCUMAN_CENTER = [-26.8261, -65.2037];
 export const INITIAL_ZOOM = 16; // Nivel de zoom a nivel de cuadras/calles para apreciación inmediata
 
 /**
@@ -96,7 +96,9 @@ export const InteractiveMapPlaceholder = ({
             : c.direccionCompleta || 'San Miguel de Tucumán';
         const localidad =
           c.localidad ||
-          (c.calle?.toLowerCase().includes('aconquija') || c.nombre?.toLowerCase().includes('yerba buena')
+          (c.calle?.toLowerCase().includes('aconquija') ||
+           c.calle?.toLowerCase().includes('lobo de la vega') ||
+           c.nombre?.toLowerCase().includes('yerba buena')
             ? 'Yerba Buena'
             : 'San Miguel de Tucumán');
 
@@ -134,7 +136,9 @@ export const InteractiveMapPlaceholder = ({
                 : cd.direccionCompleta || 'San Miguel de Tucumán';
             const localidad =
               cd.localidad ||
-              (cd.calle?.toLowerCase().includes('aconquija') || cd.nombre?.toLowerCase().includes('yerba buena')
+              (cd.calle?.toLowerCase().includes('aconquija') ||
+               cd.calle?.toLowerCase().includes('lobo de la vega') ||
+               cd.nombre?.toLowerCase().includes('yerba buena')
                 ? 'Yerba Buena'
                 : 'San Miguel de Tucumán');
 
